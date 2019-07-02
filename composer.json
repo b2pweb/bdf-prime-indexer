@@ -1,0 +1,30 @@
+{
+  "name": "b2p/bdf-prime-indexer",
+  "description": "Indexer plugin for Prime",
+  "type": "library",
+  "license": "proprietary",
+  "config": {
+    "secure-http": false
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "http://packagist.b2pweb.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Bdf\\Prime\\Indexer\\": "src"
+    }
+  },
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=7.1",
+    "b2p/bdf-prime": "~1.5",
+    "elasticsearch/elasticsearch": "~5.0",
+    "b2pweb/bdf-collections": "dev-master"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~5.7|~6.0"
+  }
+}
