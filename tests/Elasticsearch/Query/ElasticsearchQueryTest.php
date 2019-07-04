@@ -662,15 +662,15 @@ class ElasticsearchQueryTest extends TestCase
         $this->assertCount(2, $stream);
         $this->assertEquals([
             [
+                'name' => 'Cavaillon',
+                'population' => 26689,
+                'country' => 'FR'
+            ],
+            [
                 'name' => 'Paris',
                 'population' => 2201578,
                 'country' => 'FR'
             ],
-            [
-                'name' => 'Cavaillon',
-                'population' => 26689,
-                'country' => 'FR'
-            ]
-        ], $stream->map(function (array $data) { return $data['_source']; })->toArray());
+        ], $stream->map(function (array $data) { return $data['_source']; })->sort()->toArray());
     }
 }

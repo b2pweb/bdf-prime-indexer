@@ -11,7 +11,7 @@ interface PropertyAccessorInterface
     /**
      * Read (and transform) the value from model to be indexed
      *
-     * @param object $entity The model entity (retreived from database)
+     * @param object $entity The model entity (retrieved from database)
      *
      * @return mixed The extract value
      */
@@ -21,7 +21,7 @@ interface PropertyAccessorInterface
      * Write the indexed value to the model entity
      *
      * @param object $entity The entity object to write on
-     * @param mixed $indexedValue The indexed value (retreived from elastricsearch)
+     * @param mixed $indexedValue The indexed value (retrieved from elasticsearch)
      *
      * @return void
      */

@@ -10,7 +10,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInt
  *
  * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/mapping-types.html
  */
-final class Property
+final class Property implements PropertyAccessorInterface
 {
     /**
      * @var string
@@ -47,7 +47,7 @@ final class Property
      * @param string $type
      * @param PropertyAccessorInterface $accessor
      */
-    public function __construct($name, array $declaration, AnalyzerInterface $analyzer, $type, PropertyAccessorInterface $accessor)
+    public function __construct(string $name, array $declaration, AnalyzerInterface $analyzer, string $type, PropertyAccessorInterface $accessor)
     {
         $this->name = $name;
         $this->declaration = $declaration;
@@ -61,7 +61,7 @@ final class Property
      *
      * @return string
      */
-    public function name()
+    public function name(): string
     {
         return $this->name;
     }
@@ -71,7 +71,7 @@ final class Property
      *
      * @return array
      */
-    public function declaration()
+    public function declaration(): array
     {
         return $this->declaration;
     }
@@ -81,7 +81,7 @@ final class Property
      *
      * @return AnalyzerInterface
      */
-    public function analyzer()
+    public function analyzer(): AnalyzerInterface
     {
         return $this->analyzer;
     }
@@ -91,7 +91,7 @@ final class Property
      *
      * @return string
      */
-    public function type()
+    public function type(): string
     {
         return $this->type;
     }
@@ -101,8 +101,24 @@ final class Property
      *
      * @return PropertyAccessorInterface
      */
-    public function accessor()
+    public function accessor(): PropertyAccessorInterface
     {
         return $this->accessor;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function readFromModel($entity)
+    {
+        return $this->analyzer->toIndex($this->accessor->readFromModel($entity));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function writeToModel($entity, $indexedValue)
+    {
+        $this->accessor->writeToModel($entity, $this->analyzer->fromIndex($indexedValue));
     }
 }

@@ -14,7 +14,16 @@ interface IndexInterface
      *
      * @return void
      */
-    public function add($entity);
+    public function add($entity): void;
+
+    /**
+     * Check if the index contains the given entity
+     *
+     * @param object $entity Entity to check
+     *
+     * @return boolean True if the entity is indexed
+     */
+    public function contains($entity): bool;
 
     /**
      * Remove the entity from the index
@@ -23,7 +32,7 @@ interface IndexInterface
      *
      * @return void
      */
-    public function remove($entity);
+    public function remove($entity): void;
 
     /**
      * Replace the entity data from the index
@@ -32,29 +41,25 @@ interface IndexInterface
      *
      * @return void
      */
-    public function update($entity);
+    public function update($entity): void;
 
     /**
      * Get the search query
+     * If a default scope is declared, depending of the given parameter, it will be applied to the query
      *
      * <code>
      * // Search from index, and return data directly mapped to entity
      * $index->query()->where('search', 'foo')->all();
      *
-     * $index
-     *     ->query(function ($data) {
-     *         MyEntity::where('id', 'in', )->all();
-     *     })
-     *     ->where('search', 'foo')
-     *     ->all()
-     * ;
+     * // Same query, but without the default scope
+     * $index->query(false)->where('search', 'foo')->all();
      * </code>
      *
-     * @param callable $processor Process data for return entities. If not provided, will perform simple hydration with indexed fields
+     * @param bool $withDefaultScope Enable or not the default scope
      *
-     * @return mixed
+     * @return QueryInterface
      */
-    public function query(callable $processor = null);
+    public function query(bool $withDefaultScope = true): QueryInterface;
 
     /**
      * (Re-)Create the index with given data
@@ -64,12 +69,22 @@ interface IndexInterface
      *
      * @return void
      */
-    public function create($entities);
+    public function create(iterable $entities = []): void;
 
     /**
      * Remove the current index
      *
      * @return void
      */
-    public function drop();
+    public function drop(): void;
+
+    /**
+     * Call a scope
+     *
+     * @param string $name The scope name
+     * @param array $arguments The scope arguments
+     *
+     * @return QueryInterface
+     */
+    public function __call(string $name, array $arguments): QueryInterface;
 }

@@ -3,7 +3,6 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
 use Bdf\Collection\Stream\ArrayStream;
-use Bdf\Collection\Stream\Streamable;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammar;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Compound\BooleanQuery;
@@ -28,7 +27,7 @@ use Elasticsearch\Client;
  * ;
  * </code>
  */
-class ElasticsearchQuery implements QueryInterface, Streamable
+class ElasticsearchQuery implements QueryInterface
 {
     /**
      * The Elastichsearch client
@@ -82,6 +81,13 @@ class ElasticsearchQuery implements QueryInterface, Streamable
      * @var WrappingQueryInterface[]
      */
     private $wrappers = [];
+
+    /**
+     * The document transformer for get PHP model from the index document
+     *
+     * @var callable|null
+     */
+    private $transformer;
 
 
     /**
@@ -432,7 +438,19 @@ class ElasticsearchQuery implements QueryInterface, Streamable
      */
     public function stream()
     {
-        return new ArrayStream($this->execute()['hits']['hits']);
+        $stream = new ArrayStream($this->execute()['hits']['hits']);
+
+        return $this->transformer ? $stream->map($this->transformer) : $stream;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function map(callable $transformer)
+    {
+        $this->transformer = $transformer;
+
+        return $this;
     }
 
     /**

@@ -76,12 +76,21 @@ interface AnalyzerInterface
     /**
      * Declare list of filters
      *
+     * The filters can be :
+     * - A simple string, which represent an already declared (or default) filter
+     * - An array with filter name as key, an value as declaration. If no name is given, an name will be generated
+     *
+     *
      * <code>
-     * public function tokenizer()
+     * public function filters()
      * {
      *     return [
-     *         ['type' => 'lowercase'],
-     *         ['type' => 'trim'],
+     *         'lowercase',
+     *         'my_custom_filter' => [
+     *             'type' => 'length',
+     *             'min'  => 5,
+     *             'max'  => 15,
+     *         ]
      *     ];
      * }
      * </code>
