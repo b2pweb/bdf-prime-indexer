@@ -3,6 +3,8 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
 use Bdf\Collection\Stream\ArrayStream;
+use Bdf\Collection\Util\Optional;
+use Bdf\Collection\Util\OptionalInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammar;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Compound\BooleanQuery;
@@ -11,6 +13,8 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Exists;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Missing;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\WhereFilter;
 use Bdf\Prime\Indexer\QueryInterface;
+use Bdf\Prime\Query\Contract\Orderable;
+use Bdf\Prime\Query\Expression\ExpressionInterface;
 use Closure;
 use Elasticsearch\Client;
 
@@ -27,7 +31,7 @@ use Elasticsearch\Client;
  * ;
  * </code>
  */
-class ElasticsearchQuery implements QueryInterface
+class ElasticsearchQuery implements QueryInterface, Orderable
 {
     /**
      * The Elastichsearch client
@@ -71,6 +75,14 @@ class ElasticsearchQuery implements QueryInterface
      * @var CompilableExpressionInterface
      */
     private $query;
+
+    /**
+     * Order of fields
+     * Array with field name as key, and order (asc, desc) as value
+     *
+     * @var array
+     */
+    private $order = [];
 
     /**
      * All query wrappers
@@ -268,6 +280,42 @@ class ElasticsearchQuery implements QueryInterface
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function order($sort, $order = 'asc')
+    {
+        if (!is_array($sort)) {
+            $this->order = [$sort => $order];
+        } else {
+            $this->order = $sort;
+        }
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addOrder($sort, $order = 'asc')
+    {
+        if (is_array($sort)) {
+            $this->order = array_replace($this->order, $sort);
+        } else {
+            $this->order[$sort] = $order;
+        }
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getOrders()
+    {
+        return $this->order;
+    }
+
+    /**
      * Add a "should" filter on the query
      * The query must be a boolean query to works properly
      *
@@ -413,6 +461,22 @@ class ElasticsearchQuery implements QueryInterface
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function all(): array
+    {
+        return $this->stream()->toArray();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function first(): OptionalInterface
+    {
+        return $this->stream()->first();
+    }
+
+    /**
      * Compile the query
      * The query will be used as body of the elasticsearch request
      *
@@ -426,11 +490,17 @@ class ElasticsearchQuery implements QueryInterface
             $query = $wrapper->wrap($query);
         }
 
+        $body = [];
+
         if ($query) {
-            return ['query' => $query->compile($this->grammar)];
+            $body['query'] = $query->compile($this->grammar);
         }
 
-        return [];
+        if ($this->order) {
+            $body['sort'] = $this->compileSort();
+        }
+
+        return $body;
     }
 
     /**
@@ -545,5 +615,21 @@ class ElasticsearchQuery implements QueryInterface
         }
 
         return $this;
+    }
+
+    /**
+     * Compile the sort clause
+     *
+     * @return array
+     */
+    private function compileSort(): array
+    {
+        $sort = [];
+
+        foreach ($this->order as $field => $order) {
+            $sort[] = [$field => $order];
+        }
+
+        return $sort;
     }
 }

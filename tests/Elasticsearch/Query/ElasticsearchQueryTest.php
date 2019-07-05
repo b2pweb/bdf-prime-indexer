@@ -3,6 +3,7 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
 use Bdf\Collection\Stream\ArrayStream;
+use Bdf\Collection\Util\Optional;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Compound\FunctionScoreQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchPhrase;
@@ -563,6 +564,46 @@ class ElasticsearchQueryTest extends TestCase
     /**
      *
      */
+    public function test_order()
+    {
+        $this->assertEquals([
+            'sort' => [
+                ['name' => 'asc']
+            ]
+        ], $this->query->order('name')->compile());
+
+        $this->assertEquals([
+            'sort' => [
+                ['name' => 'asc'],
+                ['date' => 'desc'],
+            ]
+        ], $this->query->addOrder('date', 'desc')->compile());
+
+        $this->assertEquals([
+            'sort' => [
+                ['firstName' => 'asc'],
+                ['lastName' => 'desc'],
+            ]
+        ], $this->query->order(['firstName' => 'asc', 'lastName' => 'desc'])->compile());
+
+        $this->assertEquals([
+            'sort' => [
+                ['firstName' => 'desc'],
+                ['lastName' => 'desc'],
+                ['age' => 'desc'],
+            ]
+        ], $this->query->addOrder(['firstName' => 'desc', 'age' => 'desc'])->compile());
+
+        $this->assertSame([
+            'firstName' => 'desc',
+            'lastName' => 'desc',
+            'age' => 'desc',
+        ], $this->query->getOrders());
+    }
+
+    /**
+     *
+     */
     public function test_execute_functional()
     {
         $create = new ElasticsearchCreateQuery($this->client);
@@ -655,7 +696,7 @@ class ElasticsearchQueryTest extends TestCase
 
         sleep(2);
 
-        $stream = $this->query->from('test_cities', 'city')->stream();
+        $stream = $this->query->from('test_cities', 'city')->order('population')->stream();
 
         $this->assertInstanceOf(ArrayStream::class, $stream);
 
@@ -671,6 +712,77 @@ class ElasticsearchQueryTest extends TestCase
                 'population' => 2201578,
                 'country' => 'FR'
             ],
-        ], $stream->map(function (array $data) { return $data['_source']; })->sort()->toArray());
+        ], $stream->map(function (array $data) { return $data['_source']; })->toArray());
+    }
+
+    /**
+     *
+     */
+    public function test_all_functional()
+    {
+        $create = new ElasticsearchCreateQuery($this->client);
+        $create
+            ->into('test_cities', 'city')
+            ->values([
+                'name' => 'Paris',
+                'population' => 2201578,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Cavaillon',
+                'population' => 26689,
+                'country' => 'FR'
+            ])
+            ->execute()
+        ;
+
+        sleep(2);
+
+        $this->assertEquals([
+            [
+                'name' => 'Cavaillon',
+                'population' => 26689,
+                'country' => 'FR'
+            ],
+            [
+                'name' => 'Paris',
+                'population' => 2201578,
+                'country' => 'FR'
+            ],
+        ], $this->query->from('test_cities', 'city')->order('population')->map(function (array $data) { return $data['_source']; })->all());
+    }
+
+    /**
+     *
+     */
+    public function test_first_functional()
+    {
+        $create = new ElasticsearchCreateQuery($this->client);
+        $create
+            ->into('test_cities', 'city')
+            ->values([
+                'name' => 'Paris',
+                'population' => 2201578,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Cavaillon',
+                'population' => 26689,
+                'country' => 'FR'
+            ])
+            ->execute()
+        ;
+
+        sleep(2);
+
+        $this->assertEquals(
+            Optional::of([
+                'name' => 'Cavaillon',
+                'population' => 26689,
+                'country' => 'FR'
+            ])
+            , $this->query->from('test_cities', 'city')->order('population')->map(function (array $data) { return $data['_source']; })->first()
+        );
+        $this->assertEquals(Optional::empty() , $this->query->from('test_cities', 'city')->where('name', 'not_found')->first());
     }
 }
