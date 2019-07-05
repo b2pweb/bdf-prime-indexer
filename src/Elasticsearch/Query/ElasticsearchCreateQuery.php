@@ -47,9 +47,9 @@ use Elasticsearch\Client;
  *
  * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/docs-bulk.html
  */
-class ElasticsearchCreateQuery implements InsertQueryInterface
+class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
 {
-    /** Field name for store the priamry key of the document */
+    /** Field name for store the primary key of the document */
     private const PK_FIELD = '_id';
 
     /**
@@ -200,6 +200,28 @@ class ElasticsearchCreateQuery implements InsertQueryInterface
         }
 
         return $this->client->{$this->operation()}($this->compileSimple());
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * Get the number of pending insert values
+     */
+    public function count()
+    {
+        return count($this->values);
+    }
+
+    /**
+     * Clear the pending insert values
+     *
+     * @return $this
+     */
+    public function clear()
+    {
+        $this->values = [];
+
+        return $this;
     }
 
     /**

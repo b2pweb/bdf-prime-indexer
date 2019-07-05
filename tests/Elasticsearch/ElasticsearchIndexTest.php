@@ -25,12 +25,17 @@ class ElasticsearchIndexTest extends TestCase
     private $index;
 
     /**
+     * @var Client
+     */
+    private $client;
+
+    /**
      *
      */
     protected function setUp()
     {
         $this->index = new ElasticsearchIndex(
-            ClientBuilder::fromConfig([
+            $this->client = ClientBuilder::fromConfig([
                 'hosts' => ['127.0.0.1:9222']
             ]),
             new ElasticsearchMapper(new CityIndex())
@@ -152,9 +157,15 @@ class ElasticsearchIndexTest extends TestCase
     {
         $this->addCities();
 
+        $indexes = array_keys($this->client->indices()->getAlias(['name' => 'test_cities']));
+        $this->assertCount(1, $indexes);
+        $this->assertStringStartsWith('test_cities_', $indexes[0]);
+
         $this->assertCount(4, $this->index->query()->stream());
 
         $this->index->drop();
+
+        $this->assertFalse($this->client->indices()->existsAlias(['name' => 'test_cities']));
 
         try {
             $this->index->query()->execute();
@@ -162,6 +173,47 @@ class ElasticsearchIndexTest extends TestCase
         } catch (Missing404Exception $e) {
             $this->assertContains('index_not_found_exception', $e->getMessage());
         }
+    }
+
+    /**
+     *
+     */
+    public function test_create_multiple_should_drop_previous_aliases()
+    {
+        $this->addCities();
+        $this->addCities();
+
+        $indexes = array_keys($this->client->indices()->getAlias(['name' => 'test_cities']));
+        $this->assertCount(1, $indexes);
+        $this->assertStringStartsWith('test_cities_', $indexes[0]);
+
+        $this->assertCount(4, $this->index->query()->stream());
+    }
+
+    /**
+     *
+     */
+    public function test_create_multiple_disable_drop_previous_aliases()
+    {
+        $this->addCities(['dropPreviousIndexes' => false]);
+        $this->addCities(['dropPreviousIndexes' => false]);
+
+        $indexes = array_keys($this->client->indices()->getAlias(['name' => 'test_cities']));
+        $this->assertCount(2, $indexes);
+        $this->assertStringStartsWith('test_cities_', $indexes[0]);
+        $this->assertStringStartsWith('test_cities_', $indexes[1]);
+
+        $this->assertCount(8, $this->index->query()->stream());
+    }
+
+    /**
+     *
+     */
+    public function test_create_chunkSize()
+    {
+        $this->addCities(['chunkSize' => 3]);
+
+        $this->assertCount(4, $this->index->query()->stream());
     }
 
     /**
@@ -305,10 +357,10 @@ class ElasticsearchIndexTest extends TestCase
         $indices = $this->createMock(IndicesNamespace::class);
         $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new CityIndex()));
 
-        $client->expects($this->once())->method('indices')->willReturn($indices);
+        $client->expects($this->any())->method('indices')->willReturn($indices);
         $indices->expects($this->once())->method('create')->with($expected);
 
-        $index->create();
+        $index->create([], ['useAlias' => false]);
     }
 
     /**
@@ -369,16 +421,16 @@ class ElasticsearchIndexTest extends TestCase
         $indices = $this->createMock(IndicesNamespace::class);
         $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new \UserIndex()));
 
-        $client->expects($this->once())->method('indices')->willReturn($indices);
+        $client->expects($this->any())->method('indices')->willReturn($indices);
         $indices->expects($this->once())->method('create')->with($expected);
 
-        $index->create();
+        $index->create([], ['useAlias' => false]);
     }
 
     /**
      *
      */
-    private function addCities()
+    private function addCities(array $options = [])
     {
         $this->index->create([
             new City([
@@ -412,7 +464,7 @@ class ElasticsearchIndexTest extends TestCase
                 'zipCode' => '000000',
                 'enabled' => false,
             ]),
-        ]);
+        ], $options);
 
         sleep(2);
     }

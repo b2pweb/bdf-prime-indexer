@@ -374,6 +374,30 @@ class ElasticsearchCreateQueryTest extends TestCase
         ], $compiled);
     }
 
+    /**
+     *
+     */
+    public function test_count_clear()
+    {
+        $query = $this->query->into('test_persons', 'person');
+
+        $this->assertCount(0, $query);
+
+        $query
+            ->values([
+                'firstName' => 'Mickey',
+                'lastName' => 'Mouse'
+            ])
+            ->values([
+                'firstName' => 'Minnie',
+                'lastName' => 'Mouse'
+            ])
+        ;
+
+        $this->assertCount(2, $query);
+        $this->assertCount(0, $query->clear());
+    }
+
     public function search(): ElasticsearchQuery
     {
         return (new ElasticsearchQuery($this->client))->from('test_persons', 'person');

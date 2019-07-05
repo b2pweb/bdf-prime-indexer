@@ -65,14 +65,21 @@ interface IndexInterface
      * (Re-)Create the index with given data
      * If the index already exists, it should be replaced by the new one (call to drop() is not required)
      *
+     * Options :
+     * - useAlias (boolean) default: true, write to an alias index
+     * - dropPreviousIndexes (boolean) default: true, drop all previous declared indexes
+     * - chunkSize (integer) default: 5000, the bulk write size for indexing entities
+     *
      * @param iterable $entities Iterable entities list. Can be a walker, or a simple array
+     * @param array $options Creation options depends of the indexer
      *
      * @return void
      */
-    public function create(iterable $entities = []): void;
+    public function create(iterable $entities = [], array $options = []): void;
 
     /**
      * Remove the current index
+     * Do not fail if the index do not exists
      *
      * @return void
      */

@@ -11,6 +11,7 @@ use Bdf\Prime\Indexer\IndexInterface;
 use Bdf\Prime\Indexer\QueryInterface;
 use Elasticsearch\Client;
 use Elasticsearch\Common\Exceptions\Missing404Exception;
+use Psr\Log\NullLogger;
 
 /**
  * Index implementation for Elasticsearch
@@ -129,14 +130,54 @@ class ElasticsearchIndex implements IndexInterface
 
     /**
      * {@inheritdoc}
-     *
-     * @todo set id ?
-     * @todo Index alias
      */
-    public function create(iterable $entities = []): void
+    public function create(iterable $entities = [], array $options = []): void
     {
-        $this->createSchema();
-        $this->insertAll($entities);
+        $options += [
+            'useAlias' => true,
+            'dropPreviousIndexes' => true,
+            'chunkSize' => 5000,
+        ];
+
+        if (!isset($options['logger'])) {
+            $options['logger'] = new NullLogger();
+        }
+
+        $index = $this->mapper->configuration()->index();
+
+        if ($options['useAlias']) {
+            $index .= '_'.uniqid();
+        }
+
+        try {
+            $options['logger']->info('Creating index '.$index);
+            $this->createSchema($index);
+
+            $options['logger']->info('Insert entities into '.$index);
+            $this->insertAll($index, $options['chunkSize'], $entities);
+
+            if ($options['useAlias']) {
+                $options['logger']->info('Adding alias for '.$index.' to '.$this->mapper->configuration()->index());
+                $this->client->indices()->putAlias([
+                    'index' => $index,
+                    'name'  => $this->mapper->configuration()->index()
+                ]);
+            }
+
+            if ($options['dropPreviousIndexes']) {
+                $options['logger']->info('Removing previous indexes');
+                $this->dropPreviousIndexes($index);
+            }
+        } catch (\Exception $e) {
+            $options['logger']->info('Failed creating index '.$index.' : '.$e->getMessage());
+
+            // Delete the index on failure, if alias is used
+            if ($options['useAlias'] && $this->client->indices()->exists(['index' => $index])) {
+                $this->client->indices()->delete(['index' => $index]);
+            }
+
+            throw $e;
+        }
     }
 
     /**
@@ -186,12 +227,14 @@ class ElasticsearchIndex implements IndexInterface
     /**
      * Create the index schema
      *
+     * @param string $index The index name to use
+     *
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/indices-create-index.html
      */
-    private function createSchema()
+    private function createSchema(string $index)
     {
         $this->client->indices()->create([
-            'index' => $this->mapper->configuration()->index(),
+            'index' => $index,
             'body' => [
                 'settings' => [
                     'analysis' => $this->compileAnalysis(),
@@ -269,18 +312,50 @@ class ElasticsearchIndex implements IndexInterface
     /**
      * Insert all entities into the index
      *
+     * @param string $index The index name to use
+     * @param int $chunkSize The insert chunk size
      * @param iterable $entities
      */
-    private function insertAll(iterable $entities): void
+    private function insertAll(string $index, int $chunkSize, iterable $entities): void
     {
-        $query = $this->creationQuery();
+        $query = $this
+            ->creationQuery()
+            ->into($index, $this->mapper->configuration()->type())
+        ;
 
-        // @todo check empty
-        // @todo chunk
         foreach ($entities as $entity) {
             $query->values($this->mapper->toIndex($entity));
+
+            if (count($query) >= $chunkSize) {
+                $query->execute();
+                $query->clear();
+            }
         }
 
-        $query->execute();
+        if (count($query)) {
+            $query->execute();
+        }
+    }
+
+    /**
+     * Drop all previous indexes, excluding the current one
+     *
+     * @param string $index The current index (to keep)
+     */
+    private function dropPreviousIndexes(string $index): void
+    {
+        $alias = $this->mapper->configuration()->index();
+
+        if (!$this->client->indices()->existsAlias(['name' => $alias])) {
+            return;
+        }
+
+        // Get indexes, and remove the current
+        $indexes = $this->client->indices()->getAlias(['name' => $alias]);
+        unset($indexes[$index]);
+
+        if (!empty($indexes)) {
+            $this->client->indices()->delete(['index' => implode(',', array_keys($indexes))]);
+        }
     }
 }
