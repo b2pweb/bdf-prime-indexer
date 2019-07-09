@@ -38,10 +38,11 @@ interface IndexInterface
      * Replace the entity data from the index
      *
      * @param object $entity
+     * @param string[]|null $attributes List of attributes to update. If null, all attributes will be updated
      *
      * @return void
      */
-    public function update($entity): void;
+    public function update($entity, ?array $attributes = null): void;
 
     /**
      * Get the search query

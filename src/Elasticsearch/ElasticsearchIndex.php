@@ -88,9 +88,9 @@ class ElasticsearchIndex implements IndexInterface
     /**
      * {@inheritdoc}
      */
-    public function update($entity): void
+    public function update($entity, ?array $attributes = null): void
     {
-        $document = $this->mapper->toIndex($entity);
+        $document = $this->mapper->toIndex($entity, $attributes);
 
         if (empty($document['_id'])) {
             throw new \InvalidArgumentException('Cannot extract id from the entity');
@@ -137,6 +137,7 @@ class ElasticsearchIndex implements IndexInterface
             'useAlias' => true,
             'dropPreviousIndexes' => true,
             'chunkSize' => 5000,
+            'refresh' => false,
         ];
 
         if (!isset($options['logger'])) {
@@ -167,6 +168,10 @@ class ElasticsearchIndex implements IndexInterface
             if ($options['dropPreviousIndexes']) {
                 $options['logger']->info('Removing previous indexes');
                 $this->dropPreviousIndexes($index);
+            }
+
+            if ($options['refresh']) {
+                $this->refresh();
             }
         } catch (\Exception $e) {
             $options['logger']->info('Failed creating index '.$index.' : '.$e->getMessage());
@@ -202,6 +207,17 @@ class ElasticsearchIndex implements IndexInterface
         return (new ElasticsearchCreateQuery($this->client))
             ->into($this->mapper->configuration()->index(), $this->mapper->configuration()->type())
         ;
+    }
+
+    /**
+     * Refresh the current index
+     * Make all operations performed since the last refresh available for search
+     *
+     * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/indices-refresh.html
+     */
+    public function refresh(): void
+    {
+        $this->client->indices()->refresh(['index' => $this->mapper->configuration()->index()]);
     }
 
     /**

@@ -54,12 +54,11 @@ class ElasticsearchCreateQueryTest extends TestCase
                 'firstName' => 'Minnie',
                 'lastName' => 'Mouse'
             ])
+            ->refresh()
             ->execute()
         ;
 
         $this->assertCount(2, $response['items']);
-
-        sleep(2);
 
         $this->assertEquals(2, $this->search()->execute()['hits']['total']);
         $this->assertEquals([
@@ -84,10 +83,9 @@ class ElasticsearchCreateQueryTest extends TestCase
                 'firstName' => 'Mickey',
                 'lastName' => 'Mouse'
             ])
+            ->refresh()
             ->execute()
         ;
-
-        sleep(2);
 
         $response = $this->query
             ->into('test_persons', 'person')
@@ -122,10 +120,9 @@ class ElasticsearchCreateQueryTest extends TestCase
                 'firstName' => 'Mickey',
                 'lastName' => 'Mouse'
             ])
+            ->refresh()
             ->execute()
         ;
-
-        sleep(2);
 
         $response = $this->query
             ->into('test_persons', 'person')
@@ -163,10 +160,9 @@ class ElasticsearchCreateQueryTest extends TestCase
             ->values([
                 'firstName' => 'Minnie',
             ])
+            ->refresh()
             ->execute()
         ;
-
-        sleep(2);
 
         $this->assertEquals([
             'firstName' => 'Mickey',
@@ -193,10 +189,9 @@ class ElasticsearchCreateQueryTest extends TestCase
                 'firstName' => 'Minnie',
             ])
             ->columns([])
+            ->refresh()
             ->execute()
         ;
-
-        sleep(2);
 
         $this->assertEquals([
             'firstName' => 'Mickey',
@@ -219,12 +214,11 @@ class ElasticsearchCreateQueryTest extends TestCase
                 'firstName' => 'Mickey',
                 'lastName' => 'Mouse'
             ])
+            ->refresh()
             ->execute()
         ;
 
         $this->assertTrue($response['created']);
-
-        sleep(1);
 
         $this->assertEquals(1, $this->search()->execute()['hits']['total']);
         $this->assertEquals([
@@ -288,12 +282,11 @@ class ElasticsearchCreateQueryTest extends TestCase
                 'firstName' => 'Minnie',
                 'lastName' => 'Mouse'
             ])
+            ->refresh()
             ->execute()
         ;
 
         $this->assertFalse($response['created']);
-
-        sleep(1);
 
         $this->assertEquals(1, $this->search()->execute()['hits']['total']);
         $this->assertEquals([
@@ -396,6 +389,60 @@ class ElasticsearchCreateQueryTest extends TestCase
 
         $this->assertCount(2, $query);
         $this->assertCount(0, $query->clear());
+    }
+
+    /**
+     *
+     */
+    public function test_refresh_simple()
+    {
+        $compiled = $this->query
+            ->into('test_persons', 'person')
+            ->bulk(false)
+            ->values([
+                'firstName' => 'Mickey',
+                'lastName' => 'Mouse'
+            ])
+            ->refresh()
+            ->compile()
+        ;
+
+        $this->assertEquals([
+            'index' => 'test_persons',
+            'type'  => 'person',
+            'refresh' => true,
+            'body'  => [
+                'firstName' => 'Mickey',
+                'lastName' => 'Mouse'
+            ]
+        ], $compiled);
+    }
+
+    /**
+     *
+     */
+    public function test_refresh_bulk()
+    {
+        $compiled = $this->query
+            ->into('test_persons', 'person')
+            ->values([
+                'firstName' => 'Mickey',
+                'lastName' => 'Mouse'
+            ])
+            ->refresh()
+            ->compile()
+        ;
+
+        $this->assertEquals([
+            'refresh' => true,
+            'body' => [
+                ['create' => ['_index' => 'test_persons', '_type' => 'person']],
+                [
+                    'firstName' => 'Mickey',
+                    'lastName' => 'Mouse'
+                ]
+            ]
+        ], $compiled);
     }
 
     public function search(): ElasticsearchQuery

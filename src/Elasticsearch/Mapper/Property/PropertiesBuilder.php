@@ -3,7 +3,10 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Mapper\Property;
 
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\CustomAccessor;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\EmbeddedAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\ReadOnlyAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAccessor;
 
 /**
@@ -237,6 +240,29 @@ class PropertiesBuilder
     }
 
     /**
+     * Add a field into the property
+     *
+     * <code>
+     * $builder->string('name')->field('raw', ['type' => string', 'index' => 'not_analyzed']);
+     * </code>
+     *
+     * @param string $name The field name
+     * @param array $options
+     *
+     * @return $this
+     */
+    public function field(string $name, array $options): PropertiesBuilder
+    {
+        if (!isset($this->properties[$this->current]['fields'])) {
+            $this->properties[$this->current]['fields'] = [$name => $options];
+        } else {
+            $this->properties[$this->current]['fields'][$name] = $options;
+        }
+
+        return $this;
+    }
+
+    /**
      * Configure an option for the property
      *
      * @param string $name The option name
@@ -256,18 +282,76 @@ class PropertiesBuilder
     /**
      * Define the accessor for the property
      *
-     * @param PropertyAccessorInterface|string $accessor
+     * <code>
+     * // Simple accessor : use when indexed and php fields differs
+     * $builder->accessor('myPhpField');
+     *
+     * // Custom accessor
+     * // Can be used for computed properties
+     * $builder->accessor(function ($entity, $value) {
+     *     if ($value === null) { // second parameter null : getter
+     *         return $entity->getValue();
+     *     }
+     *
+     *     // setter
+     *     $entity->setValue($value);
+     * });
+     *
+     * // Embedded accessor : the field "value" is into the "embedded" object, which is an instance of MyEmbedded
+     * $builder->accessor(['embedded' => MyEmbedded::class, 'value']);
+     *
+     * // Custom accessor instance
+     * $builder->accessor(new MyCustomAccessor());
+     * </code>
+     *
+     * @param PropertyAccessorInterface|string|array|callable $accessor The accessor
      *
      * @return $this
      */
     public function accessor($accessor): PropertiesBuilder
     {
-        if (is_string($accessor)) {
-            $this->option('accessor', new SimplePropertyAccessor($accessor));
-        } elseif ($accessor instanceof PropertyAccessorInterface) {
-            $this->option('accessor', $accessor);
+        switch (true) {
+            case is_string($accessor):
+                return $this->option('accessor', new SimplePropertyAccessor($accessor));
+
+            // Check callable after string, but before array for allow [$this, 'method'] syntax, but disallow global functions
+            case is_callable($accessor):
+                return $this->option('accessor', new CustomAccessor($accessor));
+
+            case is_array($accessor):
+                return $this->option('accessor', new EmbeddedAccessor($accessor));
+
+            case $accessor instanceof PropertyAccessorInterface:
+                return $this->option('accessor', $accessor);
+
+            default:
+                throw new \InvalidArgumentException('Invalid accessor given');
+        }
+    }
+
+    /**
+     * Set the property as read only
+     *
+     * A read only property is only use for search purpose, but it's not hydrated to the entity.
+     * A common use is for computed properties.
+     *
+     * <code>
+     * // Set isActivated as readonly
+     * $builder->string('isActivated')->readOnly();
+     *
+     * // Custom accessor can also be defined
+     * // Note: readOnly must be called after set the accessor
+     * $builder->accessor(['embedded', 'value'])->readOnly();
+     * </code>
+     *
+     * @return $this
+     */
+    public function readOnly(): PropertiesBuilder
+    {
+        if (isset($this->properties[$this->current]['accessor'])) {
+            $this->properties[$this->current]['accessor'] = new ReadOnlyAccessor($this->properties[$this->current]['accessor']);
         } else {
-            throw new \InvalidArgumentException('Invalid accessor given');
+            $this->properties[$this->current]['accessor'] = new ReadOnlyAccessor($this->current);
         }
 
         return $this;

@@ -604,6 +604,103 @@ class ElasticsearchQueryTest extends TestCase
     /**
      *
      */
+    public function test_limit_compile()
+    {
+        $this->assertEquals([
+            'size' => 5
+        ], $this->query->limit(5)->compile());
+
+        $this->query->limit(5, 15);
+
+        $this->assertEquals([
+            'size' => 5,
+            'from' => 15
+        ], $this->query->limit(5, 15)->compile());
+
+        $this->assertEquals([
+            'size' => 5,
+            'from' => 10
+        ], $this->query->offset(10)->compile());
+        $this->assertEquals([
+            'size' => 20,
+            'from' => 40
+        ], $this->query->limitPage(3, 20)->compile());
+    }
+
+    /**
+     *
+     */
+    public function test_limit_getters()
+    {
+        $this->assertEquals(1, $this->query->getPage());
+        $this->assertNull($this->query->getLimit());
+        $this->assertNull($this->query->getOffset());
+        $this->assertFalse($this->query->isLimitQuery());
+        $this->assertFalse($this->query->hasPagination());
+
+        $this->query->limit(5);
+
+        $this->assertEquals(1, $this->query->getPage());
+        $this->assertEquals(5, $this->query->getLimit());
+        $this->assertNull($this->query->getOffset());
+        $this->assertTrue($this->query->isLimitQuery());
+        $this->assertFalse($this->query->hasPagination());
+
+        $this->query->offset(15);
+
+        $this->assertSame(4, $this->query->getPage());
+        $this->assertSame(5, $this->query->getLimit());
+        $this->assertSame(15, $this->query->getOffset());
+        $this->assertTrue($this->query->isLimitQuery());
+        $this->assertTrue($this->query->hasPagination());
+    }
+
+    /**
+     *
+     */
+    public function test_limit_functional()
+    {
+        $create = new ElasticsearchCreateQuery($this->client);
+        $create
+            ->into('test_cities', 'city')
+            ->values([
+                'name' => 'Paris',
+                'population' => 2201578,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Paris',
+                'population' => 27022,
+                'country' => 'US'
+            ])
+            ->values([
+                'name' => 'Parthenay',
+                'population' => 11599,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Cavaillon',
+                'population' => 26689,
+                'country' => 'FR'
+            ])
+            ->refresh()
+            ->execute()
+        ;
+
+        $query = $this->query
+            ->from('test_cities', 'city')
+            ->order('population', 'desc')
+            ->map(function ($doc) { return $doc['_source']['name']; })
+        ;
+
+        $this->assertEquals(['Paris', 'Paris'], $query->limit(2)->all());
+        $this->assertEquals(['Cavaillon', 'Parthenay'], $query->limit(2, 2)->all());
+        $this->assertEquals([], $query->limit(2, 4)->all());
+    }
+
+    /**
+     *
+     */
     public function test_execute_functional()
     {
         $create = new ElasticsearchCreateQuery($this->client);
@@ -629,10 +726,9 @@ class ElasticsearchQueryTest extends TestCase
                 'population' => 26689,
                 'country' => 'FR'
             ])
+            ->refresh()
             ->execute()
         ;
-
-        sleep(2);
 
         $response = $this->query->from('test_cities', 'city')
             ->wrap(

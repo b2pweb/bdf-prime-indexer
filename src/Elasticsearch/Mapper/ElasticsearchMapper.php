@@ -125,7 +125,7 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
     /**
      * {@inheritdoc}
      */
-    public function toIndex($entity): array
+    public function toIndex($entity, ?array $attributes = null): array
     {
         $className = $this->configuration->entity();
 
@@ -139,7 +139,13 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
             $document['_id'] = $accessor->readFromModel($entity);
         }
 
-        foreach ($this->properties() as $property) {
+        $properties = $this->properties();
+
+        if ($attributes !== null) {
+            $properties = array_intersect_key($this->properties(), array_flip($attributes));
+        }
+
+        foreach ($properties as $property) {
             $document[$property->name()] = $property->readFromModel($entity);
         }
 
@@ -198,6 +204,7 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
      */
     private function instantiate()
     {
+        // @todo hint
         return $this->instantiator->instantiate($this->configuration->entity());
     }
 

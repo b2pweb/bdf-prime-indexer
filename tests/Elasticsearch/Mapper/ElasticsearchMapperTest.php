@@ -112,6 +112,21 @@ class ElasticsearchMapperTest extends TestCase
                 'zipCode' => '75000',
             ]))
         );
+
+        $this->assertEquals(
+            [
+                'name' => 'Paris',
+                'country' => 'FR',
+                '_id' => 5,
+            ],
+            $this->mapper->toIndex(new City([
+                'id'  => 5,
+                'name' => 'Paris',
+                'population' => 2201578,
+                'country' => 'FR',
+                'zipCode' => '75000',
+            ]), ['name', 'country'])
+        );
     }
 
     /**

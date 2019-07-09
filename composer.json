@@ -25,6 +25,7 @@
     "b2pweb/bdf-collections": "dev-master"
   },
   "require-dev": {
+    "b2p/bdf-web": "~1.5",
     "phpunit/phpunit": "~5.7|~6.0"
   }
 }

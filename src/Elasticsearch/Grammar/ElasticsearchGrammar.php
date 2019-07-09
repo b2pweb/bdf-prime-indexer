@@ -33,19 +33,19 @@ class ElasticsearchGrammar implements ElasticsearchGrammarInterface
         switch ($operator) {
             case '<':
             case ':lt':
-                return ['range' => [$field => ['lt' => $this->escape($value)]]];
+                return ['range' => [$field => ['lt' => $value]]];
 
             case '<=':
             case ':lte':
-                return ['range' => [$field => ['lte' => $this->escape($value)]]];
+                return ['range' => [$field => ['lte' => $value]]];
 
             case '>':
             case ':gt':
-                return ['range' => [$field => ['gt' => $this->escape($value)]]];
+                return ['range' => [$field => ['gt' => $value]]];
 
             case '>=':
             case ':gte':
-                return ['range' => [$field => ['gte' => $this->escape($value)]]];
+                return ['range' => [$field => ['gte' => $value]]];
 
             // REGEX matching
             case '~=':
@@ -71,7 +71,7 @@ class ElasticsearchGrammar implements ElasticsearchGrammarInterface
                 if (empty($value)) {
                     return ['missing' => ['field' => $field]];
                 }
-                return ['terms' => [$field => array_map([$this, 'escape'], $value)]];
+                return ['terms' => [$field => $value]];
 
             // Not in
             case 'notin':
@@ -85,7 +85,7 @@ class ElasticsearchGrammar implements ElasticsearchGrammarInterface
             // Between
             case 'between':
             case ':between':
-                return ['range' => [$field => ['gte' => $this->escape($value[0]), 'lte' => $this->escape($value[1])]]];
+                return ['range' => [$field => ['gte' => $value[0], 'lte' => $value[1]]]];
 
             // Not between
             case '!between':
@@ -103,7 +103,7 @@ class ElasticsearchGrammar implements ElasticsearchGrammarInterface
                 if (is_array($value)) {
                     return $this->operator($field, ':notin', $value);
                 }
-                return $this->not(['term' => [$field => $this->escape($value)]]);
+                return $this->not(['term' => [$field => $value]]);
 
             // Equals
             case '=':
@@ -114,7 +114,7 @@ class ElasticsearchGrammar implements ElasticsearchGrammarInterface
                 if (is_array($value)) {
                     return $this->operator($field, ':in', $value);
                 }
-                return ['term' => [$field => $this->escape($value)]];
+                return ['term' => [$field => $value]];
 
             // Unsupported operator
             default:

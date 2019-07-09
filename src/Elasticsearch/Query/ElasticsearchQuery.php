@@ -3,7 +3,6 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
 use Bdf\Collection\Stream\ArrayStream;
-use Bdf\Collection\Util\Optional;
 use Bdf\Collection\Util\OptionalInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammar;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
@@ -13,8 +12,8 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Exists;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Missing;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\WhereFilter;
 use Bdf\Prime\Indexer\QueryInterface;
+use Bdf\Prime\Query\Contract\Limitable;
 use Bdf\Prime\Query\Contract\Orderable;
-use Bdf\Prime\Query\Expression\ExpressionInterface;
 use Closure;
 use Elasticsearch\Client;
 
@@ -31,7 +30,7 @@ use Elasticsearch\Client;
  * ;
  * </code>
  */
-class ElasticsearchQuery implements QueryInterface, Orderable
+class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
 {
     /**
      * The Elastichsearch client
@@ -83,6 +82,20 @@ class ElasticsearchQuery implements QueryInterface, Orderable
      * @var array
      */
     private $order = [];
+
+    /**
+     * Offset of the results
+     *
+     * @var integer|null
+     */
+    private $from = null;
+
+    /**
+     * Maximum items number of the result
+     *
+     * @var integer|null
+     */
+    private $size = null;
 
     /**
      * All query wrappers
@@ -316,6 +329,84 @@ class ElasticsearchQuery implements QueryInterface, Orderable
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function limit($limit, $offset = null)
+    {
+        $this->size = $limit;
+        $this->from = $offset;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function limitPage($page, $rowCount = 1)
+    {
+        $page     = ($page > 0) ? $page : 1;
+        $rowCount = ($rowCount > 0) ? $rowCount : 1;
+
+        $this->limit((int) $rowCount, (int) $rowCount * ($page - 1));
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPage()
+    {
+        if ($this->size === null) {
+            return 1;
+        }
+
+        return (int) ceil($this->from / $this->size) + 1;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getLimit()
+    {
+        return $this->size;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function offset($offset)
+    {
+        $this->from = $offset;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getOffset()
+    {
+        return $this->from;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isLimitQuery()
+    {
+        return $this->from !== null || $this->size !== null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function hasPagination()
+    {
+        return $this->from !== null && $this->size !== null;
+    }
+
+    /**
      * Add a "should" filter on the query
      * The query must be a boolean query to works properly
      *
@@ -498,6 +589,14 @@ class ElasticsearchQuery implements QueryInterface, Orderable
 
         if ($this->order) {
             $body['sort'] = $this->compileSort();
+        }
+
+        if ($this->size !== null) {
+            $body['size'] = $this->size;
+        }
+
+        if ($this->from !== null) {
+            $body['from'] = $this->from;
         }
 
         return $body;

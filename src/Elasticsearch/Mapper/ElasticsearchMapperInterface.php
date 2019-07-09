@@ -51,12 +51,13 @@ interface ElasticsearchMapperInterface
      * Note: This method is not the opposite method of fromIndex
      *
      * @param object $entity
+     * @param string[]|null $attributes List of attributes to update. If null, all attributes will be updated
      *
      * @return array
      *
      * @throws \TypeError If the given entity is not an instance of the handled entity
      */
-    public function toIndex($entity): array;
+    public function toIndex($entity, ?array $attributes = null): array;
 
     /**
      * Convert the indexed document to entity

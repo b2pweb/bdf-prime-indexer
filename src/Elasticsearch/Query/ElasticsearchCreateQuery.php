@@ -100,6 +100,13 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
      */
     private $mode = self::MODE_INSERT;
 
+    /**
+     * The refresh mode
+     *
+     * @var bool|string
+     */
+    private $refresh = false;
+
 
     /**
      * ElasticsearchCreateQuery constructor.
@@ -225,6 +232,27 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
     }
 
     /**
+     * Set the index refresh mode after write operation occurs
+     *
+     * If set to true, the documents will appears immediately on the next search query
+     * If set to false, the refresh will be done asynchronously
+     *
+     * Note: It's discouraged to use refresh true on production, due to performance impacts
+     *
+     * @param boolean|string $mode The refresh mode
+     *
+     * @return $this
+     *
+     * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/docs-index_.html#index-refresh
+     */
+    public function refresh($mode = true)
+    {
+        $this->refresh = $mode;
+
+        return $this;
+    }
+
+    /**
      * Compile the query
      *
      * @return array
@@ -257,7 +285,13 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
             $body[] = $this->compileData($value);
         }
 
-        return ['body' => $body];
+        $query = ['body' => $body];
+
+        if ($this->refresh) {
+            $query['refresh'] = $this->refresh;
+        }
+
+        return $query;
     }
 
     /**
@@ -280,6 +314,10 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
         if (isset($this->values[0][self::PK_FIELD])) {
             $query['id'] = $this->values[0][self::PK_FIELD];
             unset($query['body'][self::PK_FIELD]);
+        }
+
+        if ($this->refresh) {
+            $query['refresh'] = $this->refresh;
         }
 
         return $query;

@@ -63,7 +63,7 @@ class ElasticsearchIndexTest extends TestCase
         ]));
         $this->assertNotEmpty($city->id());
 
-        sleep(1);
+        $this->index->refresh();
 
         $indexed = $this->index->query()->where(new Match('name', 'Paris'))->stream()->first()->get();
         $this->assertEquals($city, $indexed);
@@ -83,7 +83,7 @@ class ElasticsearchIndexTest extends TestCase
         ]));
         $this->assertEquals(1, $city->id());
 
-        sleep(1);
+        $this->index->refresh();
 
         $indexed = $this->index->query()->where(new Match('name', 'Paris'))->stream()->first()->get();
         $this->assertEquals($city, $indexed);
@@ -110,7 +110,7 @@ class ElasticsearchIndexTest extends TestCase
         $city = $this->index->query()->where(new Match('name', 'Cavaillon'))->stream()->first()->get();
 
         $this->index->remove($city);
-        sleep(1);
+        $this->index->refresh();
 
         $this->assertCount(3, $this->index->query()->stream());
         $this->assertCount(0, $this->index->query()->where(new Match('name', 'Cavaillon'))->stream());
@@ -128,16 +128,41 @@ class ElasticsearchIndexTest extends TestCase
             'zipCode' => '75000'
         ]));
 
-        sleep(1);
+        $this->index->refresh();
 
         $city->setPopulation(2500000);
         $this->index->update($city);
-        sleep(1);
+        $this->index->refresh();
 
         $updated = $this->index->query()->stream()->first()->get();
 
         $this->assertEquals(2500000, $updated->population());
         $this->assertEquals($city, $updated);
+    }
+
+    /**
+     *
+     */
+    public function test_update_with_attributes()
+    {
+        $this->index->add($city = new City([
+            'name' => 'Paris',
+            'population' => 2201578,
+            'country' => 'FR',
+            'zipCode' => '75000'
+        ]));
+
+        $this->index->refresh();
+
+        $city->setPopulation(2500000);
+        $city->setName('New name');
+        $this->index->update($city, ['population']);
+        $this->index->refresh();
+
+        $updated = $this->index->query()->stream()->first()->get();
+
+        $this->assertEquals(2500000, $updated->population());
+        $this->assertEquals('Paris', $updated->name());
     }
 
     /**
@@ -300,7 +325,7 @@ class ElasticsearchIndexTest extends TestCase
             'country' => 'FR',
             'zipCode' => '75000'
         ]));
-        sleep(1);
+        $this->index->refresh();
 
         $this->assertFalse($this->index->contains(new City()));
         $this->assertTrue($this->index->contains($city));
@@ -430,6 +455,19 @@ class ElasticsearchIndexTest extends TestCase
     /**
      *
      */
+    public function test_refresh()
+    {
+        $this->addCities(['refresh' => false]);
+
+        $this->assertEmpty($this->index->query()->all());
+        $this->index->refresh();
+
+        $this->assertCount(4, $this->index->query()->all());
+    }
+
+    /**
+     *
+     */
     private function addCities(array $options = [])
     {
         $this->index->create([
@@ -464,8 +502,6 @@ class ElasticsearchIndexTest extends TestCase
                 'zipCode' => '000000',
                 'enabled' => false,
             ]),
-        ], $options);
-
-        sleep(2);
+        ], $options + ['refresh' => true]);
     }
 }

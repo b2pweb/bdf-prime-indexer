@@ -5,7 +5,10 @@ namespace Elasticsearch\Mapper\Property;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\CsvAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\StandardAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\CustomAccessor;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\EmbeddedAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\ReadOnlyAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
@@ -88,12 +91,77 @@ class PropertiesBuilderTest extends TestCase
     /**
      *
      */
+    public function test_accessor_closure()
+    {
+        $this->builder->string('my_field')->accessor(function () {});
+        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'string', new CustomAccessor(function () {}))], $this->builder->build());
+    }
+
+    /**
+     *
+     */
+    public function test_accessor_embedded()
+    {
+        $this->builder->string('my_field')->accessor(['embedded' => \User::class, 'name']);
+        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'string', new EmbeddedAccessor(['embedded' => \User::class, 'name']))], $this->builder->build());
+    }
+
+    /**
+     *
+     */
     public function test_accessor_invalid()
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid accessor given');
 
         $this->builder->string('my_field')->accessor(null);
+    }
+
+    /**
+     *
+     */
+    public function test_readOnly()
+    {
+        $this->builder->string('my_field')->readOnly();
+        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'string', new ReadOnlyAccessor('my_field'))], $this->builder->build());
+    }
+
+    /**
+     *
+     */
+    public function test_readOnly_with_custom_accessor()
+    {
+        $this->builder->string('my_field')->accessor('field')->readOnly();
+        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'string', new ReadOnlyAccessor(new SimplePropertyAccessor('field')))], $this->builder->build());
+    }
+
+    /**
+     *
+     */
+    public function test_fields()
+    {
+        $this->builder->string('name')->field('raw', ['type' => 'string', 'index' => 'not_analyzed']);
+        $this->assertEquals([
+            'fields' => [
+                'raw' => [
+                    'type' => 'string',
+                    'index' => 'not_analyzed',
+                ]
+            ]
+        ], $this->builder->build()['name']->declaration());
+
+        $this->builder->field('other', ['type' => 'number']);
+        $this->assertEquals([
+            'fields' => [
+                'raw' => [
+                    'type' => 'string',
+                    'index' => 'not_analyzed',
+                ],
+                'other' => [
+                    'type' => 'number',
+                ]
+            ]
+        ], $this->builder->build()['name']->declaration());
     }
 
     /**
