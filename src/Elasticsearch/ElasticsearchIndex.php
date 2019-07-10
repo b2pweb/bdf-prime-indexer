@@ -44,6 +44,14 @@ class ElasticsearchIndex implements IndexInterface
     /**
      * {@inheritdoc}
      */
+    public function config()
+    {
+        return $this->mapper->configuration();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function add($entity): void
     {
         $response = $this->creationQuery()->bulk(false)->values($this->mapper->toIndex($entity))->execute();

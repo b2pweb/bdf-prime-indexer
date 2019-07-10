@@ -8,6 +8,13 @@ namespace Bdf\Prime\Indexer;
 interface IndexInterface
 {
     /**
+     * Get the index configuration
+     *
+     * @return object
+     */
+    public function config();
+
+    /**
      * Store an entity to the index
      *
      * @param object $entity

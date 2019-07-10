@@ -167,3 +167,24 @@ class UserIndex implements ElasticsearchIndexConfigurationInterface
         return [];
     }
 }
+
+class UserMapper extends \Bdf\Prime\Mapper\Mapper
+{
+    public function schema()
+    {
+        return [
+            'connection' => 'test',
+            'table' => 'user'
+        ];
+    }
+
+    public function buildFields($builder)
+    {
+        $builder
+            ->string('name')
+            ->string('email')->primary()
+            ->string('password')
+            ->simpleArray('roles')
+        ;
+    }
+}
