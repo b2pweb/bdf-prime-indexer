@@ -24,6 +24,7 @@ class IndexFactory
      */
     private $indexes = [];
 
+
     /**
      * IndexerFactory constructor.
      *
