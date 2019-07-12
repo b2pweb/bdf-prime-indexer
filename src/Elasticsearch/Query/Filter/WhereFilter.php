@@ -31,7 +31,7 @@ final class WhereFilter implements CompilableExpressionInterface
      *
      * @param string $column
      * @param string $operator
-     * @param string $value
+     * @param mixed $value
      */
     public function __construct($column, $operator, $value)
     {
@@ -48,7 +48,7 @@ final class WhereFilter implements CompilableExpressionInterface
     /**
      * {@inheritdoc}
      */
-    public function compile(ElasticsearchGrammarInterface $grammar)
+    public function compile(ElasticsearchGrammarInterface $grammar): array
     {
         return $grammar->operator($this->column, $this->operator, $this->value);
     }

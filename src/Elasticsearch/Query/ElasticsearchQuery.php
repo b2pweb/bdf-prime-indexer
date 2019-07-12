@@ -615,7 +615,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function map(callable $transformer)
+    public function map(callable $transformer): QueryInterface
     {
         $this->transformer = $transformer;
 

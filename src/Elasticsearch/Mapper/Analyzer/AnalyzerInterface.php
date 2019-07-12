@@ -27,7 +27,7 @@ interface AnalyzerInterface
      *
      * @return array
      */
-    public function declaration();
+    public function declaration(): array;
 
     /**
      * Transform the value from index result to PHP usable value
@@ -67,7 +67,7 @@ interface AnalyzerInterface
      * }
      * </code>
      *
-     * @return array|null
+     * @return array|string|null
      *
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/analysis-tokenizers.html
      */
@@ -99,5 +99,5 @@ interface AnalyzerInterface
      *
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/analysis-tokenfilters.html
      */
-    public function filters();
+    public function filters(): array;
 }

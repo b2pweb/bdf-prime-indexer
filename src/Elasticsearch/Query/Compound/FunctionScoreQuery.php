@@ -54,7 +54,7 @@ final class FunctionScoreQuery implements WrappingQueryInterface
      *
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/query-dsl-function-score-query.html#score-functions For list of function types
      */
-    public function addFunction(string $type, array $parameters, array $filter = [], float $weight = null)
+    public function addFunction(string $type, array $parameters, array $filter = [], float $weight = null): FunctionScoreQuery
     {
         $function = [$type => $parameters];
 
@@ -78,7 +78,7 @@ final class FunctionScoreQuery implements WrappingQueryInterface
      *
      * @return $this
      */
-    public function maxBoost(float $value)
+    public function maxBoost(float $value): FunctionScoreQuery
     {
         $this->options['max_boost'] = $value;
 
@@ -92,7 +92,7 @@ final class FunctionScoreQuery implements WrappingQueryInterface
      *
      * @return $this
      */
-    public function minScore(float $value)
+    public function minScore(float $value): FunctionScoreQuery
     {
         $this->options['min_score'] = $value;
 
@@ -113,7 +113,7 @@ final class FunctionScoreQuery implements WrappingQueryInterface
      *
      * @return $this
      */
-    public function scoreMode(string $mode)
+    public function scoreMode(string $mode): FunctionScoreQuery
     {
         $this->options['score_mode'] = $mode;
 
@@ -134,7 +134,7 @@ final class FunctionScoreQuery implements WrappingQueryInterface
      *
      * @return $this
      */
-    public function boostMode(string $mode)
+    public function boostMode(string $mode): FunctionScoreQuery
     {
         $this->options['boost_mode'] = $mode;
 
@@ -144,7 +144,7 @@ final class FunctionScoreQuery implements WrappingQueryInterface
     /**
      * {@inheritdoc}
      */
-    public function wrap(CompilableExpressionInterface $innerQuery = null)
+    public function wrap(CompilableExpressionInterface $innerQuery = null): WrappingQueryInterface
     {
         $this->query = $innerQuery;
 
@@ -154,7 +154,7 @@ final class FunctionScoreQuery implements WrappingQueryInterface
     /**
      * {@inheritdoc}
      */
-    public function compile(ElasticsearchGrammarInterface $grammar)
+    public function compile(ElasticsearchGrammarInterface $grammar): array
     {
         $compiled = $this->options;
 

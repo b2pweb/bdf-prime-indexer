@@ -28,7 +28,7 @@ final class Missing implements CompilableExpressionInterface
     /**
      * {@inheritdoc}
      */
-    public function compile(ElasticsearchGrammarInterface $grammar)
+    public function compile(ElasticsearchGrammarInterface $grammar): array
     {
         return ['missing' => ['field' => $this->field]];
     }

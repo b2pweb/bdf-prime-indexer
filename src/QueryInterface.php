@@ -33,7 +33,7 @@ interface QueryInterface extends Whereable, Streamable
      *
      * @return $this
      */
-    public function map(callable $transformer);
+    public function map(callable $transformer): QueryInterface;
 
     /**
      * Execute the query and return all values into an array

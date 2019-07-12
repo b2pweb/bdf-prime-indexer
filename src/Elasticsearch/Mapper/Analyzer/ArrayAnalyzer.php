@@ -26,7 +26,7 @@ final class ArrayAnalyzer implements AnalyzerInterface
     /**
      * {@inheritdoc}
      */
-    public function declaration()
+    public function declaration(): array
     {
         return array_diff_key($this->declaration, ['filter' => null, 'tokenizer' => null]);
     }
@@ -58,7 +58,7 @@ final class ArrayAnalyzer implements AnalyzerInterface
     /**
      * {@inheritdoc}
      */
-    public function filters()
+    public function filters(): array
     {
         return $this->declaration['filter'] ?? [];
     }

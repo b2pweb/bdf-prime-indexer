@@ -26,7 +26,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @param string $query
      */
-    public function __construct($query)
+    public function __construct(string $query)
     {
         $this->query($query);
     }
@@ -38,7 +38,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function query($value)
+    public function query(string $value): QueryString
     {
         $this->parameters['query'] = $value;
 
@@ -52,7 +52,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function defaultField($value)
+    public function defaultField(string $value): QueryString
     {
         $this->parameters['default_field'] = $value;
 
@@ -66,7 +66,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function defaultOperator($value)
+    public function defaultOperator(string $value): QueryString
     {
         $this->parameters['default_operator'] = $value;
 
@@ -78,7 +78,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function and()
+    public function and(): QueryString
     {
         return $this->defaultOperator('AND');
     }
@@ -88,7 +88,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function or()
+    public function or(): QueryString
     {
         return $this->defaultOperator('OR');
     }
@@ -100,7 +100,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function analyzer($value)
+    public function analyzer(string $value): QueryString
     {
         $this->parameters['analyzer'] = $value;
 
@@ -114,7 +114,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function allowLeadingWildcard(bool $value = true)
+    public function allowLeadingWildcard(bool $value = true): QueryString
     {
         $this->parameters['allow_leading_wildcard'] = $value;
 
@@ -128,7 +128,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function lowercaseExpandedTerms(bool $value = true)
+    public function lowercaseExpandedTerms(bool $value = true): QueryString
     {
         $this->parameters['lowercase_expanded_terms'] = $value;
 
@@ -142,7 +142,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function enablePositionIncrements(bool $value = true)
+    public function enablePositionIncrements(bool $value = true): QueryString
     {
         $this->parameters['enable_position_increments'] = $value;
 
@@ -157,7 +157,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function fuzzyMaxExpansions($value)
+    public function fuzzyMaxExpansions(int $value): QueryString
     {
         $this->parameters['fuzzy_max_expansions'] = $value;
 
@@ -171,7 +171,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function fuzziness($value)
+    public function fuzziness(string $value): QueryString
     {
         $this->parameters['fuzziness'] = $value;
 
@@ -185,7 +185,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function fuzzyPrefixLength($value)
+    public function fuzzyPrefixLength(int $value): QueryString
     {
         $this->parameters['fuzzy_prefix_length'] = $value;
 
@@ -199,7 +199,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function phraseSlop($value)
+    public function phraseSlop(int $value): QueryString
     {
         $this->parameters['phrase_slop'] = $value;
 
@@ -213,7 +213,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function boost($value)
+    public function boost(float $value): QueryString
     {
         $this->parameters['boost'] = $value;
 
@@ -227,7 +227,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function analyzeWildcard(bool $value = true)
+    public function analyzeWildcard(bool $value = true): QueryString
     {
         $this->parameters['analyze_wildcard'] = $value;
 
@@ -239,7 +239,7 @@ final class QueryString implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function useLikeSyntax(bool $useLikeSyntax = true)
+    public function useLikeSyntax(bool $useLikeSyntax = true): QueryString
     {
         $this->useLikeSyntax = $useLikeSyntax;
 
@@ -249,7 +249,7 @@ final class QueryString implements CompilableExpressionInterface
     /**
      * {@inheritdoc}
      */
-    public function compile(ElasticsearchGrammarInterface $grammar)
+    public function compile(ElasticsearchGrammarInterface $grammar): array
     {
         $parameters = $this->parameters;
 

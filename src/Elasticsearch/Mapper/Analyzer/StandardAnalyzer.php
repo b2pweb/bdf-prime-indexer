@@ -10,7 +10,7 @@ final class StandardAnalyzer implements AnalyzerInterface
     /**
      * {@inheritdoc}
      */
-    public function declaration()
+    public function declaration(): array
     {
         return [
             'type' => 'standard'
@@ -44,7 +44,7 @@ final class StandardAnalyzer implements AnalyzerInterface
     /**
      * {@inheritdoc}
      */
-    public function filters()
+    public function filters(): array
     {
         return [];
     }

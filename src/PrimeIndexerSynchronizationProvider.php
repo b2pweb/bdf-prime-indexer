@@ -35,6 +35,8 @@ class PrimeIndexerSynchronizationProvider implements ServiceProviderInterface, B
 
     /**
      * {@inheritdoc}
+     *
+     * @todo Modify when Prime handle repository creation events
      */
     public function boot(Application $app)
     {

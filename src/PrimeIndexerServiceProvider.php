@@ -3,6 +3,7 @@
 namespace Bdf\Prime\Indexer;
 
 use Bdf\Console\Console;
+use Bdf\Prime\Entity\Instantiator\Instantiator;
 use Bdf\Prime\Indexer\Console\CreateIndexCommand;
 use Bdf\Prime\Indexer\Elasticsearch\Console\ShellCommand;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
@@ -41,7 +42,12 @@ class PrimeIndexerServiceProvider implements ServiceProviderInterface, CommandPr
                 ElasticsearchIndexConfigurationInterface::class => function (ElasticsearchIndexConfigurationInterface $configuration) use($app) {
                     return new ElasticsearchIndex(
                         $app->get(Client::class),
-                        new ElasticsearchMapper($configuration, $app->get('prime-instantiator'))
+                        new ElasticsearchMapper(
+                            $configuration,
+                            $app->has('prime-instantiator')
+                                ? $app->get('prime-instantiator')
+                                : new Instantiator()
+                        )
                     );
                 },
             ];

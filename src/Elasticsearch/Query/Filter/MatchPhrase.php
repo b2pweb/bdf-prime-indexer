@@ -36,7 +36,7 @@ final class MatchPhrase implements CompilableExpressionInterface
     /**
      * {@inheritdoc}
      */
-    public function compile(ElasticsearchGrammarInterface $grammar)
+    public function compile(ElasticsearchGrammarInterface $grammar): array
     {
         return ['match_phrase' => [$this->field => $this->search]];
     }

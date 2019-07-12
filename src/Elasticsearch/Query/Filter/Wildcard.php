@@ -43,7 +43,7 @@ final class Wildcard implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function useLikeSyntax($useLikeSyntax = true): Wildcard
+    public function useLikeSyntax(bool $useLikeSyntax = true): Wildcard
     {
         $this->useLikeSyntax = (bool) $useLikeSyntax;
 
@@ -53,7 +53,7 @@ final class Wildcard implements CompilableExpressionInterface
     /**
      * {@inheritdoc}
      */
-    public function compile(ElasticsearchGrammarInterface $grammar)
+    public function compile(ElasticsearchGrammarInterface $grammar): array
     {
         $value = $this->value;
 

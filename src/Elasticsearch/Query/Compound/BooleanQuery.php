@@ -52,7 +52,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function must($query)
+    public function must($query): BooleanQuery
     {
         $this->must[] = $query;
 
@@ -67,7 +67,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function filter($query)
+    public function filter($query): BooleanQuery
     {
         $this->filter[] = $query;
 
@@ -81,7 +81,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function mustNot($query)
+    public function mustNot($query): BooleanQuery
     {
         $this->mustNot[] = $query;
 
@@ -97,7 +97,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function should($query)
+    public function should($query): BooleanQuery
     {
         $this->should[] = $query;
 
@@ -115,7 +115,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function minimumShouldMatch($value)
+    public function minimumShouldMatch($value): BooleanQuery
     {
         $this->options['minimum_should_match'] = $value;
 
@@ -129,7 +129,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return $this
      */
-    public function boost($value)
+    public function boost($value): BooleanQuery
     {
         $this->options['boost'] = $value;
 
@@ -142,7 +142,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return bool
      */
-    public function isOrQuery()
+    public function isOrQuery(): bool
     {
         return $this->empty() ||
             (!empty($this->should) && empty($this->filter) && empty($this->must) && empty($this->mustNot));
@@ -165,7 +165,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return BooleanQuery
      */
-    public function or()
+    public function or(): BooleanQuery
     {
         if ($this->isOrQuery()) {
             return $this;
@@ -198,7 +198,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return BooleanQuery
      */
-    public function and()
+    public function and(): BooleanQuery
     {
         if ($this->empty() || !$this->isOrQuery()) {
             return $this;
@@ -222,7 +222,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return bool
      */
-    public function empty()
+    public function empty(): bool
     {
         return $this->count() === 0;
     }
@@ -232,7 +232,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return int
      */
-    public function count()
+    public function count(): int
     {
         return count($this->filter) + count($this->must) + count($this->mustNot) + count($this->should);
     }
@@ -240,7 +240,7 @@ final class BooleanQuery implements CompilableExpressionInterface
     /**
      * {@inheritdoc}
      */
-    public function compile(ElasticsearchGrammarInterface $grammar)
+    public function compile(ElasticsearchGrammarInterface $grammar): array
     {
         $compiled = $this->options;
 
@@ -282,7 +282,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return array
      */
-    private function compileFilterType(ElasticsearchGrammarInterface $grammar, array $filter)
+    private function compileFilterType(ElasticsearchGrammarInterface $grammar, array $filter): array
     {
         $compiled = [];
 
@@ -304,7 +304,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return array
      */
-    private function optimizeNot(array $compiled)
+    private function optimizeNot(array $compiled): array
     {
         if (empty($compiled['filter'])) {
             return $compiled;
@@ -342,7 +342,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return array
      */
-    private function optimizeSingleNestedFilter(array $compiled)
+    private function optimizeSingleNestedFilter(array $compiled): array
     {
         $types = ['should', 'filter', 'must'];
 
@@ -399,7 +399,7 @@ final class BooleanQuery implements CompilableExpressionInterface
      *
      * @return bool
      */
-    private static function isNotFilter(array $filter)
+    private static function isNotFilter(array $filter): bool
     {
         return !empty($filter['bool']) && count($filter['bool']) === 1 && !empty($filter['bool']['must_not']);
     }

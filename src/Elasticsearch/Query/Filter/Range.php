@@ -31,35 +31,35 @@ final class Range implements CompilableExpressionInterface
         $this->field = $field;
     }
 
-    public function gt($value)
+    public function gt($value): Range
     {
         $this->parameters['gt'] = $value;
 
         return $this;
     }
 
-    public function gte($value)
+    public function gte($value): Range
     {
         $this->parameters['gte'] = $value;
 
         return $this;
     }
 
-    public function lte($value)
+    public function lte($value): Range
     {
         $this->parameters['lte'] = $value;
 
         return $this;
     }
 
-    public function lt($value)
+    public function lt($value): Range
     {
         $this->parameters['lt'] = $value;
 
         return $this;
     }
 
-    public function boost($value)
+    public function boost($value): Range
     {
         $this->parameters['boost'] = $value;
 
@@ -69,7 +69,7 @@ final class Range implements CompilableExpressionInterface
     /**
      * {@inheritdoc}
      */
-    public function compile(ElasticsearchGrammarInterface $grammar)
+    public function compile(ElasticsearchGrammarInterface $grammar): array
     {
         return ['range' => [$this->field => array_map([$grammar, 'escape'], $this->parameters)]];
     }

@@ -6,8 +6,7 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
 
 /**
- * Interface CompilableExpressionInterface
- * @package Bdf\Prime\Indexer\Elasticsearch\Query
+ * Expression for elasticsearch query which can be compiled into an array
  */
 interface CompilableExpressionInterface
 {
@@ -18,5 +17,5 @@ interface CompilableExpressionInterface
      *
      * @return array
      */
-    public function compile(ElasticsearchGrammarInterface $grammar);
+    public function compile(ElasticsearchGrammarInterface $grammar): array;
 }

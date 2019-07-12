@@ -33,7 +33,7 @@ final class CsvAnalyzer implements AnalyzerInterface
     /**
      * {@inheritdoc}
      */
-    public function declaration()
+    public function declaration(): array
     {
         return [
             'type' => 'custom'
@@ -70,7 +70,7 @@ final class CsvAnalyzer implements AnalyzerInterface
     /**
      * {@inheritdoc}
      */
-    public function filters()
+    public function filters(): array
     {
         return $this->filters;
     }
