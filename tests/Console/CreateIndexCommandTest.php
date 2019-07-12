@@ -7,6 +7,7 @@ use Bdf\PHPUnit\CommandTestCase;
 use Bdf\Prime\Indexer\CustomEntitiesConfigurationInterface;
 use Bdf\Prime\Indexer\IndexFactory;
 use Bdf\Prime\Indexer\PrimeIndexerServiceProvider;
+use Bdf\Prime\Indexer\ShouldBeIndexedConfigurationInterface;
 use Bdf\Prime\Prime;
 use Bdf\Prime\PrimeServiceProvider;
 use Bdf\Prime\Test\TestPack;
@@ -141,6 +142,41 @@ class CreateIndexCommandTest extends CommandTestCase
 
         $this->assertFalse($this->client()->indices()->existsAlias(['name' => 'test_users']));
         $this->assertTrue($this->client()->indices()->exists(['index' => 'test_users']));
+    }
+
+    /**
+     *
+     */
+    public function test_execute_with_with_should_be_indexed()
+    {
+        $this->testPack->nonPersist([
+            $john = new \User([
+                'name' => 'John',
+                'email' => 'john.doe@example.com',
+                'password' => 'my secure password',
+                'roles' => ['3', '5'],
+            ]),
+            new \User([
+                'name' => 'Bob',
+                'email' => 'bob@example.com',
+                'password' => 'my secure password',
+                'roles' => ['4'],
+            ]),
+        ]);
+
+        $index = new class extends \UserIndex implements ShouldBeIndexedConfigurationInterface {
+            public function shouldBeIndexed($entity): bool
+            {
+                return in_array('3', $entity->roles());
+            }
+        };
+
+        $this->factory()->register(\User::class, $index);
+
+        $this->execute(CreateIndexCommand::class, ['entity' => \User::class]);
+        $this->client()->indices()->refresh();
+
+        $this->assertEquals([$john], $this->factory()->for(\User::class)->query()->all());
     }
 
     /**

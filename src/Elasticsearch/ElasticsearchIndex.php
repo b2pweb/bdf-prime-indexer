@@ -86,11 +86,15 @@ class ElasticsearchIndex implements IndexInterface
             throw new \InvalidArgumentException('Cannot extract id from the entity');
         }
 
-        $this->client->delete([
-            'index' => $this->mapper->configuration()->index(),
-            'type' => $this->mapper->configuration()->type(),
-            'id' => $id,
-        ]);
+        try {
+            $this->client->delete([
+                'index' => $this->mapper->configuration()->index(),
+                'type'  => $this->mapper->configuration()->type(),
+                'id'    => $id,
+            ]);
+        } catch (Missing404Exception $e) {
+            // Ignore deleting not found entities
+        }
     }
 
     /**

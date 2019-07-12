@@ -7,6 +7,7 @@ use Bdf\Console\Command;
 use Bdf\Prime\Indexer\CustomEntitiesConfigurationInterface;
 use Bdf\Prime\Indexer\IndexFactory;
 use Bdf\Prime\Indexer\IndexInterface;
+use Bdf\Prime\Indexer\ShouldBeIndexedConfigurationInterface;
 use Bdf\Prime\Repository\EntityRepository;
 use Bdf\Prime\ServiceLocator;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -65,7 +66,10 @@ class CreateIndexCommand extends Command
             $entities = $this->configureProgressBar($entities);
         }
 
-        $index->create($entities, ['logger' => $this->log()] + $options);
+        $index->create(
+            $this->filterNotIndexableEntities($index->config(), $entities),
+            ['logger' => $this->log()] + $options
+        );
 
         $this->finishProgressBar();
     }
@@ -129,5 +133,24 @@ class CreateIndexCommand extends Command
             $this->progressBar->finish();
             $this->line('');
         }
+    }
+
+    /**
+     * Filter entities that should not be indexed
+     *
+     * Note: Filter must be applied after progress bar to not break the advance
+     *
+     * @param object $config
+     * @param iterable $entities
+     *
+     * @return iterable
+     */
+    private function filterNotIndexableEntities($config, iterable $entities): iterable
+    {
+        if (!$config instanceof ShouldBeIndexedConfigurationInterface) {
+            return $entities;
+        }
+
+        return Streams::wrap($entities)->filter([$config, 'shouldBeIndexed']);
     }
 }
