@@ -8,6 +8,7 @@ use Bdf\Prime\Indexer\CustomEntitiesConfigurationInterface;
 use Bdf\Prime\Indexer\IndexFactory;
 use Bdf\Prime\Indexer\IndexInterface;
 use Bdf\Prime\Indexer\ShouldBeIndexedConfigurationInterface;
+use Bdf\Prime\Query\Contract\Paginable;
 use Bdf\Prime\Repository\EntityRepository;
 use Bdf\Prime\ServiceLocator;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -96,7 +97,14 @@ class CreateIndexCommand extends Command
             return [];
         }
 
-        return $repository->builder()->walk();
+        $query = $repository->keyValue();
+
+        // Check if paginationCount() exists for compatibility with BDF 1.5
+        if (!$query instanceof Paginable || !method_exists($query, 'paginationCount')) {
+            $query = $repository->builder();
+        }
+
+        return $query->walk();
     }
 
     /**
