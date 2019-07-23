@@ -3,6 +3,7 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
 use Bdf\Collection\Stream\ArrayStream;
+use Bdf\Collection\Stream\StreamInterface;
 use Bdf\Collection\Util\OptionalInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammar;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
@@ -11,6 +12,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\Compound\FunctionScoreQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Exists;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Missing;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\WhereFilter;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Result\ElasticsearchPaginator;
 use Bdf\Prime\Indexer\QueryInterface;
 use Bdf\Prime\Query\Contract\Limitable;
 use Bdf\Prime\Query\Contract\Orderable;
@@ -568,6 +570,19 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     }
 
     /**
+     * Get a paginator for the query
+     *
+     * @param int|null $maxRows The number of rows per page
+     * @param int|null $page The page number
+     *
+     * @return ElasticsearchPaginator
+     */
+    public function paginate(?int $maxRows = null, ?int $page = null): ElasticsearchPaginator
+    {
+        return new ElasticsearchPaginator($this, $maxRows, $page, $this->transformer);
+    }
+
+    /**
      * Compile the query
      * The query will be used as body of the elasticsearch request
      *
@@ -605,7 +620,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function stream()
+    public function stream(): StreamInterface
     {
         $stream = new ArrayStream($this->execute()['hits']['hits']);
 

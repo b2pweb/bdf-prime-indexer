@@ -6,7 +6,9 @@ use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
 
 /**
- * Class QueryString
+ * A query that uses a query parser in order to parse its content
+ *
+ * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/query-dsl-query-string-query.html
  */
 final class QueryString implements CompilableExpressionInterface
 {

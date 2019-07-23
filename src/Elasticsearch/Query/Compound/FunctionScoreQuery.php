@@ -72,7 +72,7 @@ final class FunctionScoreQuery implements WrappingQueryInterface
     }
 
     /**
-     * Retrict the score boost by the maxBoost value.
+     * Restrict the score boost by the maxBoost value.
      *
      * @param float $value
      *

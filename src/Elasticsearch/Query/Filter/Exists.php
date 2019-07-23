@@ -6,7 +6,9 @@ use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
 
 /**
- * Class Exists
+ * Returns documents that have at least one non-null value in the original field
+ *
+ * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/query-dsl-exists-query.html
  */
 final class Exists implements CompilableExpressionInterface
 {

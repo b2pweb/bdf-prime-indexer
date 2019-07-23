@@ -6,7 +6,9 @@ use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
 
 /**
- * Class Match
+ * The standard query for performing full text queries, including fuzzy matching and phrase or proximity queries.
+ *
+ * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/query-dsl-match-query.html
  */
 final class Match implements CompilableExpressionInterface
 {
@@ -24,10 +26,10 @@ final class Match implements CompilableExpressionInterface
     /**
      * MatchPhrase constructor.
      *
-     * @param string $field
-     * @param string $search
+     * @param string $field The field name to search on
+     * @param string $search The search term
      */
-    public function __construct($field, $search)
+    public function __construct(string $field, string $search)
     {
         $this->field = $field;
         $this->search = $search;

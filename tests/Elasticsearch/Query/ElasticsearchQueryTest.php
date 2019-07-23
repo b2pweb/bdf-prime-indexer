@@ -10,6 +10,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchPhrase;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\QueryString;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Range;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Wildcard;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Result\ElasticsearchPaginator;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use PHPUnit\Framework\TestCase;
@@ -880,5 +881,70 @@ class ElasticsearchQueryTest extends TestCase
             , $this->query->from('test_cities', 'city')->order('population')->map(function (array $data) { return $data['_source']; })->first()
         );
         $this->assertEquals(Optional::empty() , $this->query->from('test_cities', 'city')->where('name', 'not_found')->first());
+    }
+
+    /**
+     *
+     */
+    public function test_paginate_functional()
+    {
+        $create = new ElasticsearchCreateQuery($this->client);
+        $create
+            ->into('test_cities', 'city')
+            ->values([
+                'name' => 'Paris',
+                'population' => 2201578,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Paris',
+                'population' => 27022,
+                'country' => 'US'
+            ])
+            ->values([
+                'name' => 'Parthenay',
+                'population' => 11599,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Cavaillon',
+                'population' => 26689,
+                'country' => 'FR'
+            ])
+            ->refresh()
+            ->execute()
+        ;
+
+        $response = $this->query->from('test_cities', 'city')
+            ->should(function (ElasticsearchQuery $query) {
+                $query
+                    ->whereRaw(
+                        (new QueryString('par%'))
+                            ->and()
+                            ->defaultField('name')
+                            ->analyzeWildcard()
+                            ->useLikeSyntax()
+                    )
+                    ->orWhereRaw(new MatchPhrase('name', 'par'))
+                ;
+            })
+            ->filter(new Match('country', 'FR'))
+            ->map(function ($doc) { return $doc['_source']; })
+            ->order('population', 'desc')
+            ->paginate()
+        ;
+
+        $this->assertInstanceOf(ElasticsearchPaginator::class, $response);
+        $this->assertCount(2, $response);
+        $this->assertEquals([
+            'name' => 'Paris',
+            'population' => 2201578,
+            'country' => 'FR'
+        ], $response->get(0));
+        $this->assertEquals([
+            'name' => 'Parthenay',
+            'population' => 11599,
+            'country' => 'FR'
+        ], $response->get(1));
     }
 }

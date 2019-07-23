@@ -6,7 +6,9 @@ use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
 
 /**
- * Class WhereFilter
+ * Wrap ElasticsearchQuery::where() filters
+ *
+ * The expression will be compiled by the grammar
  */
 final class WhereFilter implements CompilableExpressionInterface
 {

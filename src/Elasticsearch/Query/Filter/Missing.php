@@ -6,7 +6,9 @@ use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
 
 /**
- * Class Missing
+ * Find documents where the field specified does is missing or contains only null values.
+ *
+ * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/query-dsl-missing-query.html
  */
 final class Missing implements CompilableExpressionInterface
 {
@@ -18,9 +20,9 @@ final class Missing implements CompilableExpressionInterface
     /**
      * Missing constructor.
      *
-     * @param string $field
+     * @param string $field The field name
      */
-    public function __construct($field)
+    public function __construct(string $field)
     {
         $this->field = $field;
     }

@@ -4,6 +4,8 @@ namespace Bdf\Prime\Indexer\Test;
 
 use Bdf\Collection\HashSet;
 use Bdf\Collection\SetInterface;
+use Bdf\Collection\Util\Functor\Consumer\Call;
+use Bdf\Collection\Util\Functor\Predicate\IsInstanceOf;
 use Bdf\PHPUnit\Extensions\AppServiceStack;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
@@ -44,7 +46,7 @@ class TestingIndexer
     public function __construct(Application $app)
     {
         $this->app = $app;
-        $this->indexes = new HashSet('spl_object_hash');
+        $this->indexes = HashSet::spl();
     }
 
     /**
@@ -52,7 +54,7 @@ class TestingIndexer
      */
     public function destroy(): void
     {
-        $this->indexes->forEach(function (IndexInterface $index) { $index->drop(); });
+        $this->indexes->forEach(new Call('drop', []));
         $this->indexes->clear();
 
         $this->restoreApplicationServices($this->app);
@@ -140,8 +142,8 @@ class TestingIndexer
 
         $indexes
             ->stream()
-            ->filter(function ($index) { return $index instanceof ElasticsearchIndex; })
-            ->forEach(function (ElasticsearchIndex $index) { $index->refresh(); })
+            ->filter(new IsInstanceOf(ElasticsearchIndex::class))
+            ->forEach(new Call('refresh', []))
         ;
     }
 

@@ -6,7 +6,12 @@ use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
 
 /**
- * Class Wildcard
+ * Find documents where the field specified contains terms which match the pattern specified,
+ * where the pattern supports single character wildcards (?) and multi-character wildcards (*)
+ *
+ * The SQL LIKE syntax is also supported, if enabled using `useLikeSyntax(true)`
+ *
+ * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/query-dsl-wildcard-query.html
  */
 final class Wildcard implements CompilableExpressionInterface
 {
@@ -39,6 +44,9 @@ final class Wildcard implements CompilableExpressionInterface
     }
 
     /**
+     * Enable (or disable) the SQL LIKE syntax (_ for any chars, % for any strings)
+     * If enabled, the search term is automatically escaped
+     *
      * @param bool $useLikeSyntax
      *
      * @return $this
