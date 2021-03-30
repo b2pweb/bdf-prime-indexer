@@ -3,7 +3,7 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Console;
 
 use Bdf\Config\Config;
-use Bdf\PHPUnit\CommandTestCase;
+use Bdf\Prime\Indexer\CommandTestCase;
 use Bdf\Prime\Indexer\IndexFactory;
 use Bdf\Prime\Indexer\PrimeIndexerServiceProvider;
 use Bdf\Prime\PrimeServiceProvider;
@@ -33,7 +33,7 @@ class ShowCommandTest extends CommandTestCase
     /**
      *
      */
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $this->factory()->for(\User::class)->drop();
     }
@@ -47,8 +47,8 @@ class ShowCommandTest extends CommandTestCase
 
         $output = $this->execute(ShowCommand::class);
 
-        $this->assertRegExp('#│ Indices +│ Types +│ Aliases +│#', $output);
-        $this->assertRegExp('#│ test_users_.{13} +│ user +│ test_users +│#', $output);
+        $this->assertRegExp('# Indices + Types + Aliases +#', $output);
+        $this->assertRegExp('# test_users_.{13} + user + test_users +#', $output);
     }
 
     private function factory(): IndexFactory

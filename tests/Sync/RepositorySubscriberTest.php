@@ -4,7 +4,6 @@ namespace Bdf\Prime\Indexer\Sync;
 
 use Bdf\Bus\BusServiceProvider;
 use Bdf\Config\Config;
-use Bdf\PHPUnit\TestCase;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
 use Bdf\Prime\Indexer\IndexInterface;
 use Bdf\Prime\Indexer\PrimeIndexerServiceProvider;
@@ -15,6 +14,7 @@ use Bdf\Prime\Repository\EntityRepository;
 use Bdf\Prime\Test\TestPack;
 use Bdf\Web\Application;
 use City;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
 /**
@@ -80,7 +80,7 @@ class RepositorySubscriberTest extends TestCase
             ->subscribe($this->repository = $this->app['prime']->repository(\City::class));
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $this->indexTester->destroy();
         $this->testPack->destroy();

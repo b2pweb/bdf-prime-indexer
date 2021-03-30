@@ -3,7 +3,6 @@
 namespace Bdf\Prime\Indexer\Test;
 
 use Bdf\Config\Config;
-use Bdf\PHPUnit\TestCase;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\PrimeIndexerServiceProvider;
 use Bdf\Prime\PrimeServiceProvider;
@@ -11,6 +10,7 @@ use Bdf\Web\Application;
 use City;
 use CityIndex;
 use Elasticsearch\Client;
+use PHPUnit\Framework\TestCase;
 use User;
 use UserIndex;
 
@@ -34,7 +34,7 @@ class TestingIndexerTest extends TestCase
      */
     private $client;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->app = new Application([
             'config' => new Config([
@@ -57,7 +57,7 @@ class TestingIndexerTest extends TestCase
     /**
      *
      */
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $this->indexer->destroy();
         $this->indexer = null;

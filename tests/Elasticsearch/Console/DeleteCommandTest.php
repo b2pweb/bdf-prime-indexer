@@ -3,7 +3,7 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Console;
 
 use Bdf\Config\Config;
-use Bdf\PHPUnit\CommandTestCase;
+use Bdf\Prime\Indexer\CommandTestCase;
 use Bdf\Prime\Indexer\IndexFactory;
 use Bdf\Prime\Indexer\PrimeIndexerServiceProvider;
 use Bdf\Prime\PrimeServiceProvider;
@@ -35,7 +35,7 @@ class DeleteCommandTest extends CommandTestCase
     /**
      *
      */
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $this->factory()->for(\User::class)->drop();
         $this->factory()->for(\City::class)->drop();

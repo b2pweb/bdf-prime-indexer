@@ -2,13 +2,12 @@
 
 namespace Bdf\Prime\Indexer;
 
-use Bdf\PHPUnit\TestCase;
 use Bdf\Prime\Entity\Instantiator\Instantiator;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
-use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Class IndexFactoryTest
@@ -20,7 +19,7 @@ class IndexFactoryTest extends TestCase
      */
     private $factory;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->factory = new IndexFactory(
             [

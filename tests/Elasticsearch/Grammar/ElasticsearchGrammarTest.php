@@ -15,7 +15,7 @@ class ElasticsearchGrammarTest extends TestCase
      */
     private $grammar;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->grammar = new ElasticsearchGrammar();
     }

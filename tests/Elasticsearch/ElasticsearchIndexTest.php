@@ -32,7 +32,7 @@ class ElasticsearchIndexTest extends TestCase
     /**
      *
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->index = new ElasticsearchIndex(
             $this->client = ClientBuilder::fromConfig([
@@ -45,7 +45,7 @@ class ElasticsearchIndexTest extends TestCase
     /**
      *
      */
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $this->index->drop();
     }
@@ -254,8 +254,9 @@ class ElasticsearchIndexTest extends TestCase
             $this->index->query()->stream()
                 ->sort(function (City $a, City $b) { return $b->population() - $a->population(); })
                 ->map(new Getter('name'))
-                ->toArray()
+                ->toArray(false)
         );
+
     }
 
     /**
@@ -273,7 +274,7 @@ class ElasticsearchIndexTest extends TestCase
             $query->stream()
                 ->sort(function (City $a, City $b) { return $b->population() - $a->population(); })
                 ->map(new Getter('name'))
-                ->toArray()
+                ->toArray(false)
         );
     }
 

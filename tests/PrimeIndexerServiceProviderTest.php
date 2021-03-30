@@ -3,6 +3,10 @@
 namespace Bdf\Prime\Indexer;
 
 use Bdf\Config\Config;
+use Bdf\Console\Console;
+use Bdf\Prime\Indexer\Console\CreateIndexCommand;
+use Bdf\Prime\Indexer\Elasticsearch\Console\DeleteCommand;
+use Bdf\Prime\Indexer\Elasticsearch\Console\ShowCommand;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\PrimeServiceProvider;
 use Bdf\Web\Application;
@@ -19,7 +23,7 @@ class PrimeIndexerServiceProviderTest extends TestCase
      */
     private $app;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->app = new Application([
             'config' => new Config([
@@ -56,5 +60,19 @@ class PrimeIndexerServiceProviderTest extends TestCase
         $index = $factory->for(\User::class);
 
         $this->assertInstanceOf(ElasticsearchIndex::class, $index);
+    }
+
+    /**
+     *
+     */
+    public function test_commands()
+    {
+        $console = new Console($this->app);
+        $this->app->register(new PrimeIndexerServiceProvider());
+        $this->app->bootConsole($console);
+
+        $this->assertInstanceOf(CreateIndexCommand::class, $console->find('prime:indexer:create'));
+        $this->assertInstanceOf(DeleteCommand::class, $console->find('elasticsearch:delete'));
+        $this->assertInstanceOf(ShowCommand::class, $console->find('elasticsearch:show'));
     }
 }

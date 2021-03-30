@@ -4,11 +4,11 @@ namespace Bdf\Prime\Indexer;
 
 use Bdf\Bus\BusServiceProvider;
 use Bdf\Config\Config;
-use Bdf\PHPUnit\TestCase;
 use Bdf\Prime\Events;
 use Bdf\Prime\Indexer\Sync\RepositorySubscriber;
 use Bdf\Prime\PrimeServiceProvider;
 use Bdf\Web\Application;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
 /**

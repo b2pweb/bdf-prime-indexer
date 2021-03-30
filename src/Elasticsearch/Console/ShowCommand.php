@@ -2,11 +2,17 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Console;
 
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
+
 /**
  * Class ShowCommand
  */
 class ShowCommand extends AbstractCommand
 {
+    protected static $defaultName = 'elasticsearch:show';
+
     /**
      * {@inheritdoc}
      */
@@ -20,16 +26,9 @@ class ShowCommand extends AbstractCommand
     /**
      * {@inheritdoc}
      */
-    public static function names()
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
-        return ['elasticsearch:show'];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function doExecute()
-    {
+        $style = new SymfonyStyle($input, $output);
         $client = $this->getClient();
 
         $aliases = $client->indices()->getAliases();
@@ -45,7 +44,9 @@ class ShowCommand extends AbstractCommand
             return strcmp($a[0], $b[0]);
         });
 
-        $this->table($headers, $rows);
+        $style->table($headers, $rows);
+
+        return 0;
     }
 
     /**

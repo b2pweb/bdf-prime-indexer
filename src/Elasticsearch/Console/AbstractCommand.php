@@ -2,16 +2,52 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Console;
 
-use Bdf\Console\Command;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class AbstractCommand
  */
 class AbstractCommand extends Command
 {
+    /**
+     * @var Client
+     */
+    private $client;
+
+    /**
+     * @var array
+     */
+    private $config;
+
+    /**
+     * @var InputInterface
+     */
+    protected $input;
+
+    /**
+     * @var OutputInterface
+     */
+    protected $output;
+
+    /**
+     * AbstractCommand constructor.
+     *
+     * @param Client $client
+     * @param array $config
+     */
+    public function __construct(Client $client, array $config)
+    {
+        parent::__construct();
+
+        $this->client = $client;
+        $this->config = $config;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -24,15 +60,24 @@ class AbstractCommand extends Command
     }
 
     /**
+     * {@inheritDoc}
+     */
+    protected function initialize(InputInterface $input, OutputInterface $output)
+    {
+        $this->input = $input;
+        $this->output = $output;
+    }
+
+    /**
      * @return Client
      */
-    protected function getClient()
+    protected function getClient(): Client
     {
-        if ($this->option('config') || $this->option('hosts')) {
+        if ($this->input->getOption('config') || $this->input->getOption('hosts')) {
             return ClientBuilder::fromConfig($this->getClientConfig());
         }
 
-        return $this->di[Client::class];
+        return $this->client;
     }
 
     /**
@@ -44,16 +89,16 @@ class AbstractCommand extends Command
             'hosts' => ['localhost']
         ];
 
-        if ($this->option('config')) {
-            $config = $this->di->get('config');
+        if ($this->input->hasOption('config')) {
+            $config = $this->config;
 
-            if ($config->has($this->option('config') . '.hosts')) {
-                $clientConfig['hosts'] = $config->get($this->option('config') . '.hosts');
+            if (isset($config[$this->input->getOption('config')]['hosts'])) {
+                $clientConfig['hosts'] = $config[$this->input->getOption('config')]['hosts'];
             }
         }
 
-        if ($this->option('hosts')) {
-            $clientConfig['hosts'] = explode(',', $this->option('hosts'));
+        if ($this->input->hasOption('hosts')) {
+            $clientConfig['hosts'] = explode(',', $this->input->getOption('hosts'));
         }
 
         return $clientConfig;

@@ -6,7 +6,6 @@ use Bdf\Collection\HashSet;
 use Bdf\Collection\SetInterface;
 use Bdf\Collection\Util\Functor\Consumer\Call;
 use Bdf\Collection\Util\Functor\Predicate\IsInstanceOf;
-use Bdf\PHPUnit\Extensions\AppServiceStack;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\IndexFactory;
@@ -18,8 +17,6 @@ use Bdf\Web\Application;
  */
 class TestingIndexer
 {
-    use AppServiceStack;
-
     /**
      * @var Application
      */
@@ -36,6 +33,8 @@ class TestingIndexer
      * @var SetInterface|IndexInterface[]
      */
     private $indexes;
+
+    private $lastIndexFactoryDiMetadata;
 
 
     /**
@@ -57,7 +56,10 @@ class TestingIndexer
         $this->indexes->forEach(new Call('drop', []));
         $this->indexes->clear();
 
-        $this->restoreApplicationServices($this->app);
+        if ($this->lastIndexFactoryDiMetadata) {
+            $this->app->restore(IndexFactory::class, $this->lastIndexFactoryDiMetadata[0], $this->lastIndexFactoryDiMetadata[1]);
+            $this->lastIndexFactoryDiMetadata = null;
+        }
     }
 
     /**
@@ -163,7 +165,8 @@ class TestingIndexer
             array_map([$this, 'toTestingConfiguration'], $this->app->has('prime.indexes') ? $this->app->get('prime.indexes') : [])
         );
 
-        $this->storeApplicationService($this->app, IndexFactory::class, $this->factory);
+        $this->lastIndexFactoryDiMetadata = [$this->app->raw(IndexFactory::class), $this->app->metadata(IndexFactory::class)];
+        $this->app->set(IndexFactory::class, $this->factory);
 
         return $this->factory;
     }

@@ -30,7 +30,7 @@ class ElasticsearchQueryTest extends TestCase
      */
     private $client;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->query = new ElasticsearchQuery(
             $this->client = ClientBuilder::fromConfig([
@@ -39,7 +39,7 @@ class ElasticsearchQueryTest extends TestCase
         );
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         if ($this->client->indices()->exists(['index' => 'test_cities'])) {
             $this->client->indices()->delete(['index' => 'test_cities']);

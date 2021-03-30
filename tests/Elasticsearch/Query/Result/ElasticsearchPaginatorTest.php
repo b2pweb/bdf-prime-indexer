@@ -2,11 +2,11 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Query\Result;
 
-use Bdf\PHPUnit\TestCase;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Class ElasticsearchPaginatorTest
@@ -23,7 +23,7 @@ class ElasticsearchPaginatorTest extends TestCase
      */
     private $client;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->query = new ElasticsearchQuery(
             $this->client = ClientBuilder::fromConfig([
@@ -61,7 +61,7 @@ class ElasticsearchPaginatorTest extends TestCase
         ;
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         if ($this->client->indices()->exists(['index' => 'test_cities'])) {
             $this->client->indices()->delete(['index' => 'test_cities']);

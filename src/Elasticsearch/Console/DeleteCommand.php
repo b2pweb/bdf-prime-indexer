@@ -3,13 +3,18 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Console;
 
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Class DeleteCommand
  */
 class DeleteCommand extends AbstractCommand
 {
+    protected static $defaultName = 'elasticsearch:delete';
+
     /**
      * {@inheritdoc}
      */
@@ -27,34 +32,29 @@ class DeleteCommand extends AbstractCommand
     /**
      * {@inheritdoc}
      */
-    public static function names()
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
-        return ['elasticsearch:delete'];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function doExecute()
-    {
+        $style = new SymfonyStyle($input, $output);
         $client = $this->getClient();
 
-        $indices = $this->argument('indices');
+        $indices = $input->getArgument('indices');
 
-        if ($this->option('all')) {
+        if ($input->getOption('all')) {
             $indices = array_keys($client->indices()->getMapping());
         }
 
         if (!$indices) {
-            $this->error('Aucun index à supprimer');
+            $style->error('Aucun index à supprimer');
 
-            return;
+            return 1;
         }
 
-        if ($this->confirm('Confirmez-vous la suppression des index : ' . implode(', ', $indices) . ' ?')) {
+        if ($style->confirm('Confirmez-vous la suppression des index : ' . implode(', ', $indices) . ' ?')) {
             $client->indices()->delete([
                 'index' => implode(',', $indices)
             ]);
         }
+
+        return 0;
     }
 }

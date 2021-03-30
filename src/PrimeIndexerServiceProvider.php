@@ -5,7 +5,8 @@ namespace Bdf\Prime\Indexer;
 use Bdf\Console\Console;
 use Bdf\Prime\Entity\Instantiator\Instantiator;
 use Bdf\Prime\Indexer\Console\CreateIndexCommand;
-use Bdf\Prime\Indexer\Elasticsearch\Console\ShellCommand;
+use Bdf\Prime\Indexer\Elasticsearch\Console\DeleteCommand;
+use Bdf\Prime\Indexer\Elasticsearch\Console\ShowCommand;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
@@ -33,6 +34,8 @@ class PrimeIndexerServiceProvider implements ServiceProviderInterface, CommandPr
      */
     public function configure(Application $app)
     {
+        $this->configureElasticsearchCommands($app);
+
         $app->set(Client::class, function (Application $app) {
             return ClientBuilder::fromConfig($app->config('elasticsearch'));
         });
@@ -61,12 +64,24 @@ class PrimeIndexerServiceProvider implements ServiceProviderInterface, CommandPr
         });
     }
 
+    private function configureElasticsearchCommands(Application $app): void
+    {
+        $app->factory(ShowCommand::class, function (Application $app) {
+            return new ShowCommand($app->get(Client::class), $app->config()->all());
+        });
+        $app->factory(DeleteCommand::class, function (Application $app) {
+            return new DeleteCommand($app->get(Client::class), $app->config()->all());
+        });
+    }
+
     /**
      * {@inheritdoc}
      */
     public function provideCommands(Console $console)
     {
         $console->lazy(CreateIndexCommand::class);
-        $console->lazy(ShellCommand::class);
+
+        $console->lazy(ShowCommand::class);
+        $console->lazy(DeleteCommand::class);
     }
 }

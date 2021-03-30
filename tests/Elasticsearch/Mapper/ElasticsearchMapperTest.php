@@ -21,7 +21,7 @@ class ElasticsearchMapperTest extends TestCase
      */
     private $mapper;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->mapper = new ElasticsearchMapper(new \CityIndex());
     }

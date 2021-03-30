@@ -5,17 +5,13 @@ namespace Bdf\Prime\Indexer\Sync;
 use Bdf\Bus\BusServiceProvider;
 use Bdf\Bus\MessageDispatcherInterface;
 use Bdf\Config\Config;
-use Bdf\PHPUnit\TestCase;
-use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
 use Bdf\Prime\Indexer\IndexInterface;
 use Bdf\Prime\Indexer\PrimeIndexerServiceProvider;
 use Bdf\Prime\Indexer\Test\TestingIndexer;
-use Bdf\Prime\Prime;
 use Bdf\Prime\PrimeServiceProvider;
-use Bdf\Prime\Repository\EntityRepository;
-use Bdf\Prime\Test\TestPack;
 use Bdf\Web\Application;
 use City;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
 /**
@@ -66,7 +62,7 @@ class RemoveFromIndexTest extends TestCase
         $this->bus = $this->app['bus.dispatcher'];
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $this->indexTester->destroy();
     }

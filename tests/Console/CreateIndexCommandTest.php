@@ -3,7 +3,7 @@
 namespace Bdf\Prime\Indexer\Console;
 
 use Bdf\Config\Config;
-use Bdf\PHPUnit\CommandTestCase;
+use Bdf\Prime\Indexer\CommandTestCase;
 use Bdf\Prime\Indexer\CustomEntitiesConfigurationInterface;
 use Bdf\Prime\Indexer\IndexFactory;
 use Bdf\Prime\Indexer\PrimeIndexerServiceProvider;
@@ -54,7 +54,7 @@ class CreateIndexCommandTest extends CommandTestCase
     /**
      *
      */
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $this->testPack->destroy();
 
