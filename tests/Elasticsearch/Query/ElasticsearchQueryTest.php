@@ -76,6 +76,25 @@ class ElasticsearchQueryTest extends TestCase
     /**
      *
      */
+    public function test_where_null()
+    {
+        $this->assertEquals(
+            [
+                'query' => [
+                    'bool' => [
+                        'filter' => [
+                            ['missing' => ['field' => 'name']]
+                        ]
+                    ]
+                ]
+            ],
+            $this->query->from('cities', 'city')->where('name', null)->compile()
+        );
+    }
+
+    /**
+     *
+     */
     public function test_with_with_custom_filters()
     {
         $this->query = new ElasticsearchQuery(

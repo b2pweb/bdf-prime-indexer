@@ -37,11 +37,6 @@ final class WhereFilter implements CompilableExpressionInterface
      */
     public function __construct($column, $operator, $value)
     {
-        if ($value === null && $operator !== null) {
-            $value = $operator;
-            $operator = '=';
-        }
-
         $this->column = $column;
         $this->operator = $operator ?: '=';
         $this->value = $value;
