@@ -2,12 +2,16 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Mapper\Property;
 
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\AnalyzerInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\ArrayAnalyzer;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\CsvAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\CustomAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\EmbeddedAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\ReadOnlyAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAccessor;
+use InvalidArgumentException;
 
 /**
  * Build index properties
@@ -23,6 +27,13 @@ class PropertiesBuilder
      * @var array
      */
     private $properties = [];
+
+    /**
+     * Anonymous analyzers
+     *
+     * @var AnalyzerInterface[]
+     */
+    private $analyzers = [];
 
     /**
      * The current property name
@@ -211,19 +222,65 @@ class PropertiesBuilder
     }
 
     /**
-     * Configure the analyzer name for the property
+     * Helper for handle an array property indexed as CSV
+     * The value will be transformed, using CsvAnalyzer to CSV
      *
-     * @param string $name
+     * The analyzer will be added automatically, and reused if possible
+     *
+     * @param string $name The property name. Should be an array property
+     * @param string $separator The values separator
+     *
+     * @return $this
+     *
+     * @see CsvAnalyzer The internally used analyzer
+     */
+    public function csv(string $name, string $separator = ','): PropertiesBuilder
+    {
+        $this->string($name);
+
+        $analyzerName = 'csv_'.ord($separator);
+
+        if (!isset($this->analyzers[$analyzerName])) {
+            $this->analyzers[$analyzerName] = new CsvAnalyzer($separator);
+        }
+
+        $this->option('analyzer', $analyzerName);
+
+        return $this;
+    }
+
+    /**
+     * Configure the analyzer for the property
+     *
+     * You can pass a string for use an analyzer declared into @see ElasticsearchIndexConfigurationInterface::analyzers()
+     * You can also use an anonymous analyzer by passing an AnalyzerInterface instance (or an array, which will be cast to ArrayAnalyzer).
+     * With an anonymous analyzer, the analyzer will be declared using a generated name
+     *
+     * @param string|array|AnalyzerInterface $analyzer The analyzer name, or value
      *
      * @return $this
      */
-    public function analyzer(string $name): PropertiesBuilder
+    public function analyzer($analyzer): PropertiesBuilder
     {
-        if (!isset($this->mapper->analyzers()[$name])) {
-            throw new \InvalidArgumentException('Analyzer '.$name.' is not declared');
+        if (is_string($analyzer)) {
+            if (!isset($this->mapper->analyzers()[$analyzer])) {
+                throw new InvalidArgumentException('Analyzer '.$analyzer.' is not declared');
+            }
+        } else {
+            if (is_array($analyzer)) {
+                $analyzer = new ArrayAnalyzer($analyzer);
+            }
+
+            if (!$analyzer instanceof AnalyzerInterface) {
+                throw new InvalidArgumentException('The parameter $analyzer must be a valid analyzer');
+            }
+
+            $name = $this->current.'_anon_analyzer';
+            $this->analyzers[$name] = $analyzer;
+            $analyzer = $name;
         }
 
-        return $this->option('analyzer', $name);
+        return $this->option('analyzer', $analyzer);
     }
 
     /**
@@ -325,7 +382,7 @@ class PropertiesBuilder
                 return $this->option('accessor', $accessor);
 
             default:
-                throw new \InvalidArgumentException('Invalid accessor given');
+                throw new InvalidArgumentException('Invalid accessor given');
         }
     }
 
@@ -373,11 +430,25 @@ class PropertiesBuilder
             $accessor = $property['accessor'] ?? new SimplePropertyAccessor($name);
             unset($property['accessor']);
 
-            $analyzer = $this->mapper->analyzers()[$property['analyzer'] ?? 'default'];
+            if (isset($property['analyzer'], $this->analyzers[$property['analyzer']])) {
+                $analyzer = $this->analyzers[$property['analyzer']];
+            } else {
+                $analyzer = $this->mapper->analyzers()[$property['analyzer'] ?? 'default'];
+            }
 
             $properties[$name] = new Property($name, $property, $analyzer, $type, $accessor);
         }
 
         return $properties;
+    }
+
+    /**
+     * Get all anonymous analysers
+     *
+     * @return AnalyzerInterface[]
+     */
+    public function analyzers(): array
+    {
+        return $this->analyzers;
     }
 }

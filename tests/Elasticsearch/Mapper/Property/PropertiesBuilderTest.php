@@ -2,6 +2,7 @@
 
 namespace Elasticsearch\Mapper\Property;
 
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\ArrayAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\CsvAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\StandardAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
@@ -133,6 +134,65 @@ class PropertiesBuilderTest extends TestCase
     {
         $this->builder->string('my_field')->accessor('field')->readOnly();
         $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'string', new ReadOnlyAccessor(new SimplePropertyAccessor('field')))], $this->builder->build());
+    }
+
+    /**
+     *
+     */
+    public function test_anonymous_analyzer()
+    {
+        $this->builder->string('my_field')->analyzer($analyzer = new CsvAnalyzer());
+        $this->assertEquals(['my_field' => new Property('my_field', ['analyzer' => 'my_field_anon_analyzer'], $analyzer, 'string', new SimplePropertyAccessor('my_field'))], $this->builder->build());
+        $this->assertSame(['my_field_anon_analyzer' => $analyzer], $this->builder->analyzers());
+    }
+
+    /**
+     *
+     */
+    public function test_anonymous_analyzer_array()
+    {
+        $this->builder->string('my_field')->analyzer(['foo' => 'bar']);
+        $this->assertEquals(['my_field' => new Property('my_field', ['analyzer' => 'my_field_anon_analyzer'], new ArrayAnalyzer(['foo' => 'bar']), 'string', new SimplePropertyAccessor('my_field'))], $this->builder->build());
+        $this->assertEquals(['my_field_anon_analyzer' => new ArrayAnalyzer(['foo' => 'bar'])], $this->builder->analyzers());
+    }
+
+    /**
+     *
+     */
+    public function test_anonymous_analyzer_invalid()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->builder->string('my_field')->analyzer(new \stdClass());
+    }
+
+    /**
+     *
+     */
+    public function test_csv()
+    {
+        $this->builder->csv('values');
+        $this->assertEquals(['values' => new Property('values', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'string', new SimplePropertyAccessor('values'))], $this->builder->build());
+        $this->assertEquals(['csv_44' => new CsvAnalyzer()], $this->builder->analyzers());
+
+        $this->builder->csv('other');
+
+        $this->assertEquals([
+            'values' => new Property('values', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'string', new SimplePropertyAccessor('values')),
+            'other' => new Property('other', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'string', new SimplePropertyAccessor('other')),
+        ], $this->builder->build());
+        $this->assertEquals(['csv_44' => new CsvAnalyzer()], $this->builder->analyzers());
+
+        $this->builder->csv('new_separator', ';');
+
+        $this->assertEquals([
+            'values' => new Property('values', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'string', new SimplePropertyAccessor('values')),
+            'other' => new Property('other', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'string', new SimplePropertyAccessor('other')),
+            'new_separator' => new Property('new_separator', ['analyzer' => 'csv_59'], new CsvAnalyzer(';'), 'string', new SimplePropertyAccessor('new_separator')),
+        ], $this->builder->build());
+        $this->assertEquals([
+            'csv_44' => new CsvAnalyzer(),
+            'csv_59' => new CsvAnalyzer(';'),
+        ], $this->builder->analyzers());
     }
 
     /**

@@ -256,7 +256,6 @@ class ElasticsearchIndexTest extends TestCase
                 ->map(new Getter('name'))
                 ->toArray(false)
         );
-
     }
 
     /**
@@ -446,6 +445,59 @@ class ElasticsearchIndexTest extends TestCase
         $client = $this->createMock(Client::class);
         $indices = $this->createMock(IndicesNamespace::class);
         $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new \UserIndex()));
+
+        $client->expects($this->any())->method('indices')->willReturn($indices);
+        $indices->expects($this->once())->method('create')->with($expected);
+
+        $index->create([], ['useAlias' => false]);
+    }
+
+    /**
+     *
+     */
+    public function test_unit_create_schema_with_custom_anonymous_analyzer()
+    {
+        $expected = [
+            'index' => 'test_anon_analyzers',
+            'body' => [
+                'settings' => [
+                    'analysis' => [
+                        'analyzer' => [
+                            'values_anon_analyzer' => [
+                                'type' => 'custom',
+                                'tokenizer' => 'values_anon_analyzer',
+                            ],
+                            'default' => [
+                                'type' => 'standard',
+                            ],
+                        ],
+                        'tokenizer' => [
+                            'values_anon_analyzer' => [
+                                'type' => 'pattern',
+                                'pattern' => ';',
+                            ],
+                        ],
+                    ],
+                ],
+                'mappings' => [
+                    'anon_analyzer' => [
+                        'properties' => [
+                            'name' => [
+                                'type' => 'string',
+                            ],
+                            'values' => [
+                                'type' => 'string',
+                                'analyzer' => 'values_anon_analyzer',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $client = $this->createMock(Client::class);
+        $indices = $this->createMock(IndicesNamespace::class);
+        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new \WithAnonAnalyzerIndex()));
 
         $client->expects($this->any())->method('indices')->willReturn($indices);
         $indices->expects($this->once())->method('create')->with($expected);

@@ -10,6 +10,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\StandardAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
+use TypeError;
 
 /**
  * Base elasticsearch mapper class
@@ -27,12 +28,12 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
     private $instantiator;
 
     /**
-     * @var Property[]|null
+     * @var Property[]
      */
     private $properties = null;
 
     /**
-     * @var AnalyzerInterface[]|null
+     * @var AnalyzerInterface[]
      */
     private $analyzers = null;
 
@@ -51,12 +52,14 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
      * ElasticsearchMapper constructor.
      *
      * @param ElasticsearchIndexConfigurationInterface $configuration
-     * @param InstantiatorInterface $instantiator
+     * @param InstantiatorInterface|null $instantiator
      */
-    public function __construct(ElasticsearchIndexConfigurationInterface $configuration, InstantiatorInterface $instantiator = null)
+    public function __construct(ElasticsearchIndexConfigurationInterface $configuration, ?InstantiatorInterface $instantiator = null)
     {
         $this->configuration = $configuration;
-        $this->instantiator = $instantiator ?: new Instantiator();
+        $this->instantiator = $instantiator ?? new Instantiator();
+
+        $this->build();
     }
 
     /**
@@ -72,14 +75,7 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
      */
     public function properties(): array
     {
-        if ($this->properties !== null) {
-            return $this->properties;
-        }
-
-        $builder = new PropertiesBuilder($this);
-        $this->configuration->properties($builder);
-
-        return $this->properties = $builder->build();
+        return $this->properties;
     }
 
     /**
@@ -87,27 +83,7 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
      */
     public function analyzers(): array
     {
-        if ($this->analyzers !== null) {
-            return $this->analyzers;
-        }
-
-        $analyzers = [];
-
-        foreach ($this->configuration->analyzers() as $name => $analyzer) {
-            if ($analyzer instanceof AnalyzerInterface) {
-                $analyzers[$name] = $analyzer;
-            } elseif (is_array($analyzer)) {
-                $analyzers[$name] = new ArrayAnalyzer($analyzer);
-            } else {
-                throw new \LogicException('Invalid analyzer declaration. Expects array or AnalyzerInterface');
-            }
-        }
-
-        if (!isset($analyzers['default'])) {
-            $analyzers['default'] = new StandardAnalyzer();
-        }
-
-        return $this->analyzers = $analyzers;
+        return $this->analyzers;
     }
 
     /**
@@ -130,7 +106,7 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
         $className = $this->configuration->entity();
 
         if (!$entity instanceof $className) {
-            throw new \TypeError('Entity must be an instance of '.$className);
+            throw new TypeError('Entity must be an instance of '.$className);
         }
 
         $document = [];
@@ -220,5 +196,54 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
         }
 
         return $this->id = $this->configuration->id();
+    }
+
+    /**
+     * Build the mapper
+     */
+    private function build(): void
+    {
+        $this->analyzers = $this->buildAnalyzers();
+        $this->properties = $this->buildProperties();
+    }
+
+    /**
+     * @return Property[]
+     */
+    private function buildProperties(): array
+    {
+        $builder = new PropertiesBuilder($this);
+        $this->configuration->properties($builder);
+
+        // Add anonymous analyzers
+        if (!empty($builder->analyzers())) {
+            $this->analyzers += $builder->analyzers();
+        }
+
+        return $builder->build();
+    }
+
+    /**
+     * @return AnalyzerInterface[]
+     */
+    private function buildAnalyzers(): array
+    {
+        $analyzers = [];
+
+        foreach ($this->configuration->analyzers() as $name => $analyzer) {
+            if ($analyzer instanceof AnalyzerInterface) {
+                $analyzers[$name] = $analyzer;
+            } elseif (is_array($analyzer)) {
+                $analyzers[$name] = new ArrayAnalyzer($analyzer);
+            } else {
+                throw new \LogicException('Invalid analyzer declaration. Expects array or AnalyzerInterface');
+            }
+        }
+
+        if (!isset($analyzers['default'])) {
+            $analyzers['default'] = new StandardAnalyzer();
+        }
+
+        return $analyzers;
     }
 }

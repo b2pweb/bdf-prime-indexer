@@ -3,13 +3,16 @@
 namespace Elasticsearch\Mapper;
 
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\ArrayAnalyzer;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\CsvAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\StandardAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAccessor;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
 use City;
 use PHPUnit\Framework\TestCase;
+use WithAnonAnalyzerIndex;
 
 /**
  * Class ElasticsearchMapperTest
@@ -200,5 +203,23 @@ class ElasticsearchMapperTest extends TestCase
         $mapper->setId($entity, 5);
 
         $this->assertNull($entity->id());
+    }
+
+    /**
+     *
+     */
+    public function test_with_anonymous_analyzers()
+    {
+        $mapper = new ElasticsearchMapper(new WithAnonAnalyzerIndex());
+
+        $this->assertEquals([
+            'values_anon_analyzer' => new CsvAnalyzer(';'),
+            'default' => new StandardAnalyzer(),
+        ], $mapper->analyzers());
+
+        $this->assertEquals([
+            'name' => new Property('name', [], $mapper->analyzers()['default'], 'string', new SimplePropertyAccessor('name')),
+            'values' => new Property('values', ['analyzer' => 'values_anon_analyzer'], $mapper->analyzers()['values_anon_analyzer'], 'string', new SimplePropertyAccessor('values')),
+        ], $mapper->properties());
     }
 }
