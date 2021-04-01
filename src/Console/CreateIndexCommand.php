@@ -202,4 +202,14 @@ class CreateIndexCommand extends Command
 
         return Streams::wrap($entities)->filter([$config, 'shouldBeIndexed']);
     }
+
+    /**
+     * Compatibility with old bdf framework
+     *
+     * @return string[]
+     */
+    public static function names()
+    {
+        return [static::$defaultName];
+    }
 }

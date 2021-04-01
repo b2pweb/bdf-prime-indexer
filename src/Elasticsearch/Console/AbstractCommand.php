@@ -103,4 +103,14 @@ class AbstractCommand extends Command
 
         return $clientConfig;
     }
+
+    /**
+     * Compatibility with old bdf framework
+     *
+     * @return string[]
+     */
+    public static function names()
+    {
+        return [static::$defaultName];
+    }
 }
