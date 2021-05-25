@@ -79,7 +79,7 @@ final class Wildcard implements CompilableExpressionInterface
     private function isPrefixSearch($value)
     {
         // Do not ends with wildcard, or wildcard is escaped
-        if ($value{-1} !== '*' || $value{-2} === '\\') {
+        if ($value[-1] !== '*' || $value[-2] === '\\') {
             return false;
         }
 
