@@ -41,7 +41,7 @@ jobs:
     - name: Runs Elasticsearch
       uses: elastic/elastic-github-actions/elasticsearch@master
       with:
-        stack-version: 5.0.2
+        stack-version: 7.2.0
 
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
