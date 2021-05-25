@@ -36,7 +36,7 @@ class ElasticsearchIndexTest extends TestCase
     {
         $this->index = new ElasticsearchIndex(
             $this->client = ClientBuilder::fromConfig([
-                'hosts' => ['es1:9200']
+                'hosts' => ['127.0.0.1:9200']
             ]),
             new ElasticsearchMapper(new CityIndex())
         );
