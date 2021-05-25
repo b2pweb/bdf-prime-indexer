@@ -3,13 +3,17 @@
 namespace Bdf\Prime\Indexer;
 
 use Bdf\Prime\Indexer\Bundle\PrimeIndexerBundle;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 class TestKernel extends \Symfony\Component\HttpKernel\Kernel
 {
     use \Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 
-    public function configureContainer(ContainerConfigurator $container): void
+    /**
+     * @param ContainerConfigurator|ContainerBuilder $container
+     */
+    public function configureContainer($container): void
     {
         $container->import(__DIR__.'/conf.yaml');
     }
