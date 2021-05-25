@@ -1,4 +1,10 @@
 # Prime Indexer
+[![build](https://github.com/b2pweb/bdf-prime-indexer/actions/workflows/php.yml/badge.svg)](https://github.com/b2pweb/bdf-prime-indexer/actions/workflows/php.yml)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/b2pweb/bdf-prime-indexer/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/b2pweb/bdf-prime-indexer/?branch=master)
+[![Code Coverage](https://scrutinizer-ci.com/g/b2pweb/bdf-prime-indexer/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/b2pweb/bdf-prime-indexer/?branch=master)
+[![Packagist Version](https://img.shields.io/packagist/v/b2pweb/bdf-prime-indexer.svg)](https://packagist.org/packages/b2pweb/bdf-prime-indexer)
+[![Total Downloads](https://img.shields.io/packagist/dt/b2pweb/bdf-prime-indexer.svg)](https://packagist.org/packages/b2pweb/bdf-prime-indexer)
+[![Type Coverage](https://shepherd.dev/github/b2pweb/bdf-prime-indexer/coverage.svg)](https://shepherd.dev/github/b2pweb/bdf-prime-indexer)
 
 Indexing entities through prime, and request from Elasticsearch index.
 
@@ -7,32 +13,33 @@ Indexing entities through prime, and request from Elasticsearch index.
 Install with composer :
 
 ```bash
-composer require b2p/bdf-prime-indexer
+composer require b2pweb/bdf-prime-indexer
 ```
 
-Register into application :
+Register into `config/bundles.php` :
 
 ```php
 <?php
-$application = new \Bdf\Web\Application([
-    // ...
-    'prime.indexes' => [
-        MyEntity::class => new MyEntityIndex(),
-    ],
-    // ...
-]);
 
-$application->register(new \Bdf\Prime\PrimeServiceProvider());
-$application->register(new \Bdf\Prime\Indexer\PrimeIndexerServiceProvider());
+return [
+    // ...
+    Bdf\Prime\Indexer\Bundle\PrimeIndexerBundle::class => ['all' => true],
+    Bdf\PrimeBundle\PrimeBundle::class => ['all' => true],
+];
 ```
 
-Configure elasticsearch on conf.ini
+Configure indexes into `config/packages/prime_indexer.yaml` :
 
-```ini
-; ...
-; Set the elasticsearch hosts
-elasticsearch.hosts[] = "127.0.0.1:9222"
-; ...
+```yaml
+prime_indexer:
+  elasticsearch:
+    # Define elasticsearch hosts
+    hosts: ['127.0.0.1:9222']
+
+  # Define indexes in form [Entity class]: [Index configuration class]
+  indexes:
+    City: CityIndex
+    User: UserIndex
 ```
 
 ## Usage
@@ -159,7 +166,7 @@ The query system use Prime interfaces, so usage is almost the same :
 ```php
 <?php
 // Get the City index
-$index = $application->get(\Bdf\Prime\Indexer\IndexFactory::class)->for(City::class);
+$index = $container->get(\Bdf\Prime\Indexer\IndexFactory::class)->for(City::class);
 
 // Get the query
 $query = $index->query();
@@ -193,7 +200,7 @@ Update operations can be done on the index manually :
 ```php
 <?php
 // Get the City index
-$index = $application->get(\Bdf\Prime\Indexer\IndexFactory::class)->for(City::class);
+$index = $container->get(\Bdf\Prime\Indexer\IndexFactory::class)->for(City::class);
 
 // Create the index, and insert all cities from database
 $index->create(City::walk());
@@ -242,42 +249,9 @@ A progress bar will be displayed for follow the indexing progress.
 For manage Elasticsearch index :
 
 ```
-bin/console.php elasticsearch
-
-show
-delete test_cities
+bin/console.php elasticsearch:show
+bin/console.php elasticsearch:delete test_cities
 ```
-
-### Synchronization of entities
-
-Automatic synchronization can be configured.
-The indexer will listen update operation on repository, and update the index corresponding to the events.
-
-For enable synchronization some dependencies are required :
-
-- `b2p/bdf-prime` For repositories
-- `b2p/bdf-bus` For perform index operation asynchronously (or not, depending of the bus configuration)
-
-On PHP side :
-
-```php
-<?php
-$application = new \Bdf\Web\Application([
-    // ...
-    'prime.indexes' => [
-        City::class => new CityIndex(),
-    ],
-    // ...
-]);
-
-$application->register(new \Bdf\Bus\BusServiceProvider());
-$application->register(new \Bdf\Prime\PrimeServiceProvider());
-$application->register(new \Bdf\Prime\Indexer\PrimeIndexerServiceProvider());
-$application->register(new \Bdf\Prime\Indexer\PrimeIndexerSynchronizationProvider());
-```
-
-And now, synchronization is enabled.
-Do not forget to start workers !
 
 ### Testing
 
