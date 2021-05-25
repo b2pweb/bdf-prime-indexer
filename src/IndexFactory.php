@@ -56,7 +56,7 @@ class IndexFactory
             }
         }
 
-        throw new \LogicException();
+        throw new \LogicException('Cannot found any factory for configuration '.get_class($configuration));
     }
 
     /**

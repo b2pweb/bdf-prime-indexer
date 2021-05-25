@@ -25,6 +25,10 @@ class PrimeIndexerServiceProviderTest extends TestCase
 
     protected function setUp(): void
     {
+        if (!class_exists(Application::class)) {
+            $this->markTestSkipped();
+        }
+
         $this->app = new Application([
             'config' => new Config([
                 'elasticsearch' => [

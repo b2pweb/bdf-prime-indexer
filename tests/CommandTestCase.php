@@ -2,9 +2,10 @@
 
 namespace Bdf\Prime\Indexer;
 
-use Bdf\DI\Container;
-use Bdf\DI\DIAccessorInterface;
+use Bdf\Prime\Prime;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -15,9 +16,9 @@ use Symfony\Component\Console\Tester\CommandTester;
 abstract class CommandTestCase extends TestCase
 {
     /**
-     * @var Container
+     * @var Application
      */
-    protected $di;
+    protected $app;
     
     /**
      * @var Command
@@ -28,6 +29,20 @@ abstract class CommandTestCase extends TestCase
      * @var CommandTester
      */
     protected $tester;
+
+    protected function setUp(): void
+    {
+        $kernel = new TestKernel('dev', false);
+        $kernel->boot();
+        $this->app = new \Symfony\Bundle\FrameworkBundle\Console\Application($kernel);
+
+        Prime::configure($kernel->getContainer()->get('prime'));
+    }
+
+    protected function tearDown(): void
+    {
+        Prime::configure(null);
+    }
 
     /**
      * Execute a command by its name
@@ -41,14 +56,11 @@ abstract class CommandTestCase extends TestCase
     public function execute($command, array $input = [], array $options = [])
     {
         $tester = $this->createCommandTester($this->createCommand($command));
+
         if (isset($options['inputs'])) {
-            if (method_exists($tester, 'setInputs')) {
-                // symfony >= 3.2
-                $tester->setInputs((array)$options['inputs']);
-            } else {
-                $this->command->getHelperSet()->get('question')->setInputStream($this->getInputStream((array)$options['inputs']));
-            }
+            $tester->setInputs((array)$options['inputs']);
         }
+
         $tester->execute($input, $options);
 
         return $tester->getDisplay();
@@ -89,11 +101,7 @@ abstract class CommandTestCase extends TestCase
         if ($class instanceof Command) {
             $this->command = $class;
         } else {
-            $this->command = $this->di->get('di.instantiator')->make($class);
-            
-            if ($this->command instanceof DIAccessorInterface) {
-                $this->command->setDI($this->di);
-            }
+            $this->command = $this->app->get($class);
         }
 
         if ($this->command->getHelperSet() === null) {

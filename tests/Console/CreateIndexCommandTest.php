@@ -2,18 +2,12 @@
 
 namespace Bdf\Prime\Indexer\Console;
 
-use Bdf\Config\Config;
 use Bdf\Prime\Indexer\CommandTestCase;
 use Bdf\Prime\Indexer\CustomEntitiesConfigurationInterface;
 use Bdf\Prime\Indexer\IndexFactory;
-use Bdf\Prime\Indexer\PrimeIndexerServiceProvider;
 use Bdf\Prime\Indexer\ShouldBeIndexedConfigurationInterface;
-use Bdf\Prime\Prime;
-use Bdf\Prime\PrimeServiceProvider;
 use Bdf\Prime\Test\TestPack;
-use Bdf\Web\Application;
 use Elasticsearch\Client;
-use Psr\Log\NullLogger;
 
 /**
  * Class CreateIndexCommandTest
@@ -28,21 +22,6 @@ class CreateIndexCommandTest extends CommandTestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->di = new Application([
-            'config' => new Config([
-                'elasticsearch' => ['hosts' => ['127.0.0.1:9222']]
-            ]),
-            'prime.indexes' => [
-                \User::class => new \UserIndex(),
-            ],
-            'logger' => new NullLogger()
-        ]);
-        $this->di->register(new PrimeServiceProvider());
-        $this->di->register(new PrimeIndexerServiceProvider());
-
-        $this->di['prime']->connections()->addConnection('test', ['adapter' => 'sqlite', 'memory' => true]);
-        Prime::configure($this->di['prime']);
 
         $this->testPack = new TestPack();
         $this->testPack
@@ -59,9 +38,11 @@ class CreateIndexCommandTest extends CommandTestCase
         $this->testPack->destroy();
 
         /** @var IndexFactory $factory */
-        $factory = $this->di[IndexFactory::class];
+        $factory = $this->app->getKernel()->getContainer()->get(IndexFactory::class);
 
         $factory->for(\User::class)->drop();
+
+        parent::tearDown();
     }
 
     /**
@@ -69,7 +50,7 @@ class CreateIndexCommandTest extends CommandTestCase
      */
     public function test_execute_without_entities()
     {
-        $this->execute(CreateIndexCommand::class, ['entity' => \User::class]);
+        $this->execute('prime:indexer:create', ['entity' => \User::class]);
 
         $this->assertTrue($this->client()->indices()->existsAlias(['name' => 'test_users']));
     }
@@ -94,7 +75,7 @@ class CreateIndexCommandTest extends CommandTestCase
             ]),
         ]);
 
-        $this->execute(CreateIndexCommand::class, ['entity' => \User::class]);
+        $this->execute('prime:indexer:create', ['entity' => \User::class]);
         $this->client()->indices()->refresh();
 
         $this->assertEquals($users, $this->factory()->for(\User::class)->query()->all(), '', 0, 1, true);
@@ -127,7 +108,7 @@ class CreateIndexCommandTest extends CommandTestCase
 
         $this->factory()->register(\User::class, $index);
 
-        $this->execute(CreateIndexCommand::class, ['entity' => \User::class]);
+        $this->execute('prime:indexer:create', ['entity' => \User::class]);
         $this->client()->indices()->refresh();
 
         $this->assertEquals($index->entities(), $this->factory()->for(\User::class)->query()->all(), '', 0, 1, true);
@@ -138,7 +119,7 @@ class CreateIndexCommandTest extends CommandTestCase
      */
     public function test_execute_with_custom_option()
     {
-        $this->execute(CreateIndexCommand::class, ['entity' => \User::class, '--options' => '{"useAlias":false}']);
+        $this->execute('prime:indexer:create', ['entity' => \User::class, '--options' => '{"useAlias":false}']);
 
         $this->assertFalse($this->client()->indices()->existsAlias(['name' => 'test_users']));
         $this->assertTrue($this->client()->indices()->exists(['index' => 'test_users']));
@@ -173,7 +154,7 @@ class CreateIndexCommandTest extends CommandTestCase
 
         $this->factory()->register(\User::class, $index);
 
-        $this->execute(CreateIndexCommand::class, ['entity' => \User::class]);
+        $this->execute('prime:indexer:create', ['entity' => \User::class]);
         $this->client()->indices()->refresh();
 
         $this->assertEquals([$john], $this->factory()->for(\User::class)->query()->all());
@@ -184,7 +165,7 @@ class CreateIndexCommandTest extends CommandTestCase
      */
     public function test_execute_invalid_options()
     {
-        $output = $this->execute(CreateIndexCommand::class, ['entity' => \User::class, '--options' => 'invalid']);
+        $output = $this->execute('prime:indexer:create', ['entity' => \User::class, '--options' => 'invalid']);
 
         $this->assertFalse($this->client()->indices()->existsAlias(['name' => 'test_users']));
         $this->assertContains('Invalid options given', $output);
@@ -192,11 +173,11 @@ class CreateIndexCommandTest extends CommandTestCase
 
     private function client(): Client
     {
-        return $this->di[Client::class];
+        return $this->app->getKernel()->getContainer()->get(Client::class);
     }
 
     private function factory(): IndexFactory
     {
-        return $this->di[IndexFactory::class];
+        return $this->app->getKernel()->getContainer()->get(IndexFactory::class);
     }
 }

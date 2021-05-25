@@ -1,0 +1,61 @@
+parameters:
+    prime.indexer.configuration: []
+    prime.indexer.configuration.elasticsearch: []
+
+services:
+    Elasticsearch\Client:
+        class: Elasticsearch\Client
+        factory: ['Elasticsearch\ClientBuilder', 'fromConfig']
+        arguments:
+            - '%prime.indexer.configuration.elasticsearch%'
+        public: true
+
+    Bdf\Prime\Indexer\IndexFactory:
+        class: Bdf\Prime\Indexer\IndexFactory
+        arguments:
+            - {'Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface': '@Bdf\Prime\Indexer\Bundle\Factory\ElasticsearchIndexFactory'}
+            - []
+        public: true
+
+    Bdf\Prime\Indexer\Bundle\Factory\ElasticsearchIndexFactory:
+        class: Bdf\Prime\Indexer\Bundle\Factory\ElasticsearchIndexFactory
+        arguments: ['@service_container']
+
+    # Commands
+    Bdf\Prime\Indexer\Elasticsearch\Console\ShowCommand:
+        class: Bdf\Prime\Indexer\Elasticsearch\Console\ShowCommand
+        arguments:
+            - '@Elasticsearch\Client'
+            - '%prime.indexer.configuration%'
+        tags: ['console.command']
+
+    Bdf\Prime\Indexer\Elasticsearch\Console\DeleteCommand:
+        class: Bdf\Prime\Indexer\Elasticsearch\Console\DeleteCommand
+        arguments:
+            - '@Elasticsearch\Client'
+            - '%prime.indexer.configuration%'
+        tags: ['console.command']
+
+    Bdf\Prime\Indexer\Console\CreateIndexCommand:
+        class: Bdf\Prime\Indexer\Console\CreateIndexCommand
+        arguments:
+            - '@Bdf\Prime\Indexer\IndexFactory'
+            - '@Bdf\Prime\ServiceLocator'
+            - '@logger'
+        tags: ['console.command']
+
+    # Messenger
+    Bdf\Prime\Indexer\Sync\AddToIndexHandler:
+        class: Bdf\Prime\Indexer\Sync\AddToIndexHandler
+        arguments: ['@Bdf\Prime\Indexer\IndexFactory']
+        tags: [messenger.message_handler]
+
+    Bdf\Prime\Indexer\Sync\RemoveFromIndexHandler:
+        class: Bdf\Prime\Indexer\Sync\RemoveFromIndexHandler
+        arguments: ['@Bdf\Prime\Indexer\IndexFactory']
+        tags: [messenger.message_handler]
+
+    Bdf\Prime\Indexer\Sync\UpdateIndexedEntityHandler:
+        class: Bdf\Prime\Indexer\Sync\UpdateIndexedEntityHandler
+        arguments: ['@Bdf\Prime\Indexer\IndexFactory']
+        tags: [messenger.message_handler]

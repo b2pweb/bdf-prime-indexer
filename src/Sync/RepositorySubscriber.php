@@ -5,6 +5,7 @@ namespace Bdf\Prime\Indexer\Sync;
 use Bdf\Bus\MessageDispatcherInterface;
 use Bdf\Prime\Indexer\ShouldBeIndexedConfigurationInterface;
 use Bdf\Prime\Repository\EntityRepository;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
  * Subscribe to repository events for synchronize the related index
@@ -12,7 +13,7 @@ use Bdf\Prime\Repository\EntityRepository;
 final class RepositorySubscriber
 {
     /**
-     * @var MessageDispatcherInterface
+     * @var MessageDispatcherInterface|MessageBusInterface
      */
     private $dispatcher;
 
@@ -30,11 +31,11 @@ final class RepositorySubscriber
     /**
      * RepositorySubscriber constructor.
      *
-     * @param MessageDispatcherInterface $dispatcher The message bus for perform index operations
+     * @param MessageDispatcherInterface|MessageBusInterface $dispatcher The message bus for perform index operations
      * @param string $index The index name
      * @param object $config The index configuration
      */
-    public function __construct(MessageDispatcherInterface $dispatcher, string $index, $config)
+    public function __construct($dispatcher, string $index, $config)
     {
         $this->dispatcher = $dispatcher;
         $this->index = $index;

@@ -2,14 +2,12 @@
 
 namespace Bdf\Prime\Indexer\Sync;
 
-use Bdf\Bus\Handler\Message\SelfHandler;
-use Bdf\Bus\Queue\Message\Queueable;
 use Bdf\Prime\Indexer\IndexFactory;
 
 /**
  * Remove an entity from the index
  */
-final class RemoveFromIndex implements SelfHandler, Queueable
+final class RemoveFromIndex
 {
     /**
      * @var string
@@ -32,6 +30,24 @@ final class RemoveFromIndex implements SelfHandler, Queueable
     {
         $this->index = $index;
         $this->entity = $entity;
+    }
+
+    /**
+     * Get the index name
+     *
+     * @return string
+     */
+    public function index(): string
+    {
+        return $this->index;
+    }
+
+    /**
+     * @return object
+     */
+    public function entity()
+    {
+        return $this->entity;
     }
 
     /**

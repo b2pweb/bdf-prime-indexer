@@ -1,0 +1,22 @@
+prime:
+  activerecord: true
+  default_connection: 'test'
+  connections:
+    test: 'sqlite::memory:'
+
+  migration:
+    connection: 'test'
+    path: '%kernel.project_dir%/src/Migration'
+  profiling: true
+
+prime_indexer:
+  elasticsearch:
+    hosts: ['127.0.0.1:9222']
+
+  indexes:
+    City: CityIndex
+    User: UserIndex
+
+services:
+  logger:
+    class: \Psr\Log\NullLogger

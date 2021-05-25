@@ -2,20 +2,15 @@
 
 namespace Bdf\Prime\Indexer\Sync;
 
-use Bdf\Bus\BusServiceProvider;
-use Bdf\Config\Config;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
 use Bdf\Prime\Indexer\IndexInterface;
-use Bdf\Prime\Indexer\PrimeIndexerServiceProvider;
 use Bdf\Prime\Indexer\Test\TestingIndexer;
+use Bdf\Prime\Indexer\TestKernel;
 use Bdf\Prime\Prime;
-use Bdf\Prime\PrimeServiceProvider;
 use Bdf\Prime\Repository\EntityRepository;
 use Bdf\Prime\Test\TestPack;
-use Bdf\Web\Application;
 use City;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 
 /**
  * Class RepositorySubscriberTest
@@ -23,7 +18,7 @@ use Psr\Log\NullLogger;
 class RepositorySubscriberTest extends TestCase
 {
     /**
-     * @var Application
+     * @var TestKernel
      */
     private $app;
 
@@ -51,21 +46,13 @@ class RepositorySubscriberTest extends TestCase
     {
         parent::setUp();
 
-        $this->app = new Application([
-            'config' => new Config([
-                'elasticsearch' => ['hosts' => ['127.0.0.1:9222']]
-            ]),
-            'prime.indexes' => [
-                \City::class => new \CityIndex(),
-            ],
-            'logger' => new NullLogger()
-        ]);
-        $this->app->register(new BusServiceProvider());
-        $this->app->register(new PrimeServiceProvider());
-        $this->app->register(new PrimeIndexerServiceProvider());
+        $this->app = new TestKernel('dev', false);
+        $this->app->boot();
 
-        $this->app['prime']->connections()->addConnection('test', ['adapter' => 'sqlite', 'memory' => true]);
-        Prime::configure($this->app['prime']);
+        $this->indexTester = new TestingIndexer($this->app->getContainer());
+        $this->index = $this->indexTester->index(\City::class);
+
+        Prime::configure($this->app->getContainer()->get('prime'));
 
         $this->testPack = new TestPack();
         $this->testPack
@@ -73,11 +60,11 @@ class RepositorySubscriberTest extends TestCase
             ->initialize()
         ;
 
-        $this->indexTester = new TestingIndexer($this->app);
+        $this->indexTester = new TestingIndexer($this->app->getContainer());
         $this->index = $this->indexTester->index(\City::class);
 
-        (new RepositorySubscriber($this->app['bus.dispatcher'], \City::class, new \CityIndex()))
-            ->subscribe($this->repository = $this->app['prime']->repository(\City::class));
+        (new RepositorySubscriber($this->app->getContainer()->get('messenger.default_bus'), \City::class, new \CityIndex()))
+            ->subscribe($this->repository = Prime::repository(\City::class));
     }
 
     protected function tearDown(): void

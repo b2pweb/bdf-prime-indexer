@@ -25,6 +25,10 @@ class PrimeIndexerSynchronizationProviderTest extends TestCase
     {
         parent::setUp();
 
+        if (!class_exists(Application::class)) {
+            $this->markTestSkipped();
+        }
+
         $this->app = new Application([
             'config' => new Config([
                 'elasticsearch' => ['hosts' => ['127.0.0.1:9222']]

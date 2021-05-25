@@ -1,5 +1,5 @@
 {
-  "name": "b2p/bdf-prime-indexer",
+  "name": "b2pweb/bdf-prime-indexer",
   "description": "Indexer plugin for Prime",
   "type": "library",
   "license": "MIT",
@@ -7,15 +7,6 @@
     {
       "name": "Vincent Quatrevieux",
       "email": "vquatrevieux@b2pweb.com"
-    }
-  ],
-  "config": {
-    "secure-http": false
-  },
-  "repositories": [
-    {
-      "type": "composer",
-      "url": "http://packagist.b2pweb.com"
     }
   ],
   "autoload": {
@@ -31,14 +22,17 @@
   "minimum-stability": "dev",
   "require": {
     "php": ">=7.1",
-    "b2p/bdf-prime": "~1.6",
+    "b2pweb/bdf-prime": "~1.0",
     "elasticsearch/elasticsearch": "~5.0",
     "b2pweb/bdf-collections": "~1.0"
   },
   "require-dev": {
-    "b2p/bdf-console": "~1.6",
-    "b2p/bdf-web": "~1.6",
-    "phpunit/phpunit": "~7.0|~8.0"
+    "phpunit/phpunit": "~7.0|~8.0",
+    "b2pweb/bdf-prime-bundle": "~1.0",
+    "symfony/framework-bundle": "~5.0",
+    "symfony/messenger": "~5.0",
+    "symfony/console": "~5.0",
+    "symfony/yaml": "~5.0"
   },
   "extra": {
     "branch-alias": {

@@ -2,17 +2,12 @@
 
 namespace Bdf\Prime\Indexer\Sync;
 
-use Bdf\Bus\BusServiceProvider;
 use Bdf\Bus\MessageDispatcherInterface;
-use Bdf\Config\Config;
 use Bdf\Prime\Indexer\IndexInterface;
-use Bdf\Prime\Indexer\PrimeIndexerServiceProvider;
 use Bdf\Prime\Indexer\Test\TestingIndexer;
-use Bdf\Prime\PrimeServiceProvider;
-use Bdf\Web\Application;
+use Bdf\Prime\Indexer\TestKernel;
 use City;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 
 /**
  * Class RemoveFromIndexTest
@@ -20,7 +15,7 @@ use Psr\Log\NullLogger;
 class RemoveFromIndexTest extends TestCase
 {
     /**
-     * @var Application
+     * @var TestKernel
      */
     private $app;
 
@@ -43,23 +38,13 @@ class RemoveFromIndexTest extends TestCase
     {
         parent::setUp();
 
-        $this->app = new Application([
-            'config' => new Config([
-                'elasticsearch' => ['hosts' => ['127.0.0.1:9222']]
-            ]),
-            'prime.indexes' => [
-                \City::class => new \CityIndex(),
-            ],
-            'logger' => new NullLogger()
-        ]);
-        $this->app->register(new BusServiceProvider());
-        $this->app->register(new PrimeServiceProvider());
-        $this->app->register(new PrimeIndexerServiceProvider());
+        $this->app = new TestKernel('dev', false);
+        $this->app->boot();
 
-        $this->indexTester = new TestingIndexer($this->app);
+        $this->indexTester = new TestingIndexer($this->app->getContainer());
         $this->index = $this->indexTester->index(\City::class);
 
-        $this->bus = $this->app['bus.dispatcher'];
+        $this->bus = $this->app->getContainer()->get('messenger.default_bus');
     }
 
     protected function tearDown(): void

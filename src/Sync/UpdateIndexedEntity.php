@@ -2,14 +2,12 @@
 
 namespace Bdf\Prime\Indexer\Sync;
 
-use Bdf\Bus\Handler\Message\SelfHandler;
-use Bdf\Bus\Queue\Message\Queueable;
 use Bdf\Prime\Indexer\IndexFactory;
 
 /**
  * Update an entity store into the index
  */
-final class UpdateIndexedEntity implements SelfHandler, Queueable
+final class UpdateIndexedEntity
 {
     /**
      * @var string
@@ -32,6 +30,24 @@ final class UpdateIndexedEntity implements SelfHandler, Queueable
     {
         $this->index = $index;
         $this->entity = $entity;
+    }
+
+    /**
+     * Get the index name
+     *
+     * @return string
+     */
+    public function index(): string
+    {
+        return $this->index;
+    }
+
+    /**
+     * @return object
+     */
+    public function entity()
+    {
+        return $this->entity;
     }
 
     /**

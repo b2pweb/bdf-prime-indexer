@@ -10,7 +10,7 @@ use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\IndexFactory;
 use Bdf\Prime\Indexer\IndexInterface;
-use Bdf\Web\Application;
+use Psr\Container\ContainerInterface;
 
 /**
  * Testing tool for setUp and use indexes
@@ -18,9 +18,9 @@ use Bdf\Web\Application;
 class TestingIndexer
 {
     /**
-     * @var Application
+     * @var ContainerInterface
      */
-    private $app;
+    private $container;
 
     /**
      * @var IndexFactory
@@ -34,17 +34,30 @@ class TestingIndexer
      */
     private $indexes;
 
-    private $lastIndexFactoryDiMetadata;
+    /**
+     * @var array
+     */
+    private $lastIndexesConfigurations;
+
+    /**
+     * @var \ReflectionProperty
+     */
+    private $configProperty;
+
+    /**
+     * @var \ReflectionProperty
+     */
+    private $indexesProperty;
 
 
     /**
      * TestingIndexer constructor.
      *
-     * @param Application $app
+     * @param ContainerInterface $app
      */
-    public function __construct(Application $app)
+    public function __construct(ContainerInterface $app)
     {
-        $this->app = $app;
+        $this->container = $app;
         $this->indexes = HashSet::spl();
     }
 
@@ -56,9 +69,11 @@ class TestingIndexer
         $this->indexes->forEach(new Call('drop', []));
         $this->indexes->clear();
 
-        if ($this->lastIndexFactoryDiMetadata) {
-            $this->app->restore(IndexFactory::class, $this->lastIndexFactoryDiMetadata[0], $this->lastIndexFactoryDiMetadata[1]);
-            $this->lastIndexFactoryDiMetadata = null;
+        if ($this->lastIndexesConfigurations) {
+            $this->setConfigurations($this->lastIndexesConfigurations);
+            $this->resetIndexesProperty();
+            $this->lastIndexesConfigurations = null;
+            $this->factory = null;
         }
     }
 
@@ -160,15 +175,45 @@ class TestingIndexer
             return $this->factory;
         }
 
-        $this->factory = new IndexFactory(
-            $this->app['prime.index.factories'],
-            array_map([$this, 'toTestingConfiguration'], $this->app->has('prime.indexes') ? $this->app->get('prime.indexes') : [])
-        );
+        $this->factory = $this->container->get(IndexFactory::class);
+        $this->lastIndexesConfigurations = $this->getConfigurations();
 
-        $this->lastIndexFactoryDiMetadata = [$this->app->raw(IndexFactory::class), $this->app->metadata(IndexFactory::class)];
-        $this->app->set(IndexFactory::class, $this->factory);
+        $this->setConfigurations(array_map([$this, 'toTestingConfiguration'], $this->lastIndexesConfigurations));
+        $this->resetIndexesProperty();
 
         return $this->factory;
+    }
+
+    private function configurationsProperty(): \ReflectionProperty
+    {
+        if ($this->configProperty) {
+            return $this->configProperty;
+        }
+
+        $this->configProperty = new \ReflectionProperty($this->factory, 'configurations');
+        $this->configProperty->setAccessible(true);
+
+        return $this->configProperty;
+    }
+
+    private function getConfigurations(): array
+    {
+        return $this->configurationsProperty()->getValue($this->factory);
+    }
+
+    private function setConfigurations(array $configurations): void
+    {
+        $this->configurationsProperty()->setValue($this->factory, $configurations);
+    }
+
+    private function resetIndexesProperty(): void
+    {
+        if (!$this->indexesProperty) {
+            $this->indexesProperty = new \ReflectionProperty($this->factory, 'indexes');
+            $this->indexesProperty->setAccessible(true);
+        }
+
+        $this->indexesProperty->setValue($this->factory, []);
     }
 
     private static function toTestingConfiguration($config)

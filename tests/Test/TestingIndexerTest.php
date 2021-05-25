@@ -2,17 +2,12 @@
 
 namespace Bdf\Prime\Indexer\Test;
 
-use Bdf\Config\Config;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
-use Bdf\Prime\Indexer\PrimeIndexerServiceProvider;
-use Bdf\Prime\PrimeServiceProvider;
-use Bdf\Web\Application;
+use Bdf\Prime\Indexer\TestKernel;
 use City;
-use CityIndex;
 use Elasticsearch\Client;
 use PHPUnit\Framework\TestCase;
 use User;
-use UserIndex;
 
 /**
  * Class TestingIndexerTest
@@ -25,7 +20,7 @@ class TestingIndexerTest extends TestCase
     private $indexer;
 
     /**
-     * @var Application
+     * @var TestKernel
      */
     private $app;
 
@@ -36,22 +31,11 @@ class TestingIndexerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->app = new Application([
-            'config' => new Config([
-                'elasticsearch' => ['hosts' => ['127.0.0.1:9222']]
-            ]),
+        $this->app = new TestKernel('dev', false);
+        $this->app->boot();
 
-            'prime.indexes' => [
-                User::class => new UserIndex(),
-                City::class => new CityIndex(),
-            ]
-        ]);
-
-        $this->app->register(new PrimeServiceProvider());
-        $this->app->register(new PrimeIndexerServiceProvider());
-
-        $this->client = $this->app[Client::class];
-        $this->indexer = new TestingIndexer($this->app);
+        $this->client = $this->app->getContainer()->get(Client::class);
+        $this->indexer = new TestingIndexer($this->app->getContainer());
     }
 
     /**
