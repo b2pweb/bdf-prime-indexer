@@ -5,6 +5,9 @@ build:
 
   nodes:
     tests:
+      services:
+        elasticsearch: 2.4
+
       tests:
         override:
           - command: composer run tests-with-coverage
