@@ -3,6 +3,7 @@
 namespace Bdf\Prime\Indexer;
 
 use Bdf\Prime\Indexer\Bundle\PrimeIndexerBundle;
+use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
@@ -12,10 +13,15 @@ class TestKernel extends \Symfony\Component\HttpKernel\Kernel
 
     /**
      * @param ContainerConfigurator|ContainerBuilder $container
+     * @param LoaderInterface|null $loader
      */
-    public function configureContainer($container): void
+    public function configureContainer($container, $loader = null): void
     {
-        $container->import(__DIR__.'/conf.yaml');
+        if ($loader !== null) {
+            $loader->load(__DIR__.'/conf.yaml');
+        } else {
+            $container->import(__DIR__ . '/conf.yaml');
+        }
     }
 
     public function registerBundles()
@@ -28,7 +34,7 @@ class TestKernel extends \Symfony\Component\HttpKernel\Kernel
         ];
     }
 
-    public function configureRoutes(\Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator $routes): void
+    public function configureRoutes($routes): void
     {
     }
 }

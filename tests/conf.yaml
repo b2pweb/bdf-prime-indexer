@@ -11,7 +11,7 @@ prime:
 
 prime_indexer:
   elasticsearch:
-    hosts: ['es1:9222']
+    hosts: ['es1:9200']
 
   indexes:
     City: CityIndex

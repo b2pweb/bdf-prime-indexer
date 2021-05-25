@@ -27,7 +27,7 @@ class ElasticsearchCreateQueryTest extends TestCase
     {
         $this->query = new ElasticsearchCreateQuery(
             $this->client = ClientBuilder::fromConfig([
-                'hosts' => ['127.0.0.1:9222']
+                'hosts' => ['es1:9200']
             ])
         );
     }
