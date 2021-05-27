@@ -14,6 +14,7 @@ final class RepositorySubscriber
 {
     /**
      * @var MessageDispatcherInterface|MessageBusInterface
+     * @psalm-var MessageBusInterface
      */
     private $dispatcher;
 
@@ -32,6 +33,7 @@ final class RepositorySubscriber
      * RepositorySubscriber constructor.
      *
      * @param MessageDispatcherInterface|MessageBusInterface $dispatcher The message bus for perform index operations
+     * @psalm-param MessageBusInterface $dispatcher
      * @param string $index The index name
      * @param object $config The index configuration
      */

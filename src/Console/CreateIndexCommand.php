@@ -26,6 +26,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class CreateIndexCommand extends Command
 {
+    /**
+     * @var string
+     */
     protected static $defaultName = 'prime:indexer:create';
 
     /**
@@ -155,7 +158,7 @@ class CreateIndexCommand extends Command
      */
     private function configureProgressBar(iterable $entities, OutputStyle $io): iterable
     {
-        if (method_exists($entities, 'size')) {
+        if ($entities instanceof \Traversable && method_exists($entities, 'size')) {
             $size = $entities->size();
         } elseif (is_array($entities) || $entities instanceof \Countable) {
             $size = count($entities);

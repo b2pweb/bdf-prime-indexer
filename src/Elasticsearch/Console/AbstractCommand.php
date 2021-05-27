@@ -111,6 +111,7 @@ class AbstractCommand extends Command
      */
     public static function names()
     {
+        /** @var string[] */
         return [static::$defaultName];
     }
 }

@@ -68,6 +68,7 @@ class ElasticsearchIndex implements IndexInterface
             return false;
         }
 
+        /** @var bool */
         return $this->client->exists([
             'index' => $this->mapper->configuration()->index(),
             'type' => $this->mapper->configuration()->type(),

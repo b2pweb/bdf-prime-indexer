@@ -121,10 +121,10 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
     /**
      * {@inheritdoc}
      */
-    public function into($index, $type = null)
+    public function into($table, $type = null)
     {
-        $this->index = $index;
-        $this->type = $type ?: $index;
+        $this->index = $table;
+        $this->type = $type ?: $table;
 
         return $this;
     }
@@ -199,6 +199,8 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
 
     /**
      * {@inheritdoc}
+     *
+     * @return int|array
      */
     public function execute($columns = null)
     {
