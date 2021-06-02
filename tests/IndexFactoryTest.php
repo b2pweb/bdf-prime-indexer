@@ -36,7 +36,7 @@ class IndexFactoryTest extends TestCase
             [
                 ElasticsearchIndexConfigurationInterface::class => function (ElasticsearchIndexConfigurationInterface $configuration) {
                     return new ElasticsearchIndex(
-                        ClientBuilder::fromConfig(['hosts' => [$_ENV['ELASTICSEARCH_HOST']]]),
+                        ClientBuilder::fromConfig(['hosts' => [ELASTICSEARCH_HOST]]),
                         new ElasticsearchMapper($configuration, new Instantiator())
                     );
                 },

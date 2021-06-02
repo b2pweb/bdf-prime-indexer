@@ -34,7 +34,7 @@ class PrimeIndexerServiceProviderTest extends TestCase
         $this->app = new Application([
             'config' => new Config([
                 'elasticsearch' => [
-                    'hosts' => [$_ENV['ELASTICSEARCH_HOST']],
+                    'hosts' => [ELASTICSEARCH_HOST],
                 ],
             ]),
         ]);
