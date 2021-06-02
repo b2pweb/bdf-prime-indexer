@@ -24,7 +24,10 @@ class PrimeIndexerBundle extends Bundle
 
                 foreach ($container->findTaggedServiceIds('prime.indexer.configuration') as $id => $_) {
                     try {
-                        $r = new \ReflectionClass($container->findDefinition($id)->getClass());
+                        $definition = $container->findDefinition($id);
+                        $definition->setPublic(true);
+
+                        $r = new \ReflectionClass($definition->getClass());
                         $config = $r->newInstanceWithoutConstructor();
 
                         $resolverDefinition->addMethodCall('register', [$id, $config->entity()]);
