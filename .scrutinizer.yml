@@ -2,6 +2,8 @@ build:
   environment:
     php: 7.2.24
     timezone: Europe/Paris
+    variables:
+      ELASTICSEARCH_HOST: "127.0.0.1:9200"
 
   nodes:
     tests:

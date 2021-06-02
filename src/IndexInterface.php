@@ -2,22 +2,26 @@
 
 namespace Bdf\Prime\Indexer;
 
+use Bdf\Prime\Indexer\Exception\ScopeNotFoundException;
+
 /**
  * Store entities for perform complex search
+ *
+ * @template E as object
  */
 interface IndexInterface
 {
     /**
      * Get the index configuration
      *
-     * @return object
+     * @return IndexConfigurationInterface<E>
      */
     public function config();
 
     /**
      * Store an entity to the index
      *
-     * @param object $entity
+     * @param E $entity
      *
      * @return void
      */
@@ -26,7 +30,7 @@ interface IndexInterface
     /**
      * Check if the index contains the given entity
      *
-     * @param object $entity Entity to check
+     * @param E $entity Entity to check
      *
      * @return boolean True if the entity is indexed
      */
@@ -35,7 +39,7 @@ interface IndexInterface
     /**
      * Remove the entity from the index
      *
-     * @param object $entity
+     * @param E $entity
      *
      * @return void
      */
@@ -44,7 +48,7 @@ interface IndexInterface
     /**
      * Replace the entity data from the index
      *
-     * @param object $entity
+     * @param E $entity
      * @param string[]|null $attributes List of attributes to update. If null, all attributes will be updated
      *
      * @return void
@@ -78,7 +82,7 @@ interface IndexInterface
      * - dropPreviousIndexes (boolean) default: true, drop all previous declared indexes
      * - chunkSize (integer) default: 5000, the bulk write size for indexing entities
      *
-     * @param iterable $entities Iterable entities list. Can be a walker, or a simple array
+     * @param iterable<E> $entities Iterable entities list. Can be a walker, or a simple array
      * @param array $options Creation options depends of the indexer
      *
      * @return void
@@ -100,6 +104,8 @@ interface IndexInterface
      * @param array $arguments The scope arguments
      *
      * @return QueryInterface
+     *
+     * @throws ScopeNotFoundException When the scope is not declared
      */
     public function __call(string $name, array $arguments): QueryInterface;
 }

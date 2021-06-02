@@ -11,6 +11,8 @@ use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\PrimeServiceProvider;
 use Bdf\Web\Application;
 use Elasticsearch\Client;
+use ElasticsearchTestFiles\User;
+use ElasticsearchTestFiles\UserIndex;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -32,7 +34,7 @@ class PrimeIndexerServiceProviderTest extends TestCase
         $this->app = new Application([
             'config' => new Config([
                 'elasticsearch' => [
-                    'hosts' => ['127.0.0.1:9200'],
+                    'hosts' => [$_ENV['ELASTICSEARCH_HOST']],
                 ],
             ]),
         ]);
@@ -56,12 +58,12 @@ class PrimeIndexerServiceProviderTest extends TestCase
     public function test_with_indexes_configuration()
     {
         $this->app->set('prime.indexes', [
-            \User::class => new \UserIndex()
+            User::class => new UserIndex()
         ]);
         $this->app->register(new PrimeIndexerServiceProvider());
 
         $factory = $this->app->get(IndexFactory::class);
-        $index = $factory->for(\User::class);
+        $index = $factory->for(User::class);
 
         $this->assertInstanceOf(ElasticsearchIndex::class, $index);
     }

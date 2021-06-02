@@ -16,7 +16,9 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Bdf\\Prime\\Indexer\\": "tests"
+      "Bdf\\Prime\\Indexer\\": "tests",
+      "ElasticsearchTestFiles\\": "tests/Elasticsearch/_files",
+      "DenormalizeTestFiles\\": "tests/Denormalize/_files"
     }
   },
   "minimum-stability": "dev",

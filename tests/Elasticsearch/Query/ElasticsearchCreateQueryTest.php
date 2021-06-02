@@ -2,6 +2,7 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
+use Bdf\Prime\Indexer\Elasticsearch\Exception\ElaticsearchQueryException;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
@@ -27,7 +28,7 @@ class ElasticsearchCreateQueryTest extends TestCase
     {
         $this->query = new ElasticsearchCreateQuery(
             $this->client = ClientBuilder::fromConfig([
-                'hosts' => ['127.0.0.1:9200']
+                'hosts' => [$_ENV['ELASTICSEARCH_HOST']]
             ])
         );
     }
@@ -300,7 +301,7 @@ class ElasticsearchCreateQueryTest extends TestCase
      */
     public function test_compile_simple_empty()
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ElaticsearchQueryException::class);
         $this->expectExceptionMessage('No value to create');
 
         $this->query->into('test_persons', 'person')->bulk(false)->compile();

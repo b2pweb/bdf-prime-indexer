@@ -2,6 +2,7 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Grammar;
 
+use Bdf\Prime\Indexer\Elasticsearch\Exception\GrammarException;
 use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
 
 /**
@@ -26,6 +27,8 @@ interface ElasticsearchGrammarInterface
      * @param mixed $value
      *
      * @return array
+     *
+     * @throws GrammarException When cannot generate a valid expression
      */
     public function operator($field, $operator, $value);
 

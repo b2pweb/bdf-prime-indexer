@@ -27,7 +27,7 @@ class ElasticsearchPaginatorTest extends TestCase
     {
         $this->query = new ElasticsearchQuery(
             $this->client = ClientBuilder::fromConfig([
-                'hosts' => ['127.0.0.1:9200']
+                'hosts' => [$_ENV['ELASTICSEARCH_HOST']]
             ])
         );
 

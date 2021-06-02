@@ -2,25 +2,29 @@
 
 namespace Bdf\Prime\Indexer;
 
+use Bdf\Prime\Indexer\Exception\IndexNotFoundException;
+use Bdf\Prime\Indexer\Exception\InvalidIndexConfigurationException;
+use Bdf\Prime\Indexer\Resolver\IndexResolverInterface;
+
 /**
  * Creates indexes
  */
 class IndexFactory
 {
     /**
-     * @var callable[]
+     * @var array<class-string, callable(object, IndexFactory):IndexInterface>
      */
-    private $factories = [];
+    private $factories;
 
     /**
-     * @var array
+     * @var IndexResolverInterface
      */
-    private $configurations = [];
+    private $resolver;
 
     /**
      * Index instances, by entity class name
      *
-     * @var IndexInterface[]
+     * @var array<class-string, IndexInterface>
      */
     private $indexes = [];
 
@@ -28,19 +32,26 @@ class IndexFactory
     /**
      * IndexerFactory constructor.
      *
-     * @param callable[] $factories
-     * @param array $configurations
+     * @param array<class-string, callable(object, IndexFactory):IndexInterface> $factories
+     * @param IndexResolverInterface $resolver
      */
-    public function __construct(array $factories, array $configurations)
+    public function __construct(array $factories, IndexResolverInterface $resolver)
     {
         $this->factories = $factories;
-        $this->configurations = $configurations;
+        $this->resolver = $resolver;
     }
 
     /**
-     * @param string $entity
+     * Get the index for the given entity class
      *
-     * @return IndexInterface
+     * @param class-string<E> $entity The entity class name
+     *
+     * @return IndexInterface<E>
+     *
+     * @throws IndexNotFoundException When cannot found any valid index configuration for the requested entity
+     * @throws InvalidIndexConfigurationException When cannot create the index using the resolved configuration
+     *
+     * @template E as object
      */
     public function for(string $entity): IndexInterface
     {
@@ -48,25 +59,18 @@ class IndexFactory
             return $this->indexes[$entity];
         }
 
-        $configuration = $this->configurations[$entity];
+        $configuration = $this->resolver->resolve($entity);
+
+        if (!$configuration) {
+            throw new IndexNotFoundException($entity);
+        }
 
         foreach ($this->factories as $name => $factory) {
             if ($configuration instanceof $name) {
-                return $this->indexes[$entity] = $factory($configuration);
+                return $this->indexes[$entity] = $factory($configuration, $this);
             }
         }
 
-        throw new \LogicException('Cannot found any factory for configuration '.get_class($configuration));
-    }
-
-    /**
-     * Register a new entity in the indexer system
-     *
-     * @param string $entity The entity class name
-     * @param object $config The index configuration
-     */
-    public function register(string $entity, $config): void
-    {
-        $this->configurations[$entity] = $config;
+        throw new InvalidIndexConfigurationException($entity, $configuration);
     }
 }

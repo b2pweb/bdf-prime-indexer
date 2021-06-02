@@ -6,12 +6,14 @@ use Bdf\Collection\Util\Functor\Transformer\Getter;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
-use City;
-use CityIndex;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Elasticsearch\Common\Exceptions\Missing404Exception;
 use Elasticsearch\Namespaces\IndicesNamespace;
+use ElasticsearchTestFiles\City;
+use ElasticsearchTestFiles\CityIndex;
+use ElasticsearchTestFiles\UserIndex;
+use ElasticsearchTestFiles\WithAnonAnalyzerIndex;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -36,7 +38,7 @@ class ElasticsearchIndexTest extends TestCase
     {
         $this->index = new ElasticsearchIndex(
             $this->client = ClientBuilder::fromConfig([
-                'hosts' => ['127.0.0.1:9200']
+                'hosts' => [$_ENV['ELASTICSEARCH_HOST']]
             ]),
             new ElasticsearchMapper(new CityIndex())
         );
@@ -296,7 +298,7 @@ class ElasticsearchIndexTest extends TestCase
     public function test_scope_not_found()
     {
         $this->expectException(\BadMethodCallException::class);
-        $this->expectExceptionMessage('The scope notFound cannot be found');
+        $this->expectExceptionMessage('The scope "notFound" cannot be found for the entity "ElasticsearchTestFiles\City"');
 
         $this->index->notFound('par');
     }
@@ -444,7 +446,7 @@ class ElasticsearchIndexTest extends TestCase
 
         $client = $this->createMock(Client::class);
         $indices = $this->createMock(IndicesNamespace::class);
-        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new \UserIndex()));
+        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new UserIndex()));
 
         $client->expects($this->any())->method('indices')->willReturn($indices);
         $indices->expects($this->once())->method('create')->with($expected);
@@ -497,7 +499,7 @@ class ElasticsearchIndexTest extends TestCase
 
         $client = $this->createMock(Client::class);
         $indices = $this->createMock(IndicesNamespace::class);
-        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new \WithAnonAnalyzerIndex()));
+        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new WithAnonAnalyzerIndex()));
 
         $client->expects($this->any())->method('indices')->willReturn($indices);
         $indices->expects($this->once())->method('create')->with($expected);
