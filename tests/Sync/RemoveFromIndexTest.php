@@ -6,7 +6,7 @@ use Bdf\Bus\MessageDispatcherInterface;
 use Bdf\Prime\Indexer\IndexInterface;
 use Bdf\Prime\Indexer\Test\TestingIndexer;
 use Bdf\Prime\Indexer\TestKernel;
-use City;
+use ElasticsearchTestFiles\City;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -42,7 +42,7 @@ class RemoveFromIndexTest extends TestCase
         $this->app->boot();
 
         $this->indexTester = new TestingIndexer($this->app->getContainer());
-        $this->index = $this->indexTester->index(\City::class);
+        $this->index = $this->indexTester->index(City::class);
 
         $this->bus = $this->app->getContainer()->get('messenger.default_bus');
     }

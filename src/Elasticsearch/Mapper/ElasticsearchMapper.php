@@ -4,6 +4,7 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Mapper;
 
 use Bdf\Prime\Entity\Instantiator\Instantiator;
 use Bdf\Prime\Entity\Instantiator\InstantiatorInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Exception\InvalidAnalyzerException;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\AnalyzerInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\ArrayAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\StandardAnalyzer;
@@ -236,7 +237,7 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
             } elseif (is_array($analyzer)) {
                 $analyzers[$name] = new ArrayAnalyzer($analyzer);
             } else {
-                throw new \LogicException('Invalid analyzer declaration. Expects array or AnalyzerInterface');
+                throw new InvalidAnalyzerException('Invalid analyzer declaration. Expects array or AnalyzerInterface');
             }
         }
 

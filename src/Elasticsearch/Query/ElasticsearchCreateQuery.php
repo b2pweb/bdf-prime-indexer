@@ -2,6 +2,7 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
+use Bdf\Prime\Indexer\Elasticsearch\Exception\ElaticsearchQueryException;
 use Bdf\Prime\Query\Contract\Query\InsertQueryInterface;
 use Elasticsearch\Client;
 
@@ -304,7 +305,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
     private function compileSimple()
     {
         if (empty($this->values)) {
-            throw new \InvalidArgumentException('No value to create');
+            throw new ElaticsearchQueryException('No value to create');
         }
 
         $query = [

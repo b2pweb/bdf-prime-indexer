@@ -11,12 +11,18 @@ prime:
 
 prime_indexer:
   elasticsearch:
-    hosts: ['127.0.0.1:9200']
-
-  indexes:
-    City: CityIndex
-    User: UserIndex
+    hosts: ['%env(ELASTICSEARCH_HOST)%']
 
 services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  ElasticsearchTestFiles\:
+    resource: './Elasticsearch/_files/*'
+
+  DenormalizeTestFiles\:
+    resource: './Denormalize/_files/*'
+
   logger:
     class: \Psr\Log\NullLogger

@@ -2,6 +2,7 @@
 
 namespace Bdf\Prime\Indexer\Bundle\Factory;
 
+use Bdf\Prime\Indexer\IndexFactory;
 use Bdf\Prime\Indexer\IndexInterface;
 
 /**
@@ -22,8 +23,9 @@ interface IndexFactoryInterface
      * Create the index from the configuration object
      *
      * @param T $config The configuration object
+     * @param IndexFactory $factory The index factory
      *
      * @return IndexInterface
      */
-    public function __invoke($config): IndexInterface;
+    public function __invoke($config, IndexFactory $factory): IndexInterface;
 }

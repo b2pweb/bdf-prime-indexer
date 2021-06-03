@@ -4,6 +4,7 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Console;
 
 use Bdf\Prime\Indexer\CommandTestCase;
 use Bdf\Prime\Indexer\IndexFactory;
+use ElasticsearchTestFiles\User;
 
 /**
  * Class ShowCommandTest
@@ -15,7 +16,7 @@ class ShowCommandTest extends CommandTestCase
      */
     protected function tearDown(): void
     {
-        $this->factory()->for(\User::class)->drop();
+        $this->factory()->for(User::class)->drop();
 
         parent::tearDown();
     }
@@ -25,7 +26,7 @@ class ShowCommandTest extends CommandTestCase
      */
     public function test_execute()
     {
-        $this->factory()->for(\User::class)->create();
+        $this->factory()->for(User::class)->create();
 
         $output = $this->execute('elasticsearch:show');
 

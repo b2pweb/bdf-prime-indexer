@@ -18,7 +18,7 @@ final class SimplePropertyAccessor implements PropertyAccessorInterface
      *
      * @param string $propertyName
      */
-    public function __construct($propertyName)
+    public function __construct(string $propertyName)
     {
         $this->propertyName = $propertyName;
     }
@@ -34,7 +34,7 @@ final class SimplePropertyAccessor implements PropertyAccessorInterface
             }
         }
 
-        throw new \LogicException('Cannot find getter for property '.$this->propertyName.' on entity '.get_class($entity));
+        throw new PropertyAccessorException('Cannot find getter for property '.$this->propertyName.' on entity '.get_class($entity));
     }
 
     /**

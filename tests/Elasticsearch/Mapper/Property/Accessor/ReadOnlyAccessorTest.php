@@ -3,6 +3,7 @@
 namespace Elasticsearch\Mapper\Property\Accessor;
 
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\ReadOnlyAccessor;
+use ElasticsearchTestFiles\User;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -15,7 +16,7 @@ class ReadOnlyAccessorTest extends TestCase
      */
     public function test_readFromModel()
     {
-        $user = new \User();
+        $user = new User();
         $user->setRoles(['3', '7']);
 
         $accessor = new ReadOnlyAccessor('roles');
@@ -27,7 +28,7 @@ class ReadOnlyAccessorTest extends TestCase
      */
     public function test_writeToModel()
     {
-        $user = new \User();
+        $user = new User();
 
         $accessor = new ReadOnlyAccessor('roles');
         $accessor->writeToModel($user, ['3', '7']);

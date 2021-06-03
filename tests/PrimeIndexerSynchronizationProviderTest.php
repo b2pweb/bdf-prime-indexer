@@ -8,6 +8,8 @@ use Bdf\Prime\Events;
 use Bdf\Prime\Indexer\Sync\RepositorySubscriber;
 use Bdf\Prime\PrimeServiceProvider;
 use Bdf\Web\Application;
+use ElasticsearchTestFiles\City;
+use ElasticsearchTestFiles\User;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -34,8 +36,8 @@ class PrimeIndexerSynchronizationProviderTest extends TestCase
                 'elasticsearch' => ['hosts' => ['127.0.0.1:9222']]
             ]),
             'prime.indexes' => [
-                \City::class => new \CityIndex(),
-                \User::class => new \UserIndex(),
+                City::class => new CityIndex(),
+                User::class => new UserIndex(),
             ],
             'logger' => new NullLogger()
         ]);
@@ -54,12 +56,12 @@ class PrimeIndexerSynchronizationProviderTest extends TestCase
         $this->app->register(new PrimeIndexerSynchronizationProvider());
         $this->app->boot();
 
-        $this->assertInstanceOf(RepositorySubscriber::class, $this->app['prime']->repository(\User::class)->listeners(Events::POST_UPDATE)[0][0]);
-        $this->assertInstanceOf(RepositorySubscriber::class, $this->app['prime']->repository(\User::class)->listeners(Events::POST_INSERT)[0][0]);
-        $this->assertInstanceOf(RepositorySubscriber::class, $this->app['prime']->repository(\User::class)->listeners(Events::POST_DELETE)[0][0]);
+        $this->assertInstanceOf(RepositorySubscriber::class, $this->app['prime']->repository(User::class)->listeners(Events::POST_UPDATE)[0][0]);
+        $this->assertInstanceOf(RepositorySubscriber::class, $this->app['prime']->repository(User::class)->listeners(Events::POST_INSERT)[0][0]);
+        $this->assertInstanceOf(RepositorySubscriber::class, $this->app['prime']->repository(User::class)->listeners(Events::POST_DELETE)[0][0]);
 
-        $this->assertInstanceOf(RepositorySubscriber::class, $this->app['prime']->repository(\City::class)->listeners(Events::POST_UPDATE)[0][0]);
-        $this->assertInstanceOf(RepositorySubscriber::class, $this->app['prime']->repository(\City::class)->listeners(Events::POST_INSERT)[0][0]);
-        $this->assertInstanceOf(RepositorySubscriber::class, $this->app['prime']->repository(\City::class)->listeners(Events::POST_DELETE)[0][0]);
+        $this->assertInstanceOf(RepositorySubscriber::class, $this->app['prime']->repository(City::class)->listeners(Events::POST_UPDATE)[0][0]);
+        $this->assertInstanceOf(RepositorySubscriber::class, $this->app['prime']->repository(City::class)->listeners(Events::POST_INSERT)[0][0]);
+        $this->assertInstanceOf(RepositorySubscriber::class, $this->app['prime']->repository(City::class)->listeners(Events::POST_DELETE)[0][0]);
     }
 }

@@ -10,16 +10,25 @@ services:
             - '%prime.indexer.configuration.elasticsearch%'
         public: true
 
+    Bdf\Prime\Indexer\Resolver\MappingResolver:
+        class: Bdf\Prime\Indexer\Resolver\MappingResolver
+        arguments: ['@service_container']
+        public: true
+
     Bdf\Prime\Indexer\IndexFactory:
         class: Bdf\Prime\Indexer\IndexFactory
         arguments:
-            - {'Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface': '@Bdf\Prime\Indexer\Bundle\Factory\ElasticsearchIndexFactory'}
-            - []
+            - 'Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface': '@Bdf\Prime\Indexer\Bundle\Factory\ElasticsearchIndexFactory'
+              'Bdf\Prime\Indexer\Denormalize\DenormalizerInterface': '@Bdf\Prime\Indexer\Bundle\Factory\DenormalizerIndexFactory'
+            - '@Bdf\Prime\Indexer\Resolver\MappingResolver'
         public: true
 
     Bdf\Prime\Indexer\Bundle\Factory\ElasticsearchIndexFactory:
         class: Bdf\Prime\Indexer\Bundle\Factory\ElasticsearchIndexFactory
         arguments: ['@service_container']
+
+    Bdf\Prime\Indexer\Bundle\Factory\DenormalizerIndexFactory:
+        class: Bdf\Prime\Indexer\Bundle\Factory\DenormalizerIndexFactory
 
     # Commands
     Bdf\Prime\Indexer\Elasticsearch\Console\ShowCommand:

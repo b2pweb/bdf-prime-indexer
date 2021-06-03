@@ -3,6 +3,7 @@
 namespace Elasticsearch\Mapper\Property\Accessor;
 
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\CustomAccessor;
+use ElasticsearchTestFiles\User;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -15,7 +16,7 @@ class CustomAccessorTest extends TestCase
      */
     public function test_readFromModel()
     {
-        $user = new \User();
+        $user = new User();
 
         $accessor = new CustomAccessor(function () use(&$parameters) {
             $parameters = func_get_args();
@@ -33,9 +34,9 @@ class CustomAccessorTest extends TestCase
      */
     public function test_writeToModel()
     {
-        $user = new \User();
+        $user = new User();
 
-        $accessor = new CustomAccessor(function (\User $user) use(&$parameters) {
+        $accessor = new CustomAccessor(function (User $user) use(&$parameters) {
             $parameters = func_get_args();
 
             $user->setName('new name');

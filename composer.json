@@ -16,7 +16,9 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Bdf\\Prime\\Indexer\\": "tests"
+      "Bdf\\Prime\\Indexer\\": "tests",
+      "ElasticsearchTestFiles\\": "tests/Elasticsearch/_files",
+      "DenormalizeTestFiles\\": "tests/Denormalize/_files"
     }
   },
   "minimum-stability": "dev",
@@ -34,6 +36,9 @@
     "symfony/console": "~4.0|~5.0",
     "symfony/yaml": "~4.0|~5.0",
     "vimeo/psalm": "~4.7"
+  },
+  "conflict": {
+    "phpdocumentor/reflection-common": "<2.0.0"
   },
   "extra": {
     "branch-alias": {

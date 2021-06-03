@@ -3,10 +3,12 @@
 namespace Bdf\Prime\Indexer\Elasticsearch;
 
 use Bdf\Collection\Stream\Streams;
+use Bdf\Prime\Indexer\Elasticsearch\Exception\IdNotProvidedException;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
+use Bdf\Prime\Indexer\Exception\ScopeNotFoundException;
 use Bdf\Prime\Indexer\IndexInterface;
 use Bdf\Prime\Indexer\QueryInterface;
 use Elasticsearch\Client;
@@ -84,7 +86,7 @@ class ElasticsearchIndex implements IndexInterface
         $id = $this->mapper->id($entity);
 
         if (empty($id)) {
-            throw new \InvalidArgumentException('Cannot extract id from the entity');
+            throw new IdNotProvidedException($this->config()->entity());
         }
 
         try {
@@ -106,7 +108,7 @@ class ElasticsearchIndex implements IndexInterface
         $document = $this->mapper->toIndex($entity, $attributes);
 
         if (empty($document['_id'])) {
-            throw new \InvalidArgumentException('Cannot extract id from the entity');
+            throw new IdNotProvidedException($this->config()->entity());
         }
 
         $id = $document['_id'];
@@ -244,7 +246,7 @@ class ElasticsearchIndex implements IndexInterface
     public function __call(string $name, array $arguments): QueryInterface
     {
         if (!isset($this->mapper->scopes()[$name])) {
-            throw new \BadMethodCallException('The scope '.$name.' cannot be found');
+            throw new ScopeNotFoundException($this->config()->entity(), $name);
         }
 
         $query = $this->query();
