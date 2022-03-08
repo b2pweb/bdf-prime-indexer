@@ -62,7 +62,7 @@ class DeleteCommandTest extends CommandTestCase
     {
         $output = $this->execute('elasticsearch:delete', ['indices' => []], ['inputs' => ['yes']]);
 
-        $this->assertContains('Aucun index à supprimer', $output);
+        $this->assertStringContainsString('Aucun index à supprimer', $output);
     }
 
     private function client(): Client

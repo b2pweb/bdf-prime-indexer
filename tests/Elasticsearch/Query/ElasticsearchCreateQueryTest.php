@@ -98,7 +98,7 @@ class ElasticsearchCreateQueryTest extends TestCase
         ;
 
         $this->assertTrue($response['errors']);
-        $this->assertEquals('document_already_exists_exception', $response['items'][0]['create']['error']['type']);
+        $this->assertContains($response['items'][0]['create']['error']['type'], ['document_already_exists_exception', 'version_conflict_engine_exception']);
 
         $this->assertEquals(1, $this->search()->execute()['hits']['total']);
 

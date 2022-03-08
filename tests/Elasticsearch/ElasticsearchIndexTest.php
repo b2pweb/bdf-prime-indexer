@@ -196,7 +196,7 @@ class ElasticsearchIndexTest extends TestCase
             $this->index->query()->execute();
             $this->fail('Expects exception');
         } catch (Missing404Exception $e) {
-            $this->assertContains('index_not_found_exception', $e->getMessage());
+            $this->assertStringContainsString('index_not_found_exception', $e->getMessage());
         }
     }
 
