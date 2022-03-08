@@ -274,7 +274,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function nested(\Closure $callback, $type = BooleanQuery::COMPOSITE_AND)
+    public function nested(callable $callback, string $type = BooleanQuery::COMPOSITE_AND)
     {
         // Save filters, and clear for the nested query
         $query = $this->query;
@@ -325,7 +325,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function getOrders()
+    public function getOrders(): array
     {
         return $this->order;
     }
@@ -357,7 +357,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function getPage()
+    public function getPage(): int
     {
         if ($this->size === null) {
             return 1;
@@ -369,7 +369,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function getLimit()
+    public function getLimit(): ?int
     {
         return $this->size;
     }
@@ -387,7 +387,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function getOffset()
+    public function getOffset(): ?int
     {
         return $this->from;
     }
@@ -395,7 +395,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function isLimitQuery()
+    public function isLimitQuery(): bool
     {
         return $this->from !== null || $this->size !== null;
     }
@@ -403,7 +403,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function hasPagination()
+    public function hasPagination(): bool
     {
         return $this->from !== null && $this->size !== null;
     }
