@@ -94,6 +94,49 @@ jobs:
     - name: Run test suite
       run: composer run-script tests
 
+  prime_compatiblity:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        prime-versions: ['1.2', '1.3']
+    name: Prime version ${{ matrix.prime-versions }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set Timezone
+      uses: szenius/set-timezone@v1.0
+      with:
+        timezoneLinux: "Europe/Paris"
+
+    - name: Install PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 7.2
+        extensions: json
+        ini-values: date.timezone=Europe/Paris
+
+    - name: Configure sysctl limits
+      run: |
+        sudo swapoff -a
+        sudo sysctl -w vm.swappiness=1
+        sudo sysctl -w fs.file-max=262144
+        sudo sysctl -w vm.max_map_count=262144
+
+    - uses: nyaruka/elasticsearch-action@v1
+      with:
+        elastic version: 5.6
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Install Prime ${{ matrix.prime-versions }}
+      run: composer require --dev 'b2pweb/bdf-prime:~${{ matrix.prime-versions }}.0' --with-all-dependencies
+
+    - name: Run test suite
+      run: composer run-script tests
+
   analysis:
     name: Analysis
     runs-on: ubuntu-latest
