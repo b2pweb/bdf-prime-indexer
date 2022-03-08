@@ -2,8 +2,17 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
+use Bdf\Prime\Connection\ConnectionInterface;
+use Bdf\Prime\Connection\Result\ResultSetInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Result\BulkResultSet;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Result\WriteResultSet;
+use Bdf\Prime\Query\Compiler\CompilerInterface;
+use Bdf\Prime\Query\Compiler\CompilerState;
+use Bdf\Prime\Query\Compiler\Preprocessor\PreprocessorInterface;
 use Bdf\Prime\Query\Contract\Query\InsertQueryInterface;
+use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Elasticsearch\Client;
+use Elasticsearch\Endpoints\Create;
 
 /**
  * Query for create documents into an elasticsearch index
@@ -107,6 +116,10 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
      */
     private $refresh = false;
 
+    /**
+     * Does the current version of elasticsearch library is >= 8.0
+     */
+    private static ?bool $isV8;
 
     /**
      * ElasticsearchCreateQuery constructor.
@@ -174,7 +187,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
      *
      * @todo handle ignore
      */
-    public function ignore($flag = true)
+    public function ignore(bool $flag = true)
     {
         return $this->mode($flag ? self::MODE_IGNORE : self::MODE_INSERT);
     }
@@ -182,7 +195,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
     /**
      * {@inheritdoc}
      */
-    public function replace($flag = true)
+    public function replace(bool $flag = true)
     {
         return $this->mode($flag ? self::MODE_REPLACE : self::MODE_INSERT);
     }
@@ -190,7 +203,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
     /**
      * {@inheritdoc}
      */
-    public function bulk($flag = true)
+    public function bulk(bool $flag = true)
     {
         $this->bulk = $flag;
 
@@ -200,15 +213,15 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
     /**
      * {@inheritdoc}
      *
-     * @return int|array
+     * @return BulkResultSet|WriteResultSet
      */
-    public function execute($columns = null)
+    public function execute($columns = null): ResultSetInterface
     {
         if ($this->bulk) {
-            return $this->client->bulk($this->compileBulk());
+            return new BulkResultSet($this->client->bulk($this->compileBulk()));
         }
 
-        return $this->client->{$this->operation()}($this->compileSimple());
+        return new WriteResultSet($this->client->{$this->operation()}($this->compileSimple()));
     }
 
     /**
@@ -216,7 +229,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
      *
      * Get the number of pending insert values
      */
-    public function count()
+    public function count(): int
     {
         return count($this->values);
     }
@@ -313,6 +326,10 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
             'body'  => $this->compileData($this->values[0]),
         ];
 
+        if (self::isV8()) {
+            unset($query['type']);
+        }
+
         if (isset($this->values[0][self::PK_FIELD])) {
             $query['id'] = $this->values[0][self::PK_FIELD];
             unset($query['body'][self::PK_FIELD]);
@@ -329,6 +346,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
      * Get the operation name from the mode
      *
      * @return string
+     * @psalm-return 'index'|'create'
      */
     private function operation()
     {
@@ -369,5 +387,161 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
         }
 
         return $filtered;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setCustomFilters(array $filters)
+    {
+        // TODO: Implement setCustomFilters() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addCustomFilter(string $name, callable $callback)
+    {
+        // TODO: Implement addCustomFilter() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getCustomFilters(): array
+    {
+        // TODO: Implement getCustomFilters() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function statement(string $statement): array
+    {
+        // TODO: Implement statement() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addStatement(string $name, $values): void
+    {
+        // TODO: Implement addStatement() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function buildClause(string $statement, $expression, $operator = null, $value = null, string $type = CompositeExpression::TYPE_AND)
+    {
+        // TODO: Implement buildClause() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function buildRaw(string $statement, $expression, string $type = CompositeExpression::TYPE_AND)
+    {
+        // TODO: Implement buildRaw() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function buildNested(string $statement, callable $callback, string $type = CompositeExpression::TYPE_AND)
+    {
+        // TODO: Implement buildNested() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addCommand(string $command, $value)
+    {
+        // TODO: Implement addCommand() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function compiler(): CompilerInterface
+    {
+        // TODO: Implement compiler() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setCompiler(CompilerInterface $compiler)
+    {
+        // TODO: Implement setCompiler() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function connection(): ConnectionInterface
+    {
+        // TODO: Implement connection() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function on(ConnectionInterface $connection)
+    {
+        // TODO: Implement on() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function from(string $from, ?string $alias = null)
+    {
+        // TODO: Implement from() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function preprocessor(): PreprocessorInterface
+    {
+        // TODO: Implement preprocessor() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function state(): CompilerState
+    {
+        // TODO: Implement state() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function useQuoteIdentifier(bool $flag = true): void
+    {
+        // TODO: Implement useQuoteIdentifier() method.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isQuoteIdentifier(): bool
+    {
+        // TODO: Implement isQuoteIdentifier() method.
+    }
+
+    /**
+     * Does the current version of elasticsearch library is >= 8.0
+     */
+    private static function isV8(): bool
+    {
+        if (!isset(self::$isV8)) {
+            self::$isV8 = !in_array('type', (new Create())->getParamWhitelist());
+        }
+
+        return self::$isV8;
     }
 }

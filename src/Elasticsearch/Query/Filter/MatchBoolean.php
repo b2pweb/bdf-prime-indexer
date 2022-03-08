@@ -10,7 +10,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
  *
  * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/query-dsl-match-query.html
  */
-final class Match implements CompilableExpressionInterface
+final class MatchBoolean implements CompilableExpressionInterface
 {
     /**
      * @var string

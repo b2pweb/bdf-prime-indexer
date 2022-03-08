@@ -29,8 +29,8 @@ class ShowCommandTest extends CommandTestCase
 
         $output = $this->execute('elasticsearch:show');
 
-        $this->assertRegExp('# Indices + Types + Aliases +#', $output);
-        $this->assertRegExp('# test_users_.{13} + user + test_users +#', $output);
+        $this->assertMatchesRegularExpression('# Indices + Types + Aliases +#', $output);
+        $this->assertMatchesRegularExpression('# test_users_.{13} + user + test_users +#', $output);
     }
 
     private function factory(): IndexFactory

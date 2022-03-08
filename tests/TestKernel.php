@@ -24,12 +24,12 @@ class TestKernel extends \Symfony\Component\HttpKernel\Kernel
         }
     }
 
-    public function registerBundles()
+    public function registerBundles(): iterable
     {
         return [
             new \Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
             new \Bdf\PrimeBundle\PrimeBundle(),
-            new \Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
+//            new \Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
             new PrimeIndexerBundle(),
         ];
     }

@@ -238,7 +238,7 @@ class PropertiesBuilder
     {
         $this->string($name);
 
-        $analyzerName = 'csv_'.ord($separator);
+        $analyzerName = 'csv_' . ord($separator);
 
         if (!isset($this->analyzers[$analyzerName])) {
             $this->analyzers[$analyzerName] = new CsvAnalyzer($separator);
@@ -253,7 +253,8 @@ class PropertiesBuilder
      * Configure the analyzer for the property
      *
      * You can pass a string for use an analyzer declared into @see ElasticsearchIndexConfigurationInterface::analyzers()
-     * You can also use an anonymous analyzer by passing an AnalyzerInterface instance (or an array, which will be cast to ArrayAnalyzer).
+     * You can also use an anonymous analyzer by passing an AnalyzerInterface instance
+     * or an array, which will be cast to ArrayAnalyzer
      * With an anonymous analyzer, the analyzer will be declared using a generated name
      *
      * @param string|array|AnalyzerInterface $analyzer The analyzer name, or value
@@ -264,7 +265,7 @@ class PropertiesBuilder
     {
         if (is_string($analyzer)) {
             if (!isset($this->mapper->analyzers()[$analyzer])) {
-                throw new InvalidArgumentException('Analyzer '.$analyzer.' is not declared');
+                throw new InvalidArgumentException('Analyzer ' . $analyzer . ' is not declared');
             }
         } else {
             if (is_array($analyzer)) {
@@ -275,7 +276,7 @@ class PropertiesBuilder
                 throw new InvalidArgumentException('The parameter $analyzer must be a valid analyzer');
             }
 
-            $name = $this->current.'_anon_analyzer';
+            $name = $this->current . '_anon_analyzer';
             $this->analyzers[$name] = $analyzer;
             $analyzer = $name;
         }
@@ -371,7 +372,8 @@ class PropertiesBuilder
             case is_string($accessor):
                 return $this->option('accessor', new SimplePropertyAccessor($accessor));
 
-            // Check callable after string, but before array for allow [$this, 'method'] syntax, but disallow global functions
+            // Check callable after string, but before array for allow [$this, 'method'] syntax,
+            // but disallow global functions
             case is_callable($accessor):
                 return $this->option('accessor', new CustomAccessor($accessor));
 

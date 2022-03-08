@@ -3,7 +3,7 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Query\Compound;
 
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammar;
-use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Missing;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Range;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Wildcard;
@@ -23,9 +23,9 @@ class BooleanQueryTest extends TestCase
 
         $bool
             ->must((new Range('population'))->gt(10000))
-            ->should(new Match('name', 'Paris'))
-            ->should(new Match('zipCode', '75000'))
-            ->filter(new Match('country', 'FR'))
+            ->should(new MatchBoolean('name', 'Paris'))
+            ->should(new MatchBoolean('zipCode', '75000'))
+            ->filter(new MatchBoolean('country', 'FR'))
             ->mustNot(new Missing('population'))
         ;
 
@@ -51,8 +51,8 @@ class BooleanQueryTest extends TestCase
         $bool = new BooleanQuery();
 
         $bool
-            ->should(new Match('name', 'Paris'))
-            ->should(new Match('zipCode', '75000'))
+            ->should(new MatchBoolean('name', 'Paris'))
+            ->should(new MatchBoolean('zipCode', '75000'))
             ->minimumShouldMatch(2)
         ;
 
@@ -75,8 +75,8 @@ class BooleanQueryTest extends TestCase
         $bool = new BooleanQuery();
 
         $bool
-            ->should(new Match('name', 'Paris'))
-            ->should(new Match('zipCode', '75000'))
+            ->should(new MatchBoolean('name', 'Paris'))
+            ->should(new MatchBoolean('zipCode', '75000'))
             ->boost(2)
         ;
 
@@ -100,8 +100,8 @@ class BooleanQueryTest extends TestCase
         $bool = new BooleanQuery();
 
         $bool
-            ->filter(new Match('name', 'Paris'))
-            ->filter(new Match('zipCode', '75000'))
+            ->filter(new MatchBoolean('name', 'Paris'))
+            ->filter(new MatchBoolean('zipCode', '75000'))
             ->or()
             ->filter(new Wildcard('name', 'P*'))
             ->filter(new Wildcard('zipCode', '75*'))
@@ -136,9 +136,9 @@ class BooleanQueryTest extends TestCase
         $bool = new BooleanQuery();
 
         $bool
-            ->should(new Match('name', 'Paris'))
+            ->should(new MatchBoolean('name', 'Paris'))
             ->and()
-            ->filter(new Match('zipCode', '75000'))
+            ->filter(new MatchBoolean('zipCode', '75000'))
         ;
 
         $bool
@@ -179,7 +179,7 @@ class BooleanQueryTest extends TestCase
         $bool = new BooleanQuery();
 
         $bool
-            ->filter((new BooleanQuery())->mustNot(new Match('name', 'John')))
+            ->filter((new BooleanQuery())->mustNot(new MatchBoolean('name', 'John')))
             ->filter(new Wildcard('name', 'J*'))
             ->filter((new BooleanQuery())->mustNot(new Missing('age')))
         ;
@@ -204,7 +204,7 @@ class BooleanQueryTest extends TestCase
     {
         $bool = new BooleanQuery();
 
-        $bool->filter((new BooleanQuery())->filter(new Match('name', 'John')));
+        $bool->filter((new BooleanQuery())->filter(new MatchBoolean('name', 'John')));
 
         $this->assertEquals([
             'bool' => [
@@ -223,8 +223,8 @@ class BooleanQueryTest extends TestCase
         $bool = new BooleanQuery();
 
         $bool
-            ->filter((new BooleanQuery())->filter(new Match('name', 'John')))
-            ->must((new BooleanQuery())->must(new Match('bar', 'foo')))
+            ->filter((new BooleanQuery())->filter(new MatchBoolean('name', 'John')))
+            ->must((new BooleanQuery())->must(new MatchBoolean('bar', 'foo')))
         ;
 
         $this->assertEquals([
@@ -248,7 +248,7 @@ class BooleanQueryTest extends TestCase
 
         $bool
             ->minimumShouldMatch(1)
-            ->should((new BooleanQuery())->should(new Match('foo', 'bar'))->minimumShouldMatch(1))
+            ->should((new BooleanQuery())->should(new MatchBoolean('foo', 'bar'))->minimumShouldMatch(1))
         ;
 
         $this->assertEquals([

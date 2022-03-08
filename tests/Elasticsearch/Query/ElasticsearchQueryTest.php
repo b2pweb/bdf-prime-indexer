@@ -5,7 +5,7 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 use Bdf\Collection\Stream\ArrayStream;
 use Bdf\Collection\Util\Optional;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Compound\FunctionScoreQuery;
-use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchPhrase;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\QueryString;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Range;
@@ -34,7 +34,7 @@ class ElasticsearchQueryTest extends TestCase
     {
         $this->query = new ElasticsearchQuery(
             $this->client = ClientBuilder::fromConfig([
-                'hosts' => ['127.0.0.1:9200']
+                'hosts' => [ELASTICSEARCH_HOST]
             ])
         );
     }
@@ -548,7 +548,7 @@ class ElasticsearchQueryTest extends TestCase
                     ->orWhereRaw(new MatchPhrase('name', 'par'))
                 ;
             })
-            ->filter(new Match('country', 'FR'))
+            ->filter(new MatchBoolean('country', 'FR'))
             ->compile()
         ;
 
@@ -772,7 +772,7 @@ class ElasticsearchQueryTest extends TestCase
                     ->orWhereRaw(new MatchPhrase('name', 'par'))
                 ;
             })
-            ->filter(new Match('country', 'FR'))
+            ->filter(new MatchBoolean('country', 'FR'))
             ->execute()['hits']
         ;
 
@@ -947,7 +947,7 @@ class ElasticsearchQueryTest extends TestCase
                     ->orWhereRaw(new MatchPhrase('name', 'par'))
                 ;
             })
-            ->filter(new Match('country', 'FR'))
+            ->filter(new MatchBoolean('country', 'FR'))
             ->map(function ($doc) { return $doc['_source']; })
             ->order('population', 'desc')
             ->paginate()

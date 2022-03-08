@@ -3,7 +3,7 @@
 namespace Bdf\Prime\Indexer\Sync;
 
 use Bdf\Bus\MessageDispatcherInterface;
-use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Bdf\Prime\Indexer\IndexInterface;
 use Bdf\Prime\Indexer\Test\TestingIndexer;
 use Bdf\Prime\Indexer\TestKernel;
@@ -70,7 +70,7 @@ class UpdateIndexedEntityTest extends TestCase
         $this->assertTrue($this->index->contains($city));
         $this->index->refresh();
 
-        $this->assertEquals([$city], $this->index->query()->where(new Match('name', 'Paris'))->all());
+        $this->assertEquals([$city], $this->index->query()->where(new MatchBoolean('name', 'Paris'))->all());
     }
 
     /**
@@ -90,6 +90,6 @@ class UpdateIndexedEntityTest extends TestCase
         $this->bus->dispatch(new UpdateIndexedEntity(City::class, $city));
         $this->index->refresh();
 
-        $this->assertEquals([$city], $this->index->query()->where(new Match('name', 'Paris'))->all());
+        $this->assertEquals([$city], $this->index->query()->where(new MatchBoolean('name', 'Paris'))->all());
     }
 }

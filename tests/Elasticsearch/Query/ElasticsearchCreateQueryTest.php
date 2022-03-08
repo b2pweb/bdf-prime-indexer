@@ -2,7 +2,7 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
-use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Elasticsearch\Common\Exceptions\Conflict409Exception;
@@ -27,7 +27,7 @@ class ElasticsearchCreateQueryTest extends TestCase
     {
         $this->query = new ElasticsearchCreateQuery(
             $this->client = ClientBuilder::fromConfig([
-                'hosts' => ['127.0.0.1:9200']
+                'hosts' => [ELASTICSEARCH_HOST]
             ])
         );
     }
@@ -58,17 +58,17 @@ class ElasticsearchCreateQueryTest extends TestCase
             ->execute()
         ;
 
-        $this->assertCount(2, $response['items']);
+        $this->assertCount(2, $response);
 
         $this->assertEquals(2, $this->search()->execute()['hits']['total']);
         $this->assertEquals([
             'firstName' => 'Mickey',
             'lastName' => 'Mouse'
-        ], $this->search()->where(new Match('firstName', 'Mickey'))->execute()['hits']['hits'][0]['_source']);
+        ], $this->search()->where(new MatchBoolean('firstName', 'Mickey'))->execute()['hits']['hits'][0]['_source']);
         $this->assertEquals([
             'firstName' => 'Minnie',
             'lastName' => 'Mouse'
-        ], $this->search()->where(new Match('firstName', 'Minnie'))->execute()['hits']['hits'][0]['_source']);
+        ], $this->search()->where(new MatchBoolean('firstName', 'Minnie'))->execute()['hits']['hits'][0]['_source']);
     }
 
     /**
@@ -167,11 +167,11 @@ class ElasticsearchCreateQueryTest extends TestCase
         $this->assertEquals([
             'firstName' => 'Mickey',
             'lastName' => 'Mouse'
-        ], $this->search()->where(new Match('firstName', 'Mickey'))->execute()['hits']['hits'][0]['_source']);
+        ], $this->search()->where(new MatchBoolean('firstName', 'Mickey'))->execute()['hits']['hits'][0]['_source']);
         $this->assertEquals([
             'firstName' => 'Minnie',
             'lastName' => null
-        ], $this->search()->where(new Match('firstName', 'Minnie'))->execute()['hits']['hits'][0]['_source']);
+        ], $this->search()->where(new MatchBoolean('firstName', 'Minnie'))->execute()['hits']['hits'][0]['_source']);
     }
 
     /**
@@ -196,10 +196,10 @@ class ElasticsearchCreateQueryTest extends TestCase
         $this->assertEquals([
             'firstName' => 'Mickey',
             'lastName' => 'Mouse'
-        ], $this->search()->where(new Match('firstName', 'Mickey'))->execute()['hits']['hits'][0]['_source']);
+        ], $this->search()->where(new MatchBoolean('firstName', 'Mickey'))->execute()['hits']['hits'][0]['_source']);
         $this->assertEquals([
             'firstName' => 'Minnie',
-        ], $this->search()->where(new Match('firstName', 'Minnie'))->execute()['hits']['hits'][0]['_source']);
+        ], $this->search()->where(new MatchBoolean('firstName', 'Minnie'))->execute()['hits']['hits'][0]['_source']);
     }
 
     /**
@@ -224,7 +224,7 @@ class ElasticsearchCreateQueryTest extends TestCase
         $this->assertEquals([
             'firstName' => 'Mickey',
             'lastName' => 'Mouse'
-        ], $this->search()->where(new Match('firstName', 'Mickey'))->execute()['hits']['hits'][0]['_source']);
+        ], $this->search()->where(new MatchBoolean('firstName', 'Mickey'))->execute()['hits']['hits'][0]['_source']);
     }
 
     /**
@@ -292,7 +292,7 @@ class ElasticsearchCreateQueryTest extends TestCase
         $this->assertEquals([
             'firstName' => 'Minnie',
             'lastName' => 'Mouse'
-        ], $this->search()->where(new Match('firstName', 'Minnie'))->execute()['hits']['hits'][0]['_source']);
+        ], $this->search()->where(new MatchBoolean('firstName', 'Minnie'))->execute()['hits']['hits'][0]['_source']);
     }
 
     /**

@@ -86,7 +86,8 @@ final class FunctionScoreQuery implements WrappingQueryInterface
     }
 
     /**
-     * To exclude documents that do not meet a certain score threshold the min_score parameter can be set to the desired score threshold.
+     * To exclude documents that do not meet a certain score threshold
+     * the min_score parameter can be set to the desired score threshold.
      *
      * @param float $value
      *

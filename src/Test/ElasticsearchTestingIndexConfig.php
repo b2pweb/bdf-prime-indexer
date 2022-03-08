@@ -32,7 +32,7 @@ class ElasticsearchTestingIndexConfig implements ElasticsearchIndexConfiguration
      */
     public function index(): string
     {
-        return 'test_'.$this->config->index();
+        return 'test_' . $this->config->index();
     }
 
     /**

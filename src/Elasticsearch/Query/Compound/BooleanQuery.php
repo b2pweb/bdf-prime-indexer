@@ -12,12 +12,12 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
  */
 final class BooleanQuery implements CompilableExpressionInterface
 {
-    const COMPOSITE_AND = 'AND';
-    const COMPOSITE_OR = 'OR';
-    const COMPOSITE_FILTER = 'FILTER';
-    const COMPOSITE_SHOULD = 'SHOULD';
-    const COMPOSITE_MUST = 'MUST';
-    const COMPOSITE_MUST_NOT = 'MUST_NOT';
+    public const COMPOSITE_AND = 'AND';
+    public const COMPOSITE_OR = 'OR';
+    public const COMPOSITE_FILTER = 'FILTER';
+    public const COMPOSITE_SHOULD = 'SHOULD';
+    public const COMPOSITE_MUST = 'MUST';
+    public const COMPOSITE_MUST_NOT = 'MUST_NOT';
 
     /**
      * @var array

@@ -15,6 +15,6 @@ class MatchTest extends TestCase
      */
     public function test_compile()
     {
-        $this->assertEquals(['match' => ['my_field' => 'my_value']], (new Match('my_field', 'my_value'))->compile(new ElasticsearchGrammar()));
+        $this->assertEquals(['match' => ['my_field' => 'my_value']], (new MatchBoolean('my_field', 'my_value'))->compile(new ElasticsearchGrammar()));
     }
 }

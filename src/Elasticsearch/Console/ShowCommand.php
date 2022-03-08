@@ -40,7 +40,7 @@ class ShowCommand extends AbstractCommand
             $rows[] = [$index, $this->getTypesColumn($definition), $this->getAliasesColumn($aliases, $index)];
         }
 
-        usort($rows, function($a, $b) {
+        usort($rows, function ($a, $b) {
             return strcmp($a[0], $b[0]);
         });
 

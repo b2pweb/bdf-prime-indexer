@@ -106,6 +106,8 @@ final class RepositorySubscriber
      */
     private function shouldBeIndexed($entity): bool
     {
-        return !$this->config instanceof ShouldBeIndexedConfigurationInterface || $this->config->shouldBeIndexed($entity);
+        return !$this->config instanceof ShouldBeIndexedConfigurationInterface
+            || $this->config->shouldBeIndexed($entity)
+        ;
     }
 }

@@ -5,9 +5,9 @@ namespace Bdf\Prime\Indexer\Elasticsearch;
 use Bdf\Collection\Util\Functor\Transformer\Getter;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
-use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
 use City;
 use CityIndex;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Elasticsearch\Common\Exceptions\Missing404Exception;
@@ -36,7 +36,7 @@ class ElasticsearchIndexTest extends TestCase
     {
         $this->index = new ElasticsearchIndex(
             $this->client = ClientBuilder::fromConfig([
-                'hosts' => ['127.0.0.1:9200']
+                'hosts' => [ELASTICSEARCH_HOST]
             ]),
             new ElasticsearchMapper(new CityIndex())
         );
@@ -65,7 +65,7 @@ class ElasticsearchIndexTest extends TestCase
 
         $this->index->refresh();
 
-        $indexed = $this->index->query()->where(new Match('name', 'Paris'))->stream()->first()->get();
+        $indexed = $this->index->query()->where(new MatchBoolean('name', 'Paris'))->stream()->first()->get();
         $this->assertEquals($city, $indexed);
     }
 
@@ -85,7 +85,7 @@ class ElasticsearchIndexTest extends TestCase
 
         $this->index->refresh();
 
-        $indexed = $this->index->query()->where(new Match('name', 'Paris'))->stream()->first()->get();
+        $indexed = $this->index->query()->where(new MatchBoolean('name', 'Paris'))->stream()->first()->get();
         $this->assertEquals($city, $indexed);
     }
 
@@ -107,13 +107,13 @@ class ElasticsearchIndexTest extends TestCase
         $this->addCities();
 
         $this->assertCount(4, $this->index->query()->stream());
-        $city = $this->index->query()->where(new Match('name', 'Cavaillon'))->stream()->first()->get();
+        $city = $this->index->query()->where(new MatchBoolean('name', 'Cavaillon'))->stream()->first()->get();
 
         $this->index->remove($city);
         $this->index->refresh();
 
         $this->assertCount(3, $this->index->query()->stream());
-        $this->assertCount(0, $this->index->query()->where(new Match('name', 'Cavaillon'))->stream());
+        $this->assertCount(0, $this->index->query()->where(new MatchBoolean('name', 'Cavaillon'))->stream());
     }
 
     /**
@@ -196,7 +196,7 @@ class ElasticsearchIndexTest extends TestCase
             $this->index->query()->execute();
             $this->fail('Expects exception');
         } catch (Missing404Exception $e) {
-            $this->assertContains('index_not_found_exception', $e->getMessage());
+            $this->assertStringContainsString('index_not_found_exception', $e->getMessage());
         }
     }
 

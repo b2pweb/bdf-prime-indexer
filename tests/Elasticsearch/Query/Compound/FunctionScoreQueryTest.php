@@ -3,7 +3,7 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Query\Compound;
 
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammar;
-use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,7 +24,7 @@ class FunctionScoreQueryTest extends TestCase
                 'factor' => 1,
                 'modifier' => 'log1p'
             ])
-            ->wrap(new Match('name', 'Paris'))
+            ->wrap(new MatchBoolean('name', 'Paris'))
         ;
 
         $this->assertEquals([
@@ -59,7 +59,7 @@ class FunctionScoreQueryTest extends TestCase
                     'decay' => .2
                 ]
             ])
-            ->wrap(new Match('name', 'Paris'))
+            ->wrap(new MatchBoolean('name', 'Paris'))
         ;
 
         $this->assertEquals([
@@ -102,7 +102,7 @@ class FunctionScoreQueryTest extends TestCase
                 'modifier' => 'log1p'
             ])
             ->maxBoost(5)
-            ->wrap(new Match('name', 'Paris'))
+            ->wrap(new MatchBoolean('name', 'Paris'))
         ;
 
         $this->assertEquals([
@@ -132,7 +132,7 @@ class FunctionScoreQueryTest extends TestCase
                 'modifier' => 'log1p'
             ])
             ->boostMode('sum')
-            ->wrap(new Match('name', 'Paris'))
+            ->wrap(new MatchBoolean('name', 'Paris'))
         ;
 
         $this->assertEquals([
@@ -162,7 +162,7 @@ class FunctionScoreQueryTest extends TestCase
                 'modifier' => 'log1p'
             ])
             ->scoreMode('sum')
-            ->wrap(new Match('name', 'Paris'))
+            ->wrap(new MatchBoolean('name', 'Paris'))
         ;
 
         $this->assertEquals([
@@ -192,7 +192,7 @@ class FunctionScoreQueryTest extends TestCase
                 'modifier' => 'log1p'
             ])
             ->minScore(1.6)
-            ->wrap(new Match('name', 'Paris'))
+            ->wrap(new MatchBoolean('name', 'Paris'))
         ;
 
         $this->assertEquals([

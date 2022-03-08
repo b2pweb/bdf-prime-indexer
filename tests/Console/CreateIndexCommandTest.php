@@ -78,7 +78,7 @@ class CreateIndexCommandTest extends CommandTestCase
         $this->execute('prime:indexer:create', ['entity' => \User::class]);
         $this->client()->indices()->refresh();
 
-        $this->assertEquals($users, $this->factory()->for(\User::class)->query()->all(), '', 0, 1, true);
+        $this->assertEqualsCanonicalizing($users, $this->factory()->for(\User::class)->query()->all());
     }
 
     /**
@@ -111,7 +111,7 @@ class CreateIndexCommandTest extends CommandTestCase
         $this->execute('prime:indexer:create', ['entity' => \User::class]);
         $this->client()->indices()->refresh();
 
-        $this->assertEquals($index->entities(), $this->factory()->for(\User::class)->query()->all(), '', 0, 1, true);
+        $this->assertEqualsCanonicalizing($index->entities(), $this->factory()->for(\User::class)->query()->all());
     }
 
     /**
@@ -168,7 +168,7 @@ class CreateIndexCommandTest extends CommandTestCase
         $output = $this->execute('prime:indexer:create', ['entity' => \User::class, '--options' => 'invalid']);
 
         $this->assertFalse($this->client()->indices()->existsAlias(['name' => 'test_users']));
-        $this->assertContains('Invalid options given', $output);
+        $this->assertStringContainsString('Invalid options given', $output);
     }
 
     private function client(): Client

@@ -18,6 +18,8 @@ use Bdf\Prime\Query\Contract\Limitable;
 use Bdf\Prime\Query\Contract\Orderable;
 use Closure;
 use Elasticsearch\Client;
+use Elasticsearch\Endpoints\AbstractEndpoint;
+use Elasticsearch\Endpoints\Search;
 
 /**
  * Query for perform index search
@@ -116,6 +118,11 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      */
     private $transformer;
 
+    /**
+     * Does the current version of elasticsearch library is >= 8.0
+     */
+    private static ?bool $isV8;
+
 
     /**
      * ElasticsearchQuery constructor.
@@ -200,7 +207,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function whereNull($column, $type = BooleanQuery::COMPOSITE_AND)
+    public function whereNull(string $column, string $type = BooleanQuery::COMPOSITE_AND)
     {
         return $this->whereRaw(new Missing($column), $type);
     }
@@ -208,7 +215,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function whereNotNull($column, $type = BooleanQuery::COMPOSITE_AND)
+    public function whereNotNull(string $column, string $type = BooleanQuery::COMPOSITE_AND)
     {
         return $this->whereRaw(new Exists($column), $type);
     }
@@ -216,7 +223,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function orWhereNull($column)
+    public function orWhereNull(string $column)
     {
         return $this->whereNull($column, BooleanQuery::COMPOSITE_OR);
     }
@@ -224,7 +231,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function orWhereNotNull($column)
+    public function orWhereNotNull(string $column)
     {
         return $this->whereNotNull($column, BooleanQuery::COMPOSITE_OR);
     }
@@ -232,7 +239,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function whereRaw($raw, $type = BooleanQuery::COMPOSITE_AND)
+    public function whereRaw($raw, string $type = BooleanQuery::COMPOSITE_AND)
     {
         switch ($type) {
             case BooleanQuery::COMPOSITE_AND:
@@ -274,7 +281,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function nested(\Closure $callback, $type = BooleanQuery::COMPOSITE_AND)
+    public function nested(callable $callback, string $type = BooleanQuery::COMPOSITE_AND)
     {
         // Save filters, and clear for the nested query
         $query = $this->query;
@@ -297,7 +304,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function order($sort, $order = 'asc')
+    public function order($sort, ?string $order = 'asc')
     {
         if (!is_array($sort)) {
             $this->order = [$sort => $order];
@@ -311,7 +318,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function addOrder($sort, $order = 'asc')
+    public function addOrder($sort, ?string $order = 'asc')
     {
         if (is_array($sort)) {
             $this->order = array_replace($this->order, $sort);
@@ -325,7 +332,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function getOrders()
+    public function getOrders(): array
     {
         return $this->order;
     }
@@ -333,7 +340,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function limit($limit, $offset = null)
+    public function limit(?int $limit, ?int $offset = null)
     {
         $this->size = $limit;
         $this->from = $offset;
@@ -344,7 +351,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function limitPage($page, $rowCount = 1)
+    public function limitPage(int $page, int $rowCount = 1)
     {
         $page     = ($page > 0) ? $page : 1;
         $rowCount = ($rowCount > 0) ? $rowCount : 1;
@@ -357,7 +364,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function getPage()
+    public function getPage(): int
     {
         if ($this->size === null) {
             return 1;
@@ -369,7 +376,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function getLimit()
+    public function getLimit(): ?int
     {
         return $this->size;
     }
@@ -377,7 +384,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function offset($offset)
+    public function offset(?int $offset)
     {
         $this->from = $offset;
 
@@ -387,7 +394,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function getOffset()
+    public function getOffset(): ?int
     {
         return $this->from;
     }
@@ -395,7 +402,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function isLimitQuery()
+    public function isLimitQuery(): bool
     {
         return $this->from !== null || $this->size !== null;
     }
@@ -403,7 +410,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function hasPagination()
+    public function hasPagination(): bool
     {
         return $this->from !== null && $this->size !== null;
     }
@@ -412,7 +419,9 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      * Add a "should" filter on the query
      * The query must be a boolean query to works properly
      *
-     * Note: composite expressions are combined with "AND". So should with array of filters means "should match all those filters", instead of "all those filters should match"
+     * Note: composite expressions are combined with "AND".
+     *       So should with array of filters means "should match all those filters",
+     *       instead of "all those filters should match"
      *
      * <code>
      * $query->should('name', 'Foo');
@@ -546,11 +555,20 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      */
     public function execute()
     {
-        return $this->client->search([
+        if (!isset(self::$isV8)) {
+            self::$isV8 = !in_array('type', (new Search())->getParamWhitelist());
+        }
+
+        $arguments = [
             'index' => $this->index,
-            'type' => $this->type,
             'body' => $this->compile()
-        ]);
+        ];
+
+        if (!self::$isV8) {
+            $arguments['type'] = $this->type;
+        }
+
+        return $this->client->search($arguments);
     }
 
     /**

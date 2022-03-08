@@ -170,7 +170,7 @@ class UserIndex implements ElasticsearchIndexConfigurationInterface
 
 class UserMapper extends \Bdf\Prime\Mapper\Mapper
 {
-    public function schema()
+    public function schema(): array
     {
         return [
             'connection' => 'test',
@@ -178,7 +178,7 @@ class UserMapper extends \Bdf\Prime\Mapper\Mapper
         ];
     }
 
-    public function buildFields($builder)
+    public function buildFields($builder): void
     {
         $builder
             ->string('name')

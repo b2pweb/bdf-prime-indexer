@@ -48,7 +48,8 @@ final class QueryString implements CompilableExpressionInterface
     }
 
     /**
-     * The default field for query terms if no prefix field is specified. Defaults to the index.query.default_field index settings, which in turn defaults to _all.
+     * The default field for query terms if no prefix field is specified.
+     * Defaults to the index.query.default_field index settings, which in turn defaults to _all.
      *
      * @param string $value
      *
@@ -62,7 +63,10 @@ final class QueryString implements CompilableExpressionInterface
     }
 
     /**
-     * The default operator used if no explicit operator is specified. For example, with a default operator of OR, the query capital of Hungary is translated to capital OR of OR Hungary, and with default operator of AND, the same query is translated to capital AND of AND Hungary. The default value is OR.
+     * The default operator used if no explicit operator is specified.
+     * For example, with a default operator of OR, the query capital of Hungary is translated to capital
+     * OR of OR Hungary, and with default operator of AND, the same query is translated to capital AND of AND Hungary.
+     * The default value is OR.
      *
      * @param string $value
      *
@@ -124,7 +128,9 @@ final class QueryString implements CompilableExpressionInterface
     }
 
     /**
-     * Whether terms of wildcard, prefix, fuzzy, and range queries are to be automatically lower-cased or not (since they are not analyzed). Defaults to true.
+     * Whether terms of wildcard, prefix, fuzzy, and range queries are to be automatically lower-cased
+     * or not (since they are not analyzed).
+     * Defaults to true.
      *
      * @param bool $value
      *
@@ -223,7 +229,8 @@ final class QueryString implements CompilableExpressionInterface
     }
 
     /**
-     * By default, wildcards terms in a query string are not analyzed. By setting this value to true, a best effort will be made to analyze those as well.
+     * By default, wildcards terms in a query string are not analyzed.
+     * By setting this value to true, a best effort will be made to analyze those as well.
      *
      * @param bool $value
      *

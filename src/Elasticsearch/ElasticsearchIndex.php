@@ -56,7 +56,7 @@ class ElasticsearchIndex implements IndexInterface
     {
         $response = $this->creationQuery()->bulk(false)->values($this->mapper->toIndex($entity))->execute();
 
-        $this->mapper->setId($entity, $response['_id']);
+        $this->mapper->setId($entity, $response->id());
     }
 
     /**
@@ -160,18 +160,18 @@ class ElasticsearchIndex implements IndexInterface
         $index = $this->mapper->configuration()->index();
 
         if ($options['useAlias']) {
-            $index .= '_'.uniqid();
+            $index .= '_' . uniqid();
         }
 
         try {
-            $options['logger']->info('Creating index '.$index);
+            $options['logger']->info('Creating index ' . $index);
             $this->createSchema($index);
 
-            $options['logger']->info('Insert entities into '.$index);
+            $options['logger']->info('Insert entities into ' . $index);
             $this->insertAll($index, $options['chunkSize'], $entities);
 
             if ($options['useAlias']) {
-                $options['logger']->info('Adding alias for '.$index.' to '.$this->mapper->configuration()->index());
+                $options['logger']->info('Adding alias for ' . $index . ' to ' . $this->mapper->configuration()->index());
                 $this->client->indices()->putAlias([
                     'index' => $index,
                     'name'  => $this->mapper->configuration()->index()
@@ -187,7 +187,7 @@ class ElasticsearchIndex implements IndexInterface
                 $this->refresh();
             }
         } catch (\Exception $e) {
-            $options['logger']->info('Failed creating index '.$index.' : '.$e->getMessage());
+            $options['logger']->info('Failed creating index ' . $index . ' : ' . $e->getMessage());
 
             // Delete the index on failure, if alias is used
             if ($options['useAlias'] && $this->client->indices()->exists(['index' => $index])) {
@@ -310,7 +310,7 @@ class ElasticsearchIndex implements IndexInterface
                         $declaration['filter'][] = $filterDeclaration;
                     } else {
                         if (is_int($filter)) {
-                            $filter = 'filter_'.$filter;
+                            $filter = 'filter_' . $filter;
                         }
 
                         $declaration['filter'][] = $filter;
@@ -333,7 +333,9 @@ class ElasticsearchIndex implements IndexInterface
     private function compileProperties(): array
     {
         return Streams::wrap($this->mapper->properties())
-            ->map(function (Property $property) { return ['type' => $property->type()] + $property->declaration(); })
+            ->map(function (Property $property) {
+                return ['type' => $property->type()] + $property->declaration();
+            })
             ->toArray()
         ;
     }
