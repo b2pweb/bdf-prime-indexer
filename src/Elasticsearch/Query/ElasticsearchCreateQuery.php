@@ -283,7 +283,10 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
                 $metadata[self::PK_FIELD] = $value[self::PK_FIELD];
             }
 
-            $body[] = [$this->operation() => $metadata];
+            // Use index mode if the id is not provided
+            $operation = $this->mode === self::MODE_REPLACE || !isset($value[self::PK_FIELD]) ? 'index' : 'create';
+
+            $body[] = [$operation => $metadata];
             $body[] = $this->compileData($value);
         }
 

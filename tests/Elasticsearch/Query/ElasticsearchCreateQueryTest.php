@@ -353,12 +353,48 @@ class ElasticsearchCreateQueryTest extends TestCase
 
         $this->assertEquals([
             'body' => [
-                ['create' => ['_index' => 'test_persons', '_type' => 'person']],
+                ['index' => ['_index' => 'test_persons', '_type' => 'person']],
                 [
                     'firstName' => 'Mickey',
                     'lastName' => 'Mouse'
                 ],
-                ['create' => ['_index' => 'test_persons', '_type' => 'person']],
+                ['index' => ['_index' => 'test_persons', '_type' => 'person']],
+                [
+                    'firstName' => 'Minnie',
+                    'lastName' => 'Mouse'
+                ],
+            ]
+        ], $compiled);
+    }
+
+    /**
+     *
+     */
+    public function test_compile_bulk_with_id()
+    {
+        $compiled = $this->query
+            ->into('test_persons', 'person')
+            ->values([
+                '_id' => '1',
+                'firstName' => 'Mickey',
+                'lastName' => 'Mouse'
+            ])
+            ->values([
+                '_id' => '2',
+                'firstName' => 'Minnie',
+                'lastName' => 'Mouse'
+            ])
+            ->compile()
+        ;
+
+        $this->assertEquals([
+            'body' => [
+                ['create' => ['_index' => 'test_persons', '_type' => 'person', '_id' => '1']],
+                [
+                    'firstName' => 'Mickey',
+                    'lastName' => 'Mouse'
+                ],
+                ['create' => ['_index' => 'test_persons', '_type' => 'person', '_id' => '2']],
                 [
                     'firstName' => 'Minnie',
                     'lastName' => 'Mouse'
@@ -436,7 +472,7 @@ class ElasticsearchCreateQueryTest extends TestCase
         $this->assertEquals([
             'refresh' => true,
             'body' => [
-                ['create' => ['_index' => 'test_persons', '_type' => 'person']],
+                ['index' => ['_index' => 'test_persons', '_type' => 'person']],
                 [
                     'firstName' => 'Mickey',
                     'lastName' => 'Mouse'

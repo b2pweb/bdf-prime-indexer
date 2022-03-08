@@ -57,8 +57,9 @@ jobs:
   es_compatiblity:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        es-versions: ['2.4', '5.6', '6.8.23', '7.17.1']
+        es-versions: ['2.4', '5.6', '6.8.23']
     name: Elasticsearch version ${{ matrix.es-versions }}
 
     steps:
