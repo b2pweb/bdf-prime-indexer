@@ -48,8 +48,44 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
 
-    # Add a test script to composer.json, for instance: "test": "vendor/bin/phpunit"
-    # Docs: https://getcomposer.org/doc/articles/scripts.md
+    - name: Run test suite
+      run: composer run-script tests
+
+  es_compatiblity:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        es-versions: ['2.4', '5.6', '6.8', '7.17']
+    name: Elasticsearch version ${{ matrix.es-versions }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set Timezone
+      uses: szenius/set-timezone@v1.0
+      with:
+        timezoneLinux: "Europe/Paris"
+
+    - name: Install PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 7.2
+        extensions: json
+        ini-values: date.timezone=Europe/Paris
+
+    - name: Configure sysctl limits
+      run: |
+        sudo swapoff -a
+        sudo sysctl -w vm.swappiness=1
+        sudo sysctl -w fs.file-max=262144
+        sudo sysctl -w vm.max_map_count=262144
+
+    - uses: nyaruka/elasticsearch-action@v1
+      with:
+        elastic version: ${{ matrix.es-versions }}
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
 
     - name: Run test suite
       run: composer run-script tests
