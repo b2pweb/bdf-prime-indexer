@@ -274,7 +274,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function nested(callable $callback, string $type = BooleanQuery::COMPOSITE_AND)
+    public function nested($callback, $type = BooleanQuery::COMPOSITE_AND)
     {
         // Save filters, and clear for the nested query
         $query = $this->query;
