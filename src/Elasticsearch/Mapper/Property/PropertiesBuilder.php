@@ -76,10 +76,40 @@ class PropertiesBuilder
      * @return $this
      *
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/string.html
+     *
+     * @deprecated Use text or keyword types instead on elasticsearch >= 5.0
      */
     public function string(string $name): PropertiesBuilder
     {
         return $this->add($name, 'string');
+    }
+
+    /**
+     * Add a text property
+     *
+     * @param string $name The index property name
+     *
+     * @return $this
+     *
+     * @see https://www.elastic.co/guide/en/elasticsearch/reference/5.0/text.html
+     */
+    public function text(string $name): PropertiesBuilder
+    {
+        return $this->add($name, 'text');
+    }
+
+    /**
+     * Add a keyword property
+     *
+     * @param string $name The index property name
+     *
+     * @return $this
+     *
+     * @see https://www.elastic.co/guide/en/elasticsearch/reference/5.0/keyword.html
+     */
+    public function keyword(string $name): PropertiesBuilder
+    {
+        return $this->add($name, 'keyword');
     }
 
     /**
@@ -229,14 +259,15 @@ class PropertiesBuilder
      *
      * @param string $name The property name. Should be an array property
      * @param string $separator The values separator
+     * @param string $type The property type to use. Use "string" on elasticsearch < 5.0
      *
      * @return $this
      *
      * @see CsvAnalyzer The internally used analyzer
      */
-    public function csv(string $name, string $separator = ','): PropertiesBuilder
+    public function csv(string $name, string $separator = ',', string $type = 'text'): PropertiesBuilder
     {
-        $this->string($name);
+        $this->add($name, $type);
 
         $analyzerName = 'csv_'.ord($separator);
 
@@ -290,10 +321,24 @@ class PropertiesBuilder
      * @return $this
      *
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/mapping-index.html
+     * @deprecated Since ES v5.0, removed on ES v6.0. Use disableIndexing() instead
      */
     public function notAnalyzed(): PropertiesBuilder
     {
         return $this->option('index', 'not_analyzed');
+    }
+
+    /**
+     * Disable full-text analysis on the property
+     * Use this to permit term level queries
+     *
+     * @return $this
+     *
+     * @see https://www.elastic.co/guide/en/elasticsearch/reference/5.0/mapping-index.html
+     */
+    public function disableIndexing(): PropertiesBuilder
+    {
+        return $this->option('index', false);
     }
 
     /**

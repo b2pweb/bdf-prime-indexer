@@ -204,6 +204,15 @@ class ElasticsearchIndex implements IndexInterface
     public function drop(): void
     {
         try {
+            if ($this->client->indices()->existsAlias(['name' => $this->mapper->configuration()->index()])) {
+                $alias = $this->client->indices()->getAlias(['name' => $this->mapper->configuration()->index()]);
+                $this->client->indices()->deleteAlias([
+                    'index' => key($alias),
+                    'name' => $this->mapper->configuration()->index(),
+                ]);
+                return;
+            }
+
             $this->client->indices()->delete(['index' => $this->mapper->configuration()->index()]);
         } catch (Missing404Exception $e) {
             // Index not found : do not raise the exception

@@ -219,6 +219,7 @@ class ElasticsearchCreateQueryTest extends TestCase
         ;
 
         $this->assertTrue($response['created']);
+        $this->assertSame('created', $response['result']);
 
         $this->assertEquals(1, $this->search()->execute()['hits']['total']);
         $this->assertEquals([

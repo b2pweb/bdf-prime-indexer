@@ -50,9 +50,20 @@ class DeleteCommand extends AbstractCommand
         }
 
         if ($style->confirm('Confirmez-vous la suppression des index : ' . implode(', ', $indices) . ' ?')) {
-            $client->indices()->delete([
-                'index' => implode(',', $indices)
-            ]);
+            foreach ($client->indices()->getAliases() as $index => $alias) {
+                foreach ($indices as $k => $toDelete) {
+                    if (isset($alias['aliases'][$toDelete])) {
+                        unset($indices[$k]);
+                        $client->indices()->deleteAlias(['index' => $index, 'name' => $toDelete]);
+                    }
+                }
+            }
+
+            if (!empty($indices)) {
+                foreach (array_chunk($indices, 10) as $chunk) {
+                    $client->indices()->delete(['index' => implode(',', $chunk)]);
+                }
+            }
         }
 
         return 0;

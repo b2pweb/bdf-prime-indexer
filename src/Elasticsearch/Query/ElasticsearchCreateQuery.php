@@ -208,7 +208,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
             return $this->client->bulk($this->compileBulk());
         }
 
-        return $this->client->{$this->operation()}($this->compileSimple());
+        return $this->normalizeSimpleExecuteResult($this->client->{$this->operation()}($this->compileSimple()));
     }
 
     /**
@@ -372,5 +372,32 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
         }
 
         return $filtered;
+    }
+
+    /**
+     * Normalize execution result between ES v2 and v6
+     *
+     * @param array $rawResult
+     *
+     * @return array
+     */
+    private function normalizeSimpleExecuteResult(array $rawResult): array
+    {
+        if (isset($rawResult['result'])) {
+            $rawResult['created'] = $rawResult['updated'] = false;
+            $rawResult[$rawResult['result']] = true;
+        } else {
+            switch (true) {
+                case !empty($rawResult['created']):
+                    $rawResult['result'] = 'created';
+                    break;
+
+                case !empty($rawResult['updated']):
+                    $rawResult['result'] = 'updated';
+                    break;
+            }
+        }
+
+        return $rawResult;
     }
 }
