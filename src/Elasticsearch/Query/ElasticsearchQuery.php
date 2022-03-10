@@ -546,11 +546,18 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      */
     public function execute()
     {
-        return $this->client->search([
+        $result = $this->client->search([
             'index' => $this->index,
             'type' => $this->type,
             'body' => $this->compile()
         ]);
+
+        // In ES >= 7.0 total is wrapped into an array
+        if (is_array($result['hits']['total'])) {
+            $result['hits']['total'] = $result['hits']['total']['value'];
+        }
+
+        return $result;
     }
 
     /**

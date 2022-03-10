@@ -21,6 +21,7 @@ interface ElasticsearchIndexConfigurationInterface
      * Defines the type name
      *
      * @return string
+     * @deprecated Use "_doc" on ES 6 and empty string on 7. Will be removed on further versions.
      */
     public function type(): string;
 

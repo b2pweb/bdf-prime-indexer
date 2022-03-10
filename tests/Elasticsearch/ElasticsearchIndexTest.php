@@ -374,6 +374,10 @@ class ElasticsearchIndexTest extends IndexTestCase
             $expected['body']['mappings']['city']['properties']['country']['index'] = false;
         }
 
+        if (self::minimalElasticsearchVersion('7.0')) {
+            $expected['body']['mappings'] = $expected['body']['mappings']['city'];
+        }
+
         $client = $this->createMock(Client::class);
         $indices = $this->createMock(IndicesNamespace::class);
         $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new CityIndex()));
@@ -446,6 +450,10 @@ class ElasticsearchIndexTest extends IndexTestCase
             $expected['body']['mappings']['user']['properties']['password']['type'] = 'keyword';
             $expected['body']['mappings']['user']['properties']['password']['index'] = false;
             $expected['body']['mappings']['user']['properties']['roles']['type'] = 'text';
+        }
+
+        if (self::minimalElasticsearchVersion('7.0')) {
+            $expected['body']['mappings'] = $expected['body']['mappings']['user'];
         }
 
         $client = $this->createMock(Client::class);

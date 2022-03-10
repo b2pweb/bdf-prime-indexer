@@ -137,7 +137,7 @@ class UserIndex implements ElasticsearchIndexConfigurationInterface
 
     public function type(): string
     {
-        return 'user';
+        return IndexTestCase::minimalElasticsearchVersion('7.0') ? '' : 'user';
     }
 
     public function id(): ?PropertyAccessorInterface

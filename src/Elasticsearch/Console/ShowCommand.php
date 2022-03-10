@@ -56,7 +56,7 @@ class ShowCommand extends AbstractCommand
      */
     protected function getTypesColumn(array $definition)
     {
-        if (empty($definition['mappings'])) {
+        if (empty($definition['mappings']) || isset($definition['mappings']['properties'])) {
             return '';
         }
 

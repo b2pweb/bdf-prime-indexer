@@ -180,7 +180,7 @@ class CityIndex implements ElasticsearchIndexConfigurationInterface, \Bdf\Prime\
 
     public function type(): string
     {
-        return 'city';
+        return IndexTestCase::minimalElasticsearchVersion('7.0') ? '' : 'city';
     }
 
     public function entity(): string
