@@ -68,12 +68,17 @@ class ElasticsearchIndex implements IndexInterface
             return false;
         }
 
-        /** @var bool */
-        return $this->client->exists([
+        $parameters = [
             'index' => $this->mapper->configuration()->index(),
-            'type' => $this->mapper->configuration()->type(),
             'id' => $id,
-        ]);
+        ];
+
+        if ($type = $this->mapper->configuration()->type()) {
+            $parameters['type'] = $type;
+        }
+
+        /** @var bool */
+        return $this->client->exists($parameters);
     }
 
     /**
@@ -87,12 +92,17 @@ class ElasticsearchIndex implements IndexInterface
             throw new \InvalidArgumentException('Cannot extract id from the entity');
         }
 
+        $parameters = [
+            'index' => $this->mapper->configuration()->index(),
+            'id' => $id,
+        ];
+
+        if ($type = $this->mapper->configuration()->type()) {
+            $parameters['type'] = $type;
+        }
+
         try {
-            $this->client->delete([
-                'index' => $this->mapper->configuration()->index(),
-                'type'  => $this->mapper->configuration()->type(),
-                'id'    => $id,
-            ]);
+            $this->client->delete($parameters);
         } catch (Missing404Exception $e) {
             // Ignore deleting not found entities
         }
@@ -112,14 +122,19 @@ class ElasticsearchIndex implements IndexInterface
         $id = $document['_id'];
         unset($document['_id']);
 
-        $this->client->update([
+        $parameters = [
             'index' => $this->mapper->configuration()->index(),
-            'type' => $this->mapper->configuration()->type(),
             'id' => $id,
             'body' => [
                 'doc' => $document,
             ],
-        ]);
+        ];
+
+        if ($type = $this->mapper->configuration()->type()) {
+            $parameters['type'] = $type;
+        }
+
+        $this->client->update($parameters);
     }
 
     /**
@@ -204,6 +219,15 @@ class ElasticsearchIndex implements IndexInterface
     public function drop(): void
     {
         try {
+            if ($this->client->indices()->existsAlias(['name' => $this->mapper->configuration()->index()])) {
+                $alias = $this->client->indices()->getAlias(['name' => $this->mapper->configuration()->index()]);
+                $this->client->indices()->deleteAlias([
+                    'index' => key($alias),
+                    'name' => $this->mapper->configuration()->index(),
+                ]);
+                return;
+            }
+
             $this->client->indices()->delete(['index' => $this->mapper->configuration()->index()]);
         } catch (Missing404Exception $e) {
             // Index not found : do not raise the exception
@@ -262,18 +286,28 @@ class ElasticsearchIndex implements IndexInterface
      */
     private function createSchema(string $index)
     {
+        $type = $this->mapper->configuration()->type();
+        $body = [
+            'settings' => [
+                'analysis' => $this->compileAnalysis(),
+            ],
+        ];
+
+        if ($type) {
+            $body['mappings'] = [
+                $type => [
+                    'properties' => $this->compileProperties(),
+                ],
+            ];
+        } else {
+            $body['mappings'] = [
+                'properties' => $this->compileProperties(),
+            ];
+        }
+
         $this->client->indices()->create([
             'index' => $index,
-            'body' => [
-                'settings' => [
-                    'analysis' => $this->compileAnalysis(),
-                ],
-                'mappings' => [
-                    $this->mapper->configuration()->type() => [
-                        'properties' => $this->compileProperties(),
-                    ],
-                ],
-            ],
+            'body' => $body,
         ]);
     }
 

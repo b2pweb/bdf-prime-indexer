@@ -74,7 +74,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
     /**
      * The requested entry type
      *
-     * @var string
+     * @var string|null
      */
     private $type;
 
@@ -124,7 +124,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
     public function into($table, $type = null)
     {
         $this->index = $table;
-        $this->type = $type ?: $table;
+        $this->type = $type;
 
         return $this;
     }
@@ -208,7 +208,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
             return $this->client->bulk($this->compileBulk());
         }
 
-        return $this->client->{$this->operation()}($this->compileSimple());
+        return $this->normalizeSimpleExecuteResult($this->client->{$this->operation()}($this->compileSimple()));
     }
 
     /**
@@ -274,10 +274,11 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
         $body = [];
 
         foreach ($this->values as $value) {
-            $metadata = [
-                '_index' => $this->index,
-                '_type'  => $this->type,
-            ];
+            $metadata = ['_index' => $this->index];
+
+            if ($this->type) {
+                $metadata['_type'] = $this->type;
+            }
 
             if (isset($value[self::PK_FIELD])) {
                 $metadata[self::PK_FIELD] = $value[self::PK_FIELD];
@@ -312,9 +313,12 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
 
         $query = [
             'index' => $this->index,
-            'type'  => $this->type,
             'body'  => $this->compileData($this->values[0]),
         ];
+
+        if ($this->type) {
+            $query['type'] = $this->type;
+        }
 
         if (isset($this->values[0][self::PK_FIELD])) {
             $query['id'] = $this->values[0][self::PK_FIELD];
@@ -372,5 +376,33 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
         }
 
         return $filtered;
+    }
+
+    /**
+     * Normalize execution result between ES v2 and v6
+     *
+     * @param array $rawResult
+     *
+     * @return array
+     */
+    private function normalizeSimpleExecuteResult(array $rawResult): array
+    {
+        // ES >= 6.0 use "result" key instead of bool flags
+        if (isset($rawResult['result'])) {
+            $rawResult['created'] = $rawResult['updated'] = false;
+            $rawResult[$rawResult['result']] = true;
+        } else {
+            switch (true) {
+                case !empty($rawResult['created']):
+                    $rawResult['result'] = 'created';
+                    break;
+
+                case !empty($rawResult['updated']):
+                    $rawResult['result'] = 'updated';
+                    break;
+            }
+        }
+
+        return $rawResult;
     }
 }

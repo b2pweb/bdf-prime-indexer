@@ -58,6 +58,20 @@ class DeleteCommandTest extends CommandTestCase
     /**
      *
      */
+    public function test_execute_all()
+    {
+        $this->factory()->for(\User::class)->create();
+        $this->factory()->for(\City::class)->create();
+
+        $this->execute('elasticsearch:delete', ['--all' => true], ['inputs' => ['yes']]);
+
+        $this->assertFalse($this->client()->indices()->existsAlias(['name' => 'test_users']));
+        $this->assertFalse($this->client()->indices()->existsAlias(['name' => 'test_cities']));
+    }
+
+    /**
+     *
+     */
     public function test_execute_none()
     {
         $output = $this->execute('elasticsearch:delete', ['indices' => []], ['inputs' => ['yes']]);

@@ -72,6 +72,15 @@ class PropertiesBuilderTest extends TestCase
     /**
      *
      */
+    public function test_disableIndexing()
+    {
+        $this->builder->string('my_field')->disableIndexing();
+        $this->assertEquals(['my_field' => new Property('my_field', ['index' => false], new StandardAnalyzer(), 'string', new SimplePropertyAccessor('my_field'))], $this->builder->build());
+    }
+
+    /**
+     *
+     */
     public function test_accessor_string()
     {
         $this->builder->string('my_field')->accessor('other_field');
@@ -171,28 +180,37 @@ class PropertiesBuilderTest extends TestCase
     public function test_csv()
     {
         $this->builder->csv('values');
-        $this->assertEquals(['values' => new Property('values', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'string', new SimplePropertyAccessor('values'))], $this->builder->build());
+        $this->assertEquals(['values' => new Property('values', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'text', new SimplePropertyAccessor('values'))], $this->builder->build());
         $this->assertEquals(['csv_44' => new CsvAnalyzer()], $this->builder->analyzers());
 
         $this->builder->csv('other');
 
         $this->assertEquals([
-            'values' => new Property('values', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'string', new SimplePropertyAccessor('values')),
-            'other' => new Property('other', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'string', new SimplePropertyAccessor('other')),
+            'values' => new Property('values', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'text', new SimplePropertyAccessor('values')),
+            'other' => new Property('other', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'text', new SimplePropertyAccessor('other')),
         ], $this->builder->build());
         $this->assertEquals(['csv_44' => new CsvAnalyzer()], $this->builder->analyzers());
 
         $this->builder->csv('new_separator', ';');
 
         $this->assertEquals([
-            'values' => new Property('values', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'string', new SimplePropertyAccessor('values')),
-            'other' => new Property('other', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'string', new SimplePropertyAccessor('other')),
-            'new_separator' => new Property('new_separator', ['analyzer' => 'csv_59'], new CsvAnalyzer(';'), 'string', new SimplePropertyAccessor('new_separator')),
+            'values' => new Property('values', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'text', new SimplePropertyAccessor('values')),
+            'other' => new Property('other', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'text', new SimplePropertyAccessor('other')),
+            'new_separator' => new Property('new_separator', ['analyzer' => 'csv_59'], new CsvAnalyzer(';'), 'text', new SimplePropertyAccessor('new_separator')),
         ], $this->builder->build());
         $this->assertEquals([
             'csv_44' => new CsvAnalyzer(),
             'csv_59' => new CsvAnalyzer(';'),
         ], $this->builder->analyzers());
+    }
+
+    /**
+     *
+     */
+    public function test_csv_with_custom_type()
+    {
+        $this->builder->csv('values', ',', 'string');
+        $this->assertEquals(['values' => new Property('values', ['analyzer' => 'csv_44'], new CsvAnalyzer(), 'string', new SimplePropertyAccessor('values'))], $this->builder->build());
     }
 
     /**

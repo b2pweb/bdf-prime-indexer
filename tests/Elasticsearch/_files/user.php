@@ -5,6 +5,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\CsvAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
+use Bdf\Prime\Indexer\IndexTestCase;
 
 class User
 {
@@ -136,7 +137,7 @@ class UserIndex implements ElasticsearchIndexConfigurationInterface
 
     public function type(): string
     {
-        return 'user';
+        return IndexTestCase::minimalElasticsearchVersion('7.0') ? '' : 'user';
     }
 
     public function id(): ?PropertyAccessorInterface
@@ -146,13 +147,23 @@ class UserIndex implements ElasticsearchIndexConfigurationInterface
 
     public function properties(PropertiesBuilder $builder): void
     {
-        $builder
-            ->string('name')
-            ->string('email')
-            ->string('login')->accessor('email')->notAnalyzed()
-            ->string('password')->notAnalyzed()
-            ->string('roles')->analyzer('csv')
-        ;
+        if (IndexTestCase::minimalElasticsearchVersion('5.0')) {
+            $builder
+                ->text('name')
+                ->text('email')
+                ->keyword('login')->accessor('email')->disableIndexing()
+                ->keyword('password')->disableIndexing()
+                ->text('roles')->analyzer('csv')
+            ;
+        } else {
+            $builder
+                ->string('name')
+                ->string('email')
+                ->string('login')->accessor('email')->notAnalyzed()
+                ->string('password')->notAnalyzed()
+                ->string('roles')->analyzer('csv')
+            ;
+        }
     }
 
     public function analyzers(): array

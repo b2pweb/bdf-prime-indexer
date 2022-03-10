@@ -9,6 +9,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\Compound\FunctionScoreQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\QueryString;
+use Bdf\Prime\Indexer\IndexTestCase;
 
 class City
 {
@@ -179,7 +180,7 @@ class CityIndex implements ElasticsearchIndexConfigurationInterface, \Bdf\Prime\
 
     public function type(): string
     {
-        return 'city';
+        return IndexTestCase::minimalElasticsearchVersion('7.0') ? '' : 'city';
     }
 
     public function entity(): string
@@ -189,13 +190,23 @@ class CityIndex implements ElasticsearchIndexConfigurationInterface, \Bdf\Prime\
 
     public function properties(PropertiesBuilder $builder): void
     {
-        $builder
-            ->string('name')
-            ->integer('population')
-            ->string('zipCode')
-            ->string('country')->notAnalyzed()
-            ->boolean('enabled')
-        ;
+        if (IndexTestCase::minimalElasticsearchVersion('5.0')) {
+            $builder
+                ->text('name')
+                ->integer('population')
+                ->keyword('zipCode')
+                ->keyword('country')->disableIndexing()
+                ->boolean('enabled')
+            ;
+        } else {
+            $builder
+                ->string('name')
+                ->integer('population')
+                ->string('zipCode')
+                ->string('country')->notAnalyzed()
+                ->boolean('enabled')
+            ;
+        }
     }
 
     public function id(): ?PropertyAccessorInterface
