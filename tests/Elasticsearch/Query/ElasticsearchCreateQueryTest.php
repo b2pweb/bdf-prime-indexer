@@ -554,7 +554,7 @@ class ElasticsearchCreateQueryTest extends IndexTestCase
 
     public function search(): ElasticsearchQuery
     {
-        return (new ElasticsearchQuery(self::getClient()))->from('test_persons', 'person');
+        return (new ElasticsearchQuery(self::getClient()))->from('test_persons');
     }
 }
 
