@@ -1,17 +1,18 @@
 name: Build
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
+
+env:
+  ELASTICSEARCH_HOST: '127.0.0.1:9200'
+  ELASTICSEARCH_USER: 'elastic'
+  ELASTICSEARCH_PASSWORD: 'changeme'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-versions: ['7.1', '7.2', '7.3', '7.4', '8.0', '8.1']
+        php-versions: ['7.4', '8.0', '8.1']
     name: PHP ${{ matrix.php-versions }}
 
     steps:
@@ -38,9 +39,10 @@ jobs:
         sudo sysctl -w fs.file-max=262144
         sudo sysctl -w vm.max_map_count=262144
 
-    - uses: nyaruka/elasticsearch-action@v1
+    - name: Runs Elasticsearch
+      uses: elastic/elastic-github-actions/elasticsearch@master
       with:
-        elastic version: '2.4'
+        stack-version: 7.17.1
 
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
@@ -48,11 +50,114 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
 
-    # Add a test script to composer.json, for instance: "test": "vendor/bin/phpunit"
-    # Docs: https://getcomposer.org/doc/articles/scripts.md
+    - name: Install ES Lib 7.0
+      run: composer require --dev 'elasticsearch/elasticsearch:~7.0' --with-all-dependencies
 
     - name: Run test suite
       run: composer run-script tests
+
+  es_compatiblity:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        versions:
+          - es: '7.17.1'
+            lib: '7.0'
+          - es: '8.1.0'
+            lib: '8.0'
+
+    name: Elasticsearch version ${{ matrix.versions.es }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set Timezone
+      uses: szenius/set-timezone@v1.0
+      with:
+        timezoneLinux: "Europe/Paris"
+
+    - name: Install PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.0
+        extensions: json
+        ini-values: date.timezone=Europe/Paris
+
+    - name: Configure sysctl limits
+      run: |
+        sudo swapoff -a
+        sudo sysctl -w vm.swappiness=1
+        sudo sysctl -w fs.file-max=262144
+        sudo sysctl -w vm.max_map_count=262144
+
+    - name: Runs Elasticsearch ${{ matrix.versions.es }}
+      uses: elastic/elastic-github-actions/elasticsearch@master
+      with:
+        stack-version: ${{ matrix.versions.es }}
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Install ES Lib ${{ matrix.versions.lib }}
+      run: composer require --dev 'elasticsearch/elasticsearch:~${{ matrix.versions.lib }}' --with-all-dependencies
+
+    - name: Wait for ES
+      uses: cygnetdigital/wait_for_response@v2.0.0
+      with:
+        url: 'http://localhost:9200/'
+        responseCode: '200'
+        timeout: 10000
+        interval: 100
+
+    - name: Run test suite
+      run: composer run-script tests
+#
+#  prime_compatiblity:
+#    runs-on: ubuntu-latest
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        prime-versions: ['2.0']
+#    name: Prime version ${{ matrix.prime-versions }}
+#
+#    steps:
+#    - uses: actions/checkout@v2
+#
+#    - name: Set Timezone
+#      uses: szenius/set-timezone@v1.0
+#      with:
+#        timezoneLinux: "Europe/Paris"
+#
+#    - name: Install PHP
+#      uses: shivammathur/setup-php@v2
+#      with:
+#        php-version: 7.2
+#        extensions: json
+#        ini-values: date.timezone=Europe/Paris
+#
+#    - name: Configure sysctl limits
+#      run: |
+#        sudo swapoff -a
+#        sudo sysctl -w vm.swappiness=1
+#        sudo sysctl -w fs.file-max=262144
+#        sudo sysctl -w vm.max_map_count=262144
+#
+#    - uses: nyaruka/elasticsearch-action@v1
+#      with:
+#        elastic version: 5.6
+#
+#    - name: Install dependencies
+#      run: composer install --prefer-dist --no-progress
+#
+#    - name: Install Prime ${{ matrix.prime-versions }}
+#      run: composer require --dev 'b2pweb/bdf-prime:~${{ matrix.prime-versions }}.0' --with-all-dependencies
+#
+#    - name: Install ES Lib 5.0
+#      run: composer require --dev 'elasticsearch/elasticsearch:~5.0' --with-all-dependencies
+#
+#    - name: Run test suite
+#      run: composer run-script tests
 
   analysis:
     name: Analysis
@@ -69,7 +174,7 @@ jobs:
     - name: Install PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: 7.4
+        php-version: 8.0
         extensions: json
         ini-values: date.timezone=Europe/Paris
 #
@@ -81,6 +186,9 @@ jobs:
 
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
+
+    - name: Install ES Lib 7.0
+      run: composer require --dev 'elasticsearch/elasticsearch:~7.0' --with-all-dependencies
 
     - name: Run type coverage
       run: composer run-script psalm

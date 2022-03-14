@@ -38,14 +38,6 @@ class ElasticsearchTestingIndexConfig implements ElasticsearchIndexConfiguration
     /**
      * {@inheritdoc}
      */
-    public function type(): string
-    {
-        return $this->config->type();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function entity(): string
     {
         return $this->config->entity();

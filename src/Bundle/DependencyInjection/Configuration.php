@@ -40,6 +40,7 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('sslKey')->end()
             ->booleanNode('sslVerification')->end()
             ->booleanNode('sniffOnStart')->end()
+            ->arrayNode('basicAuthentication')->scalarPrototype()->end()->end()
             ->end()
         ;
 

@@ -10,19 +10,19 @@ class IndexFactory
     /**
      * @var callable[]
      */
-    private $factories = [];
+    private array $factories = [];
 
     /**
      * @var array
      */
-    private $configurations = [];
+    private array $configurations = [];
 
     /**
      * Index instances, by entity class name
      *
      * @var IndexInterface[]
      */
-    private $indexes = [];
+    private array $indexes = [];
 
 
     /**
@@ -65,7 +65,7 @@ class IndexFactory
      * @param string $entity The entity class name
      * @param object $config The index configuration
      */
-    public function register(string $entity, $config): void
+    public function register(string $entity, object $config): void
     {
         $this->configurations[$entity] = $config;
     }

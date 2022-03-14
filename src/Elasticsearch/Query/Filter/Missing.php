@@ -12,10 +12,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
  */
 final class Missing implements CompilableExpressionInterface
 {
-    /**
-     * @var string
-     */
-    private $field;
+    private string $field;
 
     /**
      * Missing constructor.

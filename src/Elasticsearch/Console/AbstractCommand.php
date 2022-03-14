@@ -14,25 +14,10 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class AbstractCommand extends Command
 {
-    /**
-     * @var Client
-     */
-    private $client;
-
-    /**
-     * @var array
-     */
-    private $config;
-
-    /**
-     * @var InputInterface
-     */
-    protected $input;
-
-    /**
-     * @var OutputInterface
-     */
-    protected $output;
+    private Client $client;
+    private array $config;
+    protected InputInterface $input;
+    protected OutputInterface $output;
 
     /**
      * AbstractCommand constructor.

@@ -12,10 +12,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
  */
 final class Exists implements CompilableExpressionInterface
 {
-    /**
-     * @var string
-     */
-    private $field;
+    private string $field;
 
     /**
      * Exists constructor.

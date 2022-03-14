@@ -31,7 +31,7 @@ class PrimeIndexerSynchronizationProviderTest extends TestCase
 
         $this->app = new Application([
             'config' => new Config([
-                'elasticsearch' => ['hosts' => ['127.0.0.1:9222']]
+                'elasticsearch' => ['hosts' => [ELASTICSEARCH_HOST]]
             ]),
             'prime.indexes' => [
                 \City::class => new \CityIndex(),

@@ -19,31 +19,11 @@ final class BooleanQuery implements CompilableExpressionInterface
     public const COMPOSITE_MUST = 'MUST';
     public const COMPOSITE_MUST_NOT = 'MUST_NOT';
 
-    /**
-     * @var array
-     */
-    private $options = [];
-
-    /**
-     * @var array
-     */
-    private $must = [];
-
-    /**
-     * @var array
-     */
-    private $mustNot = [];
-
-    /**
-     * @var array
-     */
-    private $filter = [];
-
-    /**
-     * @var array
-     */
-    private $should = [];
-
+    private array $options = [];
+    private array $must = [];
+    private array $mustNot = [];
+    private array $filter = [];
+    private array $should = [];
 
     /**
      * The clause (query) must appear in matching documents and will contribute to the score.

@@ -2,6 +2,7 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Query\Result;
 
+use ArrayAccess;
 use BadMethodCallException;
 use Bdf\Prime\Connection\Result\ResultSetInterface;
 use EmptyIterator;
@@ -9,12 +10,25 @@ use EmptyIterator;
 /**
  * ResultSet wrapper for a single document write result
  */
-final class WriteResultSet extends EmptyIterator implements ResultSetInterface, \ArrayAccess
+final class WriteResultSet extends EmptyIterator implements ResultSetInterface, ArrayAccess
 {
+    public const RESULT_CREATED = 'created';
+    public const RESULT_UPDATED = 'updated';
+    public const RESULT_DELETED = 'deleted';
+    public const RESULT_NOOP    = 'noop';
+
     /**
-     * @var array{_index: string, _id: string, _version: integer, result: string}
+     * @var array{
+     *     _index: string,
+     *     _id: string,
+     *     _version: integer,
+     *     result: string,
+     *     created: bool,
+     *     updated: bool,
+     *     deleted: bool
+     * }
      */
-    private $data;
+    private array $data;
 
     /**
      * @param array $data
@@ -22,6 +36,11 @@ final class WriteResultSet extends EmptyIterator implements ResultSetInterface, 
     public function __construct(array $data)
     {
         $this->data = $data;
+
+        $this->data[self::RESULT_CREATED] = $data['result'] === self::RESULT_CREATED;
+        $this->data[self::RESULT_UPDATED] = $data['result'] === self::RESULT_UPDATED;
+        $this->data[self::RESULT_DELETED] = $data['result'] === self::RESULT_DELETED;
+        $this->data[self::RESULT_NOOP]    = $data['result'] === self::RESULT_NOOP;
     }
 
     /**
@@ -77,7 +96,7 @@ final class WriteResultSet extends EmptyIterator implements ResultSetInterface, 
      */
     public function rewind(): void
     {
-        $this->rewind();
+        parent::rewind();
     }
 
     /**
@@ -161,5 +180,35 @@ final class WriteResultSet extends EmptyIterator implements ResultSetInterface, 
     public function id(): string
     {
         return $this->data['_id'];
+    }
+
+    /**
+     * Check if the query is a creation
+     *
+     * @return bool
+     */
+    public function creation(): bool
+    {
+        return $this->data['result'] === self::RESULT_CREATED;
+    }
+
+    /**
+     * Check if the query is an update
+     *
+     * @return bool
+     */
+    public function update(): bool
+    {
+        return $this->data['result'] === self::RESULT_UPDATED;
+    }
+
+    /**
+     * Check if the query is a deletion
+     *
+     * @return bool
+     */
+    public function deletion(): bool
+    {
+        return $this->data['result'] === self::RESULT_DELETED;
     }
 }

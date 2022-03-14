@@ -11,38 +11,28 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\QueryString;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Range;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Wildcard;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\ElasticsearchPaginator;
+use Bdf\Prime\Indexer\IndexTestCase;
 use Elasticsearch\Client;
-use Elasticsearch\ClientBuilder;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Class ElasticsearchQueryTest
  */
-class ElasticsearchQueryTest extends TestCase
+class ElasticsearchQueryTest extends IndexTestCase
 {
     /**
      * @var ElasticsearchQuery
      */
     private $query;
 
-    /**
-     * @var Client
-     */
-    private $client;
-
     protected function setUp(): void
     {
-        $this->query = new ElasticsearchQuery(
-            $this->client = ClientBuilder::fromConfig([
-                'hosts' => [ELASTICSEARCH_HOST]
-            ])
-        );
+        $this->query = new ElasticsearchQuery(self::getClient());
     }
 
     protected function tearDown(): void
     {
-        if ($this->client->indices()->exists(['index' => 'test_cities'])) {
-            $this->client->indices()->delete(['index' => 'test_cities']);
+        if (self::getClient()->indices()->exists(['index' => 'test_cities'])) {
+            self::getClient()->indices()->delete(['index' => 'test_cities']);
         }
     }
 
@@ -98,7 +88,7 @@ class ElasticsearchQueryTest extends TestCase
     public function test_with_with_custom_filters()
     {
         $this->query = new ElasticsearchQuery(
-            $this->client,
+            self::getClient(),
             [
                 'search' => function (ElasticsearchQuery $query, $value) {
                     $query
@@ -206,7 +196,7 @@ class ElasticsearchQueryTest extends TestCase
     public function test_where_with_array_and_custom_filter()
     {
         $this->query = new ElasticsearchQuery(
-            $this->client,
+            self::getClient(),
             [
                 'search' => function (ElasticsearchQuery $query, $value) {
                     $query
@@ -248,7 +238,7 @@ class ElasticsearchQueryTest extends TestCase
     public function test_where_with_array_and_raw_filter()
     {
         $this->query = new ElasticsearchQuery(
-            $this->client,
+            self::getClient(),
             [
                 'search' => function (ElasticsearchQuery $query, $value) {
                     $query
@@ -680,7 +670,7 @@ class ElasticsearchQueryTest extends TestCase
      */
     public function test_limit_functional()
     {
-        $create = new ElasticsearchCreateQuery($this->client);
+        $create = new ElasticsearchCreateQuery(self::getClient());
         $create
             ->into('test_cities', 'city')
             ->values([
@@ -723,7 +713,7 @@ class ElasticsearchQueryTest extends TestCase
      */
     public function test_execute_functional()
     {
-        $create = new ElasticsearchCreateQuery($this->client);
+        $create = new ElasticsearchCreateQuery(self::getClient());
         $create
             ->into('test_cities', 'city')
             ->values([
@@ -794,7 +784,7 @@ class ElasticsearchQueryTest extends TestCase
      */
     public function test_stream_functional()
     {
-        $create = new ElasticsearchCreateQuery($this->client);
+        $create = new ElasticsearchCreateQuery(self::getClient());
         $create
             ->into('test_cities', 'city')
             ->values([
@@ -836,7 +826,7 @@ class ElasticsearchQueryTest extends TestCase
      */
     public function test_all_functional()
     {
-        $create = new ElasticsearchCreateQuery($this->client);
+        $create = new ElasticsearchCreateQuery(self::getClient());
         $create
             ->into('test_cities', 'city')
             ->values([
@@ -873,7 +863,7 @@ class ElasticsearchQueryTest extends TestCase
      */
     public function test_first_functional()
     {
-        $create = new ElasticsearchCreateQuery($this->client);
+        $create = new ElasticsearchCreateQuery(self::getClient());
         $create
             ->into('test_cities', 'city')
             ->values([
@@ -907,7 +897,7 @@ class ElasticsearchQueryTest extends TestCase
      */
     public function test_paginate_functional()
     {
-        $create = new ElasticsearchCreateQuery($this->client);
+        $create = new ElasticsearchCreateQuery(self::getClient());
         $create
             ->into('test_cities', 'city')
             ->values([

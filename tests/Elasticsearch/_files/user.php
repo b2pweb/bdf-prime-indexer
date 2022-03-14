@@ -5,6 +5,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\CsvAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
+use Bdf\Prime\Indexer\IndexTestCase;
 
 class User
 {
@@ -134,11 +135,6 @@ class UserIndex implements ElasticsearchIndexConfigurationInterface
         return 'test_users';
     }
 
-    public function type(): string
-    {
-        return 'user';
-    }
-
     public function id(): ?PropertyAccessorInterface
     {
         return null;
@@ -147,11 +143,11 @@ class UserIndex implements ElasticsearchIndexConfigurationInterface
     public function properties(PropertiesBuilder $builder): void
     {
         $builder
-            ->string('name')
-            ->string('email')
-            ->string('login')->accessor('email')->notAnalyzed()
-            ->string('password')->notAnalyzed()
-            ->string('roles')->analyzer('csv')
+            ->text('name')
+            ->text('email')
+            ->keyword('login')->accessor('email')->disableIndexing()
+            ->keyword('password')->disableIndexing()
+            ->text('roles')->analyzer('csv')
         ;
     }
 

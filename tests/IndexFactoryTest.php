@@ -6,13 +6,11 @@ use Bdf\Prime\Entity\Instantiator\Instantiator;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
-use Elasticsearch\ClientBuilder;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Class IndexFactoryTest
  */
-class IndexFactoryTest extends TestCase
+class IndexFactoryTest extends IndexTestCase
 {
     /**
      * @var IndexFactory
@@ -25,7 +23,7 @@ class IndexFactoryTest extends TestCase
             [
                 ElasticsearchIndexConfigurationInterface::class => function (ElasticsearchIndexConfigurationInterface $configuration) {
                     return new ElasticsearchIndex(
-                        ClientBuilder::fromConfig(['hosts' => ['127.0.0.1:9200']]),
+                        self::getClient(),
                         new ElasticsearchMapper($configuration, new Instantiator())
                     );
                 },

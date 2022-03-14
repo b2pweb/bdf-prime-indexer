@@ -2,7 +2,9 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
+use Bdf\Prime\Connection\Result\ResultSetInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
+use Bdf\Prime\Indexer\IndexTestCase;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Elasticsearch\Common\Exceptions\Conflict409Exception;
@@ -11,31 +13,22 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class ElasticsearchCreateQueryTest
  */
-class ElasticsearchCreateQueryTest extends TestCase
+class ElasticsearchCreateQueryTest extends IndexTestCase
 {
     /**
      * @var ElasticsearchCreateQuery
      */
     private $query;
 
-    /**
-     * @var Client
-     */
-    private $client;
-
     protected function setUp(): void
     {
-        $this->query = new ElasticsearchCreateQuery(
-            $this->client = ClientBuilder::fromConfig([
-                'hosts' => [ELASTICSEARCH_HOST]
-            ])
-        );
+        $this->query = new ElasticsearchCreateQuery(self::getClient());
     }
 
     protected function tearDown(): void
     {
-        if ($this->client->indices()->exists(['index' => ['test_persons']])) {
-            $this->client->indices()->delete(['index' => ['test_persons']]);
+        if (self::getClient()->indices()->exists(['index' => ['test_persons']])) {
+            self::getClient()->indices()->delete(['index' => ['test_persons']]);
         }
     }
 
@@ -45,7 +38,7 @@ class ElasticsearchCreateQueryTest extends TestCase
     public function test_insert_bulk()
     {
         $response = $this->query
-            ->into('test_persons', 'person')
+            ->into('test_persons')
             ->values([
                 'firstName' => 'Mickey',
                 'lastName' => 'Mouse'
@@ -58,7 +51,27 @@ class ElasticsearchCreateQueryTest extends TestCase
             ->execute()
         ;
 
+        $this->assertFalse($response->isRead());
+        $this->assertTrue($response->isWrite());
+        $this->assertTrue($response->hasWrite());
+        $this->assertArrayHasKey('errors', $response);
+        $this->assertArrayHasKey('took', $response);
+        $this->assertArrayNotHasKey('foo', $response);
+        $this->assertFalse($response['errors']);
         $this->assertCount(2, $response);
+        $this->assertCount(2, $response->all());
+        $this->assertEquals($response->all(), iterator_to_array($response));
+
+        $this->assertEquals('test_persons', $response->all()[0]['index']['_index']);
+        $this->assertEquals(1, $response->all()[0]['index']['_version']);
+        $this->assertEquals('created', $response->all()[0]['index']['result']);
+        $this->assertTrue($response->all()[0]['index']['forced_refresh']);
+        $this->assertNotEmpty($response->all()[0]['index']['_id']);
+        $this->assertEquals('test_persons', $response->all()[1]['index']['_index']);
+        $this->assertEquals(1, $response->all()[1]['index']['_version']);
+        $this->assertEquals('created', $response->all()[1]['index']['result']);
+        $this->assertTrue($response->all()[1]['index']['forced_refresh']);
+        $this->assertNotEmpty($response->all()[1]['index']['_id']);
 
         $this->assertEquals(2, $this->search()->execute()['hits']['total']);
         $this->assertEquals([
@@ -74,10 +87,46 @@ class ElasticsearchCreateQueryTest extends TestCase
     /**
      *
      */
+    public function test_insert_bulk_result_typed()
+    {
+        $response = $this->query
+            ->into('test_persons')
+            ->values([
+                'firstName' => 'Mickey',
+                'lastName' => 'Mouse'
+            ])
+            ->refresh()
+            ->execute()
+        ;
+
+        $result = $response->asObject()->all()[0];
+        $this->assertInstanceOf(\stdClass::class, $result);
+        $this->assertEquals('test_persons', $result->index['_index']);
+
+        $result = $response->asAssociative()->all()[0];
+        $this->assertIsArray($result);
+        $this->assertEquals('test_persons', $result['index']['_index']);
+
+        $result = $response->asList()->all()[0];
+        $this->assertIsArray($result);
+        $this->assertEquals('test_persons', $result[0]['_index']);
+
+        $result = $response->asColumn()->all()[0];
+        $this->assertIsArray($result);
+        $this->assertEquals('test_persons', $result['_index']);
+
+        $result = $response->asClass(MyCustomResultClass::class)->all()[0];
+        $this->assertInstanceOf(MyCustomResultClass::class, $result);
+        $this->assertEquals('test_persons', $result->index());
+    }
+
+    /**
+     *
+     */
     public function test_insert_bulk_twice_with_same_id()
     {
         $this->query
-            ->into('test_persons', 'person')
+            ->into('test_persons')
             ->values([
                 '_id' => 1,
                 'firstName' => 'Mickey',
@@ -88,7 +137,7 @@ class ElasticsearchCreateQueryTest extends TestCase
         ;
 
         $response = $this->query
-            ->into('test_persons', 'person')
+            ->into('test_persons')
             ->values([
                 '_id' => 1,
                 'firstName' => 'Minnie',
@@ -98,7 +147,7 @@ class ElasticsearchCreateQueryTest extends TestCase
         ;
 
         $this->assertTrue($response['errors']);
-        $this->assertEquals('document_already_exists_exception', $response['items'][0]['create']['error']['type']);
+        $this->assertContains($response['items'][0]['create']['error']['type'], ['document_already_exists_exception', 'version_conflict_engine_exception']);
 
         $this->assertEquals(1, $this->search()->execute()['hits']['total']);
 
@@ -114,7 +163,7 @@ class ElasticsearchCreateQueryTest extends TestCase
     public function test_replace_bulk_twice_with_same_id()
     {
         $this->query
-            ->into('test_persons', 'person')
+            ->into('test_persons')
             ->values([
                 '_id' => 1,
                 'firstName' => 'Mickey',
@@ -125,7 +174,7 @@ class ElasticsearchCreateQueryTest extends TestCase
         ;
 
         $response = $this->query
-            ->into('test_persons', 'person')
+            ->into('test_persons')
             ->replace()
             ->values([
                 '_id' => 1,
@@ -152,7 +201,7 @@ class ElasticsearchCreateQueryTest extends TestCase
     public function test_insert_bulk_with_missing_columns()
     {
         $this->query
-            ->into('test_persons', 'person')
+            ->into('test_persons')
             ->values([
                 'firstName' => 'Mickey',
                 'lastName' => 'Mouse'
@@ -180,7 +229,7 @@ class ElasticsearchCreateQueryTest extends TestCase
     public function test_insert_bulk_without_columns_filter()
     {
         $this->query
-            ->into('test_persons', 'person')
+            ->into('test_persons')
             ->values([
                 'firstName' => 'Mickey',
                 'lastName' => 'Mouse'
@@ -208,7 +257,7 @@ class ElasticsearchCreateQueryTest extends TestCase
     public function test_insert()
     {
         $response = $this->query
-            ->into('test_persons', 'person')
+            ->into('test_persons')
             ->bulk(false)
             ->values([
                 'firstName' => 'Mickey',
@@ -219,6 +268,20 @@ class ElasticsearchCreateQueryTest extends TestCase
         ;
 
         $this->assertTrue($response['created']);
+        $this->assertSame('created', $response['result']);
+        $this->assertTrue($response->creation());
+        $this->assertFalse($response->update());
+        $this->assertFalse($response->deletion());
+        $this->assertTrue($response->isWrite());
+        $this->assertTrue($response->hasWrite());
+        $this->assertFalse($response->isRead());
+        $this->assertCount(1, $response);
+
+        $this->assertEmpty(iterator_to_array($response));
+        $this->assertEmpty($response->all());
+        $this->assertSame($response, $response->asAssociative()->asList()->asObject()->asClass(\stdClass::class)->asColumn(1)->fetchMode(ResultSetInterface::FETCH_ASSOC));
+        $this->assertArrayHasKey('result', $response);
+        $this->assertArrayNotHasKey('foo', $response);
 
         $this->assertEquals(1, $this->search()->execute()['hits']['total']);
         $this->assertEquals([
@@ -235,7 +298,7 @@ class ElasticsearchCreateQueryTest extends TestCase
         $this->expectException(Conflict409Exception::class);
 
         $this->query
-            ->into('test_persons', 'person')
+            ->into('test_persons')
             ->bulk(false)
             ->values([
                 '_id' => 1,
@@ -246,7 +309,7 @@ class ElasticsearchCreateQueryTest extends TestCase
         ;
 
         $this->query
-            ->into('test_persons', 'person')
+            ->into('test_persons')
             ->bulk(false)
             ->values([
                 '_id' => 1,
@@ -263,7 +326,7 @@ class ElasticsearchCreateQueryTest extends TestCase
     public function test_insert_replace_same_id_twice()
     {
         $this->query
-            ->into('test_persons', 'person')
+            ->into('test_persons')
             ->bulk(false)
             ->values([
                 '_id' => 1,
@@ -274,7 +337,7 @@ class ElasticsearchCreateQueryTest extends TestCase
         ;
 
         $response = $this->query
-            ->into('test_persons', 'person')
+            ->into('test_persons')
             ->bulk(false)
             ->replace()
             ->values([
@@ -286,7 +349,17 @@ class ElasticsearchCreateQueryTest extends TestCase
             ->execute()
         ;
 
-        $this->assertFalse($response['created']);
+        $this->assertFalse($response->creation());
+        $this->assertTrue($response->update());
+        $this->assertFalse($response->deletion());
+        $this->assertTrue($response->isWrite());
+        $this->assertTrue($response->hasWrite());
+        $this->assertFalse($response->isRead());
+        $this->assertCount(1, $response);
+
+        $this->assertEmpty(iterator_to_array($response));
+        $this->assertEmpty($response->all());
+        $this->assertSame($response, $response->asAssociative()->asList()->asObject()->asClass(\stdClass::class)->asColumn(1)->fetchMode(ResultSetInterface::FETCH_ASSOC));
 
         $this->assertEquals(1, $this->search()->execute()['hits']['total']);
         $this->assertEquals([
@@ -312,7 +385,7 @@ class ElasticsearchCreateQueryTest extends TestCase
     public function test_compile_simple()
     {
         $compiled = $this->query
-            ->into('test_persons', 'person')
+            ->into('test_persons')
             ->bulk(false)
             ->values([
                 '_id' => 1,
@@ -324,7 +397,6 @@ class ElasticsearchCreateQueryTest extends TestCase
 
         $this->assertEquals([
             'index' => 'test_persons',
-            'type'  => 'person',
             'id'    => 1,
             'body'  => [
                 'firstName' => 'Mickey',
@@ -339,7 +411,7 @@ class ElasticsearchCreateQueryTest extends TestCase
     public function test_compile_bulk()
     {
         $compiled = $this->query
-            ->into('test_persons', 'person')
+            ->into('test_persons')
             ->values([
                 'firstName' => 'Mickey',
                 'lastName' => 'Mouse'
@@ -353,12 +425,48 @@ class ElasticsearchCreateQueryTest extends TestCase
 
         $this->assertEquals([
             'body' => [
-                ['create' => ['_index' => 'test_persons', '_type' => 'person']],
+                ['index' => ['_index' => 'test_persons']],
                 [
                     'firstName' => 'Mickey',
                     'lastName' => 'Mouse'
                 ],
-                ['create' => ['_index' => 'test_persons', '_type' => 'person']],
+                ['index' => ['_index' => 'test_persons']],
+                [
+                    'firstName' => 'Minnie',
+                    'lastName' => 'Mouse'
+                ],
+            ]
+        ], $compiled);
+    }
+
+    /**
+     *
+     */
+    public function test_compile_bulk_with_id()
+    {
+        $compiled = $this->query
+            ->into('test_persons')
+            ->values([
+                '_id' => '1',
+                'firstName' => 'Mickey',
+                'lastName' => 'Mouse'
+            ])
+            ->values([
+                '_id' => '2',
+                'firstName' => 'Minnie',
+                'lastName' => 'Mouse'
+            ])
+            ->compile()
+        ;
+
+        $this->assertEquals([
+            'body' => [
+                ['create' => ['_index' => 'test_persons', '_id' => '1']],
+                [
+                    'firstName' => 'Mickey',
+                    'lastName' => 'Mouse'
+                ],
+                ['create' => ['_index' => 'test_persons', '_id' => '2']],
                 [
                     'firstName' => 'Minnie',
                     'lastName' => 'Mouse'
@@ -372,7 +480,7 @@ class ElasticsearchCreateQueryTest extends TestCase
      */
     public function test_count_clear()
     {
-        $query = $this->query->into('test_persons', 'person');
+        $query = $this->query->into('test_persons');
 
         $this->assertCount(0, $query);
 
@@ -409,7 +517,6 @@ class ElasticsearchCreateQueryTest extends TestCase
 
         $this->assertEquals([
             'index' => 'test_persons',
-            'type'  => 'person',
             'refresh' => true,
             'body'  => [
                 'firstName' => 'Mickey',
@@ -436,7 +543,7 @@ class ElasticsearchCreateQueryTest extends TestCase
         $this->assertEquals([
             'refresh' => true,
             'body' => [
-                ['create' => ['_index' => 'test_persons', '_type' => 'person']],
+                ['index' => ['_index' => 'test_persons']],
                 [
                     'firstName' => 'Mickey',
                     'lastName' => 'Mouse'
@@ -447,6 +554,16 @@ class ElasticsearchCreateQueryTest extends TestCase
 
     public function search(): ElasticsearchQuery
     {
-        return (new ElasticsearchQuery($this->client))->from('test_persons', 'person');
+        return (new ElasticsearchQuery(self::getClient()))->from('test_persons', 'person');
+    }
+}
+
+class MyCustomResultClass
+{
+    public array $index;
+
+    public function index()
+    {
+        return $this->index['_index'];
     }
 }

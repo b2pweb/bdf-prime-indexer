@@ -16,12 +16,12 @@ final class BulkResultSet implements ResultSetInterface, ArrayAccess
      * @var array{took: int, errors: bool, items: list}
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html
      */
-    private $data;
+    private array $data;
 
     /**
      * @var ResultSetInterface
      */
-    private $resultSet;
+    private ResultSetInterface $resultSet;
 
     /**
      * @param array $data

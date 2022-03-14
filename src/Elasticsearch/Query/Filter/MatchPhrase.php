@@ -12,16 +12,8 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
  */
 final class MatchPhrase implements CompilableExpressionInterface
 {
-    /**
-     * @var string
-     */
-    private $field;
-
-    /**
-     * @var string
-     */
-    private $search;
-
+    private string $field;
+    private string $search;
 
     /**
      * MatchPhrase constructor.

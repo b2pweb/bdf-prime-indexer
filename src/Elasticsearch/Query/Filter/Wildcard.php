@@ -15,21 +15,9 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
  */
 final class Wildcard implements CompilableExpressionInterface
 {
-    /**
-     * @var bool
-     */
-    private $useLikeSyntax = false;
-
-    /**
-     * @var string
-     */
-    private $field;
-
-    /**
-     * @var string
-     */
-    private $value;
-
+    private bool $useLikeSyntax = false;
+    private string $field;
+    private string $value;
 
     /**
      * Wildcard constructor.
@@ -53,7 +41,7 @@ final class Wildcard implements CompilableExpressionInterface
      */
     public function useLikeSyntax(bool $useLikeSyntax = true): Wildcard
     {
-        $this->useLikeSyntax = (bool) $useLikeSyntax;
+        $this->useLikeSyntax = $useLikeSyntax;
 
         return $this;
     }

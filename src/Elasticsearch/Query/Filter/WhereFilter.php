@@ -12,18 +12,11 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
  */
 final class WhereFilter implements CompilableExpressionInterface
 {
-    /**
-     * @var string
-     */
-    private $column;
+    private string $column;
+    private string $operator;
 
     /**
-     * @var string
-     */
-    private $operator;
-
-    /**
-     * @var string
+     * @var mixed
      */
     private $value;
 
@@ -35,7 +28,7 @@ final class WhereFilter implements CompilableExpressionInterface
      * @param string $operator
      * @param mixed $value
      */
-    public function __construct($column, $operator, $value)
+    public function __construct(string $column, string $operator, $value)
     {
         $this->column = $column;
         $this->operator = $operator ?: '=';

@@ -31,20 +31,27 @@ class ShowCommand extends AbstractCommand
         $style = new SymfonyStyle($input, $output);
         $client = $this->getClient();
 
-        $aliases = $client->indices()->getAliases();
+        $aliases = $client->indices()->getAlias();
 
-        $headers = ['Indices', 'Types', 'Aliases'];
+        $headers = ['Indices', 'Properties', 'Aliases'];
         $rows = [];
 
         foreach ($client->indices()->getMapping() as $index => $definition) {
-            $rows[] = [$index, $this->getTypesColumn($definition), $this->getAliasesColumn($aliases, $index)];
+            $rows[] = [$index, $this->getProperties($definition), $this->getAliasesColumn($aliases, $index)];
         }
 
         usort($rows, function ($a, $b) {
             return strcmp($a[0], $b[0]);
         });
 
-        $style->table($headers, $rows);
+        $style->createTable()
+            ->setStyle('box-double')
+            ->setHeaders($headers)
+            ->setRows($rows)
+            ->render()
+        ;
+
+        $style->newLine();
 
         return 0;
     }
@@ -54,17 +61,19 @@ class ShowCommand extends AbstractCommand
      *
      * @return string
      */
-    protected function getTypesColumn(array $definition)
+    protected function getProperties(array $definition)
     {
-        if (empty($definition['mappings'])) {
+        if (empty($definition['mappings']['properties'])) {
             return '';
         }
 
-        $types = array_keys($definition['mappings']);
+        $properties = '';
 
-        sort($types);
+        foreach ($definition['mappings']['properties'] as $prop => $def) {
+            $properties .= $prop . ': ' . $def['type'] . PHP_EOL;
+        }
 
-        return implode(PHP_EOL, $types);
+        return $properties;
     }
 
     /**

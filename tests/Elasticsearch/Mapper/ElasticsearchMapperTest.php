@@ -8,16 +8,15 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\StandardAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAccessor;
-use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
+use Bdf\Prime\Indexer\IndexTestCase;
 use City;
-use PHPUnit\Framework\TestCase;
 use WithAnonAnalyzerIndex;
 
 /**
  * Class ElasticsearchMapperTest
  */
-class ElasticsearchMapperTest extends TestCase
+class ElasticsearchMapperTest extends IndexTestCase
 {
     /**
      * @var ElasticsearchMapper
@@ -62,13 +61,15 @@ class ElasticsearchMapperTest extends TestCase
     {
         $properties = $this->mapper->properties();
 
-        $this->assertEquals([
-            'name' => new Property('name', [], $this->mapper->analyzers()['default'], 'string', new SimplePropertyAccessor('name')),
+        $expected = [
+            'name' => new Property('name', [], $this->mapper->analyzers()['default'], 'text', new SimplePropertyAccessor('name')),
             'population' => new Property('population', [], $this->mapper->analyzers()['default'], 'integer', new SimplePropertyAccessor('population')),
-            'zipCode' => new Property('zipCode', [], $this->mapper->analyzers()['default'], 'string', new SimplePropertyAccessor('zipCode')),
-            'country' => new Property('country', ['index' => 'not_analyzed'], $this->mapper->analyzers()['default'], 'string', new SimplePropertyAccessor('country')),
+            'zipCode' => new Property('zipCode', [], $this->mapper->analyzers()['default'], 'keyword', new SimplePropertyAccessor('zipCode')),
+            'country' => new Property('country', ['index' => false], $this->mapper->analyzers()['default'], 'keyword', new SimplePropertyAccessor('country')),
             'enabled' => new Property('enabled', [], $this->mapper->analyzers()['default'], 'boolean', new SimplePropertyAccessor('enabled')),
-        ], $properties);
+        ];
+
+        $this->assertEquals($expected, $properties);
 
         $this->assertSame($properties, $this->mapper->properties());
     }
@@ -218,8 +219,8 @@ class ElasticsearchMapperTest extends TestCase
         ], $mapper->analyzers());
 
         $this->assertEquals([
-            'name' => new Property('name', [], $mapper->analyzers()['default'], 'string', new SimplePropertyAccessor('name')),
-            'values' => new Property('values', ['analyzer' => 'values_anon_analyzer'], $mapper->analyzers()['values_anon_analyzer'], 'string', new SimplePropertyAccessor('values')),
+            'name' => new Property('name', [], $mapper->analyzers()['default'], 'keyword', new SimplePropertyAccessor('name')),
+            'values' => new Property('values', ['analyzer' => 'values_anon_analyzer'], $mapper->analyzers()['values_anon_analyzer'], 'text', new SimplePropertyAccessor('values')),
         ], $mapper->properties());
     }
 }

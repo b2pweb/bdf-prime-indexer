@@ -12,15 +12,8 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
  */
 final class QueryString implements CompilableExpressionInterface
 {
-    /**
-     * @var array
-     */
-    private $parameters = [];
-
-    /**
-     * @var bool
-     */
-    private $useLikeSyntax = false;
+    private array $parameters = [];
+    private bool $useLikeSyntax = false;
 
 
     /**

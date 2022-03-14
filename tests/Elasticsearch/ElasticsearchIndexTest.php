@@ -5,19 +5,18 @@ namespace Bdf\Prime\Indexer\Elasticsearch;
 use Bdf\Collection\Util\Functor\Transformer\Getter;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
+use Bdf\Prime\Indexer\IndexTestCase;
 use City;
 use CityIndex;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Elasticsearch\Client;
-use Elasticsearch\ClientBuilder;
 use Elasticsearch\Common\Exceptions\Missing404Exception;
 use Elasticsearch\Namespaces\IndicesNamespace;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Class ElasticsearchIndexTest
  */
-class ElasticsearchIndexTest extends TestCase
+class ElasticsearchIndexTest extends IndexTestCase
 {
     /**
      * @var ElasticsearchIndex
@@ -25,21 +24,11 @@ class ElasticsearchIndexTest extends TestCase
     private $index;
 
     /**
-     * @var Client
-     */
-    private $client;
-
-    /**
      *
      */
     protected function setUp(): void
     {
-        $this->index = new ElasticsearchIndex(
-            $this->client = ClientBuilder::fromConfig([
-                'hosts' => [ELASTICSEARCH_HOST]
-            ]),
-            new ElasticsearchMapper(new CityIndex())
-        );
+        $this->index = $this->createIndex(new CityIndex());
     }
 
     /**
@@ -182,7 +171,7 @@ class ElasticsearchIndexTest extends TestCase
     {
         $this->addCities();
 
-        $indexes = array_keys($this->client->indices()->getAlias(['name' => 'test_cities']));
+        $indexes = array_keys(self::$client->indices()->getAlias(['name' => 'test_cities']));
         $this->assertCount(1, $indexes);
         $this->assertStringStartsWith('test_cities_', $indexes[0]);
 
@@ -190,7 +179,7 @@ class ElasticsearchIndexTest extends TestCase
 
         $this->index->drop();
 
-        $this->assertFalse($this->client->indices()->existsAlias(['name' => 'test_cities']));
+        $this->assertFalse(self::$client->indices()->existsAlias(['name' => 'test_cities']));
 
         try {
             $this->index->query()->execute();
@@ -208,7 +197,7 @@ class ElasticsearchIndexTest extends TestCase
         $this->addCities();
         $this->addCities();
 
-        $indexes = array_keys($this->client->indices()->getAlias(['name' => 'test_cities']));
+        $indexes = array_keys(self::$client->indices()->getAlias(['name' => 'test_cities']));
         $this->assertCount(1, $indexes);
         $this->assertStringStartsWith('test_cities_', $indexes[0]);
 
@@ -223,7 +212,7 @@ class ElasticsearchIndexTest extends TestCase
         $this->addCities(['dropPreviousIndexes' => false]);
         $this->addCities(['dropPreviousIndexes' => false]);
 
-        $indexes = array_keys($this->client->indices()->getAlias(['name' => 'test_cities']));
+        $indexes = array_keys(self::$client->indices()->getAlias(['name' => 'test_cities']));
         $this->assertCount(2, $indexes);
         $this->assertStringStartsWith('test_cities_', $indexes[0]);
         $this->assertStringStartsWith('test_cities_', $indexes[1]);
@@ -354,24 +343,22 @@ class ElasticsearchIndexTest extends TestCase
                     ],
                 ],
                 'mappings' => [
-                    'city' => [
-                        'properties' => [
-                            'name' => [
-                                'type' => 'string'
-                            ],
-                            'population' => [
-                                'type' => 'integer'
-                            ],
-                            'zipCode' => [
-                                'type' => 'string'
-                            ],
-                            'country' => [
-                                'index' => 'not_analyzed',
-                                'type' => 'string'
-                            ],
-                            'enabled' => [
-                                'type' => 'boolean'
-                            ],
+                    'properties' => [
+                        'name' => [
+                            'type' => 'text'
+                        ],
+                        'population' => [
+                            'type' => 'integer'
+                        ],
+                        'zipCode' => [
+                            'type' => 'keyword'
+                        ],
+                        'country' => [
+                            'index' => false,
+                            'type' => 'keyword'
+                        ],
+                        'enabled' => [
+                            'type' => 'boolean'
                         ],
                     ],
                 ],
@@ -416,26 +403,24 @@ class ElasticsearchIndexTest extends TestCase
                     ],
                 ],
                 'mappings' => [
-                    'user' => [
-                        'properties' => [
-                            'name' => [
-                                'type' => 'string',
-                            ],
-                            'email' => [
-                                'type' => 'string',
-                            ],
-                            'login' => [
-                                'type' => 'string',
-                                'index' => 'not_analyzed',
-                            ],
-                            'password' => [
-                                'type' => 'string',
-                                'index' => 'not_analyzed',
-                            ],
-                            'roles' => [
-                                'type' => 'string',
-                                'analyzer' => 'csv',
-                            ],
+                    'properties' => [
+                        'name' => [
+                            'type' => 'text',
+                        ],
+                        'email' => [
+                            'type' => 'text',
+                        ],
+                        'login' => [
+                            'type' => 'keyword',
+                            'index' => false,
+                        ],
+                        'password' => [
+                            'type' => 'keyword',
+                            'index' => false,
+                        ],
+                        'roles' => [
+                            'type' => 'text',
+                            'analyzer' => 'csv',
                         ],
                     ],
                 ],
@@ -480,15 +465,13 @@ class ElasticsearchIndexTest extends TestCase
                     ],
                 ],
                 'mappings' => [
-                    'anon_analyzer' => [
-                        'properties' => [
-                            'name' => [
-                                'type' => 'string',
-                            ],
-                            'values' => [
-                                'type' => 'string',
-                                'analyzer' => 'values_anon_analyzer',
-                            ],
+                    'properties' => [
+                        'name' => [
+                            'type' => 'keyword',
+                        ],
+                        'values' => [
+                            'type' => 'text',
+                            'analyzer' => 'values_anon_analyzer',
                         ],
                     ],
                 ],

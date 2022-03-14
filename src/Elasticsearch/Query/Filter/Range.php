@@ -12,15 +12,8 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
  */
 final class Range implements CompilableExpressionInterface
 {
-    /**
-     * @var string
-     */
-    private $field;
-
-    /**
-     * @var array
-     */
-    private $parameters = [];
+    private string $field;
+    private array $parameters = [];
 
     /**
      * Range constructor.

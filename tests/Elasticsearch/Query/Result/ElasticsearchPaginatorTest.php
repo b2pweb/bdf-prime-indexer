@@ -4,6 +4,7 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query\Result;
 
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
+use Bdf\Prime\Indexer\IndexTestCase;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use PHPUnit\Framework\TestCase;
@@ -11,29 +12,20 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class ElasticsearchPaginatorTest
  */
-class ElasticsearchPaginatorTest extends TestCase
+class ElasticsearchPaginatorTest extends IndexTestCase
 {
     /**
      * @var ElasticsearchQuery
      */
     private $query;
 
-    /**
-     * @var Client
-     */
-    private $client;
-
     protected function setUp(): void
     {
-        $this->query = new ElasticsearchQuery(
-            $this->client = ClientBuilder::fromConfig([
-                'hosts' => [ELASTICSEARCH_HOST]
-            ])
-        );
+        $this->query = new ElasticsearchQuery(self::getClient());
 
         $this->query->from('test_cities', 'city')->order('population', 'desc');
 
-        $create = new ElasticsearchCreateQuery($this->client);
+        $create = new ElasticsearchCreateQuery(self::getClient());
         $create
             ->into('test_cities', 'city')
             ->values([
@@ -63,8 +55,8 @@ class ElasticsearchPaginatorTest extends TestCase
 
     protected function tearDown(): void
     {
-        if ($this->client->indices()->exists(['index' => 'test_cities'])) {
-            $this->client->indices()->delete(['index' => 'test_cities']);
+        if (self::getClient()->indices()->exists(['index' => 'test_cities'])) {
+            self::getClient()->indices()->delete(['index' => 'test_cities']);
         }
     }
 

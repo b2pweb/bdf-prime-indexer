@@ -12,6 +12,7 @@ prime:
 prime_indexer:
   elasticsearch:
     hosts: ['%env(ELASTICSEARCH_HOST)%']
+    basicAuthentication: ['%env(ELASTICSEARCH_USER)%', '%env(ELASTICSEARCH_PASSWORD)%']
 
   indexes:
     City: CityIndex

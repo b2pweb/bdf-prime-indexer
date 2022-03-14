@@ -18,8 +18,6 @@ use Bdf\Prime\Query\Contract\Limitable;
 use Bdf\Prime\Query\Contract\Orderable;
 use Closure;
 use Elasticsearch\Client;
-use Elasticsearch\Endpoints\AbstractEndpoint;
-use Elasticsearch\Endpoints\Search;
 
 /**
  * Query for perform index search
@@ -41,14 +39,14 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      *
      * @var Client
      */
-    private $client;
+    private Client $client;
 
     /**
      * The query grammar
      *
      * @var ElasticsearchGrammarInterface
      */
-    private $grammar;
+    private ElasticsearchGrammarInterface $grammar;
 
     /**
      * List of custom filters, indexed by the filter name
@@ -56,28 +54,21 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      *
      * @var callable[]
      */
-    private $customFilters = [];
+    private array $customFilters = [];
 
     /**
      * The index name
      *
      * @var string
      */
-    private $index;
-
-    /**
-     * The requested entry type
-     *
-     * @var string
-     */
-    private $type;
+    private string $index;
 
     /**
      * Query to execute
      *
      * @var CompilableExpressionInterface
      */
-    private $query;
+    private ?CompilableExpressionInterface $query = null;
 
     /**
      * Order of fields
@@ -85,21 +76,21 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      *
      * @var array
      */
-    private $order = [];
+    private array $order = [];
 
     /**
      * Offset of the results
      *
      * @var integer|null
      */
-    private $from = null;
+    private ?int $from = null;
 
     /**
      * Maximum items number of the result
      *
      * @var integer|null
      */
-    private $size = null;
+    private ?int $size = null;
 
     /**
      * All query wrappers
@@ -109,7 +100,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      *
      * @var WrappingQueryInterface[]
      */
-    private $wrappers = [];
+    private array $wrappers = [];
 
     /**
      * The document transformer for get PHP model from the index document
@@ -117,11 +108,6 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      * @var callable|null
      */
     private $transformer;
-
-    /**
-     * Does the current version of elasticsearch library is >= 8.0
-     */
-    private static ?bool $isV8;
 
 
     /**
@@ -145,14 +131,12 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      * </code>
      *
      * @param string $index The index name
-     * @param string $type The type name
      *
      * @return $this
      */
-    public function from(string $index, string $type)
+    public function from(string $index)
     {
         $this->index = $index;
-        $this->type = $type;
 
         return $this;
     }
@@ -555,20 +539,14 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      */
     public function execute()
     {
-        if (!isset(self::$isV8)) {
-            self::$isV8 = !in_array('type', (new Search())->getParamWhitelist());
-        }
-
-        $arguments = [
+        $result = $this->client->search([
             'index' => $this->index,
             'body' => $this->compile()
-        ];
+        ]);
 
-        if (!self::$isV8) {
-            $arguments['type'] = $this->type;
-        }
+        $result['hits']['total'] = $result['hits']['total']['value'];
 
-        return $this->client->search($arguments);
+        return $result;
     }
 
     /**

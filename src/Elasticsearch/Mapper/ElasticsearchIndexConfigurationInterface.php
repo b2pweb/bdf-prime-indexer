@@ -18,13 +18,6 @@ interface ElasticsearchIndexConfigurationInterface
     public function index(): string;
 
     /**
-     * Defines the type name
-     *
-     * @return string
-     */
-    public function type(): string;
-
-    /**
      * Defines the entity class name
      *
      * @return string
