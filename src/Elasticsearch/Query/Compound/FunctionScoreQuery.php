@@ -15,20 +15,9 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\WrappingQueryInterface;
  */
 final class FunctionScoreQuery implements WrappingQueryInterface
 {
-    /**
-     * @var CompilableExpressionInterface
-     */
-    private $query;
-
-    /**
-     * @var array
-     */
-    private $options = [];
-
-    /**
-     * @var array
-     */
-    private $functions = [];
+    private ?CompilableExpressionInterface $query;
+    private array $options = [];
+    private array $functions = [];
 
     /**
      * Add a new function for compute the score
@@ -48,7 +37,7 @@ final class FunctionScoreQuery implements WrappingQueryInterface
      * @param string $type The function type (ex: "field_value_factor", "weight"...)
      * @param array $parameters The fonction parameters. Depends of the function type
      * @param array $filter The query for filter the entries that are used by the score function
-     * @param float $weight The weight of the function score over all functions
+     * @param float|null $weight The weight of the function score over all functions
      *
      * @return $this
      *
@@ -86,7 +75,8 @@ final class FunctionScoreQuery implements WrappingQueryInterface
     }
 
     /**
-     * To exclude documents that do not meet a certain score threshold the min_score parameter can be set to the desired score threshold.
+     * To exclude documents that do not meet a certain score threshold
+     * the min_score parameter can be set to the desired score threshold.
      *
      * @param float $value
      *

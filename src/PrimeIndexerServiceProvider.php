@@ -42,7 +42,7 @@ class PrimeIndexerServiceProvider implements ServiceProviderInterface, CommandPr
 
         $app->set('prime.index.factories', function (Application $app) {
             return [
-                ElasticsearchIndexConfigurationInterface::class => function (ElasticsearchIndexConfigurationInterface $configuration) use($app) {
+                ElasticsearchIndexConfigurationInterface::class => function (ElasticsearchIndexConfigurationInterface $configuration) use ($app) {
                     return new ElasticsearchIndex(
                         $app->get(Client::class),
                         new ElasticsearchMapper(

@@ -7,7 +7,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAcces
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Compound\FunctionScoreQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
-use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\QueryString;
 use Bdf\Prime\Indexer\IndexTestCase;
 
@@ -150,7 +150,7 @@ class City
 
 class CityMapper extends \Bdf\Prime\Mapper\Mapper
 {
-    public function schema()
+    public function schema(): array
     {
         return [
             'connection' => 'test',
@@ -158,7 +158,7 @@ class CityMapper extends \Bdf\Prime\Mapper\Mapper
         ];
     }
 
-    public function buildFields($builder)
+    public function buildFields($builder): void
     {
         $builder
             ->integer('id')->autoincrement()
@@ -178,11 +178,6 @@ class CityIndex implements ElasticsearchIndexConfigurationInterface, \Bdf\Prime\
         return 'test_cities';
     }
 
-    public function type(): string
-    {
-        return IndexTestCase::minimalElasticsearchVersion('7.0') ? '' : 'city';
-    }
-
     public function entity(): string
     {
         return City::class;
@@ -190,23 +185,13 @@ class CityIndex implements ElasticsearchIndexConfigurationInterface, \Bdf\Prime\
 
     public function properties(PropertiesBuilder $builder): void
     {
-        if (IndexTestCase::minimalElasticsearchVersion('5.0')) {
-            $builder
-                ->text('name')
-                ->integer('population')
-                ->keyword('zipCode')
-                ->keyword('country')->disableIndexing()
-                ->boolean('enabled')
-            ;
-        } else {
-            $builder
-                ->string('name')
-                ->integer('population')
-                ->string('zipCode')
-                ->string('country')->notAnalyzed()
-                ->boolean('enabled')
-            ;
-        }
+        $builder
+            ->text('name')
+            ->integer('population')
+            ->keyword('zipCode')
+            ->keyword('country')->disableIndexing()
+            ->boolean('enabled')
+        ;
     }
 
     public function id(): ?PropertyAccessorInterface
@@ -245,7 +230,7 @@ class CityIndex implements ElasticsearchIndexConfigurationInterface, \Bdf\Prime\
 
             'matchName' => function (ElasticsearchQuery $query, string $name) {
                 $query
-                    ->where(new Match('name', $name))
+                    ->where(new MatchBoolean('name', $name))
                     ->orWhere(
                         (new QueryString($name.'%'))
                             ->and()

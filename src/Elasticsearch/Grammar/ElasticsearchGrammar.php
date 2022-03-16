@@ -52,7 +52,9 @@ class ElasticsearchGrammar implements ElasticsearchGrammarInterface
             case '=~':
             case ':regex':
                 if (is_array($value)) {
-                    return $this->or(array_map(function ($value) use($field) { return $this->operator($field, ':regex', $value); }, $value));
+                    return $this->or(array_map(function ($value) use ($field) {
+                        return $this->operator($field, ':regex', $value);
+                    }, $value));
                 }
 
                 return ['regexp' => [$field => ['value' => $value]]];
@@ -60,7 +62,9 @@ class ElasticsearchGrammar implements ElasticsearchGrammarInterface
             // LIKE
             case ':like':
                 if (is_array($value)) {
-                    return $this->or(array_map(function ($value) use($field) { return $this->operator($field, ':like', $value); }, $value));
+                    return $this->or(array_map(function ($value) use ($field) {
+                        return $this->operator($field, ':like', $value);
+                    }, $value));
                 }
 
                 return (new Wildcard($field, $value))->useLikeSyntax()->compile($this);

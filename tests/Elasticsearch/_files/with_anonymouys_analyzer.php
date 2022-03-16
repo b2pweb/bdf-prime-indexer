@@ -81,11 +81,6 @@ class WithAnonAnalyzerIndex implements ElasticsearchIndexConfigurationInterface
         return 'test_anon_analyzers';
     }
 
-    public function type(): string
-    {
-        return 'anon_analyzer';
-    }
-
     public function id(): ?PropertyAccessorInterface
     {
         return null;
@@ -94,8 +89,8 @@ class WithAnonAnalyzerIndex implements ElasticsearchIndexConfigurationInterface
     public function properties(PropertiesBuilder $builder): void
     {
         $builder
-            ->string('name')
-            ->string('values')->analyzer(new CsvAnalyzer(';'))
+            ->keyword('name')
+            ->text('values')->analyzer(new CsvAnalyzer(';'))
         ;
     }
 

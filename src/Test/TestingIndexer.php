@@ -86,7 +86,9 @@ class TestingIndexer
      */
     public function push($entities): TestingIndexer
     {
-        $this->execute($entities, function (IndexInterface $index, $entity) { $index->add($entity); });
+        $this->execute($entities, function (IndexInterface $index, $entity) {
+            $index->add($entity);
+        });
 
         return $this;
     }
@@ -100,7 +102,9 @@ class TestingIndexer
      */
     public function remove($entities)
     {
-        $this->execute($entities, function (IndexInterface $index, $entity) { $index->remove($entity); });
+        $this->execute($entities, function (IndexInterface $index, $entity) {
+            $index->remove($entity);
+        });
 
         return $this;
     }
@@ -222,6 +226,6 @@ class TestingIndexer
             return new ElasticsearchTestingIndexConfig($config);
         }
 
-        throw new \LogicException('Unsupported config '.get_class($config));
+        throw new \LogicException('Unsupported config ' . get_class($config));
     }
 }

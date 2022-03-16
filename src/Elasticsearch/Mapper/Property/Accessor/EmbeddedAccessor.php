@@ -65,13 +65,13 @@ final class EmbeddedAccessor implements PropertyAccessorInterface
                     return;
                 }
 
-                $embedded = new $class;
-                $owner->{'set'.$name}($embedded);
+                $embedded = new $class();
+                $owner->{'set' . $name}($embedded);
             }
 
             $owner = $embedded;
         }
 
-        $owner->{'set'.$last}($indexedValue);
+        $owner->{'set' . $last}($indexedValue);
     }
 }

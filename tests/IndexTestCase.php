@@ -36,7 +36,8 @@ class IndexTestCase extends TestCase
         }
 
         return self::$client = ClientBuilder::fromConfig([
-            'hosts' => [ELASTICSEARCH_HOST]
+            'hosts' => [ELASTICSEARCH_HOST],
+            'basicAuthentication' => [ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD],
         ]);
     }
 

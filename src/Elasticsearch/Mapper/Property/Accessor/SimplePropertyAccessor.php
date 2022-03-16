@@ -28,7 +28,7 @@ final class SimplePropertyAccessor implements PropertyAccessorInterface
      */
     public function readFromModel($entity)
     {
-        foreach ([$this->propertyName, 'get'.ucfirst($this->propertyName)] as $method) {
+        foreach ([$this->propertyName, 'get' . ucfirst($this->propertyName)] as $method) {
             if (method_exists($entity, $method)) {
                 return $entity->$method();
             }
@@ -42,6 +42,6 @@ final class SimplePropertyAccessor implements PropertyAccessorInterface
      */
     public function writeToModel($entity, $indexedValue)
     {
-        $entity->{'set'.ucfirst($this->propertyName)}($indexedValue);
+        $entity->{'set' . ucfirst($this->propertyName)}($indexedValue);
     }
 }

@@ -10,9 +10,9 @@ interface WrappingQueryInterface extends CompilableExpressionInterface
     /**
      * Set the inner query
      *
-     * @param CompilableExpressionInterface $innerQuery
+     * @param CompilableExpressionInterface|null $innerQuery
      *
      * @return static
      */
-    public function wrap(CompilableExpressionInterface $innerQuery = null): WrappingQueryInterface;
+    public function wrap(?CompilableExpressionInterface $innerQuery = null): WrappingQueryInterface;
 }

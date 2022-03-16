@@ -30,13 +30,13 @@ class ShowCommandTest extends CommandTestCase
 
         $output = $this->execute('elasticsearch:show');
 
-        $this->assertRegExp('# Indices + Types + Aliases +#', $output);
-
-        if (IndexTestCase::minimalElasticsearchVersion('7.0')) {
-            $this->assertRegExp('# test_users_.{13} + {6} + test_users +#', $output);
-        } else {
-            $this->assertRegExp('# test_users_.{13} + user + test_users +#', $output);
-        }
+        $this->assertMatchesRegularExpression('# Indices +| Properties +| Aliases +#', $output);
+        $this->assertMatchesRegularExpression('# test_users_.{13} +| .* +| test_users +#', $output);
+        $this->assertStringContainsString('email: text', $output);
+        $this->assertStringContainsString('login: keyword', $output);
+        $this->assertStringContainsString('name: text', $output);
+        $this->assertStringContainsString('password: keyword', $output);
+        $this->assertStringContainsString('roles: text', $output);
     }
 
     private function factory(): IndexFactory

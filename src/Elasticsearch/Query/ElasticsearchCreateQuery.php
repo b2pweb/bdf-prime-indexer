@@ -2,7 +2,12 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
-use Bdf\Prime\Query\Contract\Query\InsertQueryInterface;
+use Bdf\Prime\Connection\Result\ResultSetInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Result\BulkResultSet;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Result\WriteResultSet;
+use Bdf\Prime\Query\Contract\BulkWriteBuilderInterface;
+use Bdf\Prime\Query\Contract\SelfExecutable;
+use Countable;
 use Elasticsearch\Client;
 
 /**
@@ -47,7 +52,7 @@ use Elasticsearch\Client;
  *
  * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/docs-bulk.html
  */
-class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
+class ElasticsearchCreateQuery implements BulkWriteBuilderInterface, SelfExecutable, Countable
 {
     /** Field name for store the primary key of the document */
     private const PK_FIELD = '_id';
@@ -55,58 +60,50 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
     /**
      * @var Client
      */
-    private $client;
+    private Client $client;
 
     /**
      * Enable bulk insert ?
      *
      * @var bool
      */
-    private $bulk = true;
+    private bool $bulk = true;
 
     /**
      * The index name
      *
      * @var string
      */
-    private $index;
-
-    /**
-     * The requested entry type
-     *
-     * @var string|null
-     */
-    private $type;
+    private string $index;
 
     /**
      * Array of values to insert
      *
      * @var array
      */
-    private $values = [];
+    private array $values = [];
 
     /**
      * List of columns
-     * May be null for disable column check
+     * May be empty for disable column check
      *
      * @var string[]
      */
-    private $columns = [];
+    private array $columns = [];
 
     /**
      * The insert mode
      *
      * @var string
      */
-    private $mode = self::MODE_INSERT;
+    private string $mode = self::MODE_INSERT;
 
     /**
      * The refresh mode
      *
-     * @var bool|string
+     * @var true|false|'wait_for'
      */
     private $refresh = false;
-
 
     /**
      * ElasticsearchCreateQuery constructor.
@@ -121,10 +118,9 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
     /**
      * {@inheritdoc}
      */
-    public function into($table, $type = null)
+    public function into($table)
     {
         $this->index = $table;
-        $this->type = $type;
 
         return $this;
     }
@@ -174,7 +170,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
      *
      * @todo handle ignore
      */
-    public function ignore($flag = true)
+    public function ignore(bool $flag = true)
     {
         return $this->mode($flag ? self::MODE_IGNORE : self::MODE_INSERT);
     }
@@ -182,7 +178,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
     /**
      * {@inheritdoc}
      */
-    public function replace($flag = true)
+    public function replace(bool $flag = true)
     {
         return $this->mode($flag ? self::MODE_REPLACE : self::MODE_INSERT);
     }
@@ -190,7 +186,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
     /**
      * {@inheritdoc}
      */
-    public function bulk($flag = true)
+    public function bulk(bool $flag = true)
     {
         $this->bulk = $flag;
 
@@ -200,15 +196,15 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
     /**
      * {@inheritdoc}
      *
-     * @return int|array
+     * @return BulkResultSet|WriteResultSet
      */
-    public function execute($columns = null)
+    public function execute($columns = null): ResultSetInterface
     {
         if ($this->bulk) {
-            return $this->client->bulk($this->compileBulk());
+            return new BulkResultSet($this->client->bulk($this->compileBulk()));
         }
 
-        return $this->normalizeSimpleExecuteResult($this->client->{$this->operation()}($this->compileSimple()));
+        return new WriteResultSet($this->client->{$this->operation()}($this->compileSimple()));
     }
 
     /**
@@ -216,7 +212,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
      *
      * Get the number of pending insert values
      */
-    public function count()
+    public function count(): int
     {
         return count($this->values);
     }
@@ -238,10 +234,11 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
      *
      * If set to true, the documents will appears immediately on the next search query
      * If set to false, the refresh will be done asynchronously
+     * If set to "wait_for" then wait for a refresh to make this operation visible to search
      *
      * Note: It's discouraged to use refresh true on production, due to performance impacts
      *
-     * @param boolean|string $mode The refresh mode
+     * @param boolean|'wait_for' $mode The refresh mode
      *
      * @return $this
      *
@@ -275,10 +272,6 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
 
         foreach ($this->values as $value) {
             $metadata = ['_index' => $this->index];
-
-            if ($this->type) {
-                $metadata['_type'] = $this->type;
-            }
 
             if (isset($value[self::PK_FIELD])) {
                 $metadata[self::PK_FIELD] = $value[self::PK_FIELD];
@@ -316,10 +309,6 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
             'body'  => $this->compileData($this->values[0]),
         ];
 
-        if ($this->type) {
-            $query['type'] = $this->type;
-        }
-
         if (isset($this->values[0][self::PK_FIELD])) {
             $query['id'] = $this->values[0][self::PK_FIELD];
             unset($query['body'][self::PK_FIELD]);
@@ -336,6 +325,7 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
      * Get the operation name from the mode
      *
      * @return string
+     * @psalm-return 'index'|'create'
      */
     private function operation()
     {
@@ -376,33 +366,5 @@ class ElasticsearchCreateQuery implements InsertQueryInterface, \Countable
         }
 
         return $filtered;
-    }
-
-    /**
-     * Normalize execution result between ES v2 and v6
-     *
-     * @param array $rawResult
-     *
-     * @return array
-     */
-    private function normalizeSimpleExecuteResult(array $rawResult): array
-    {
-        // ES >= 6.0 use "result" key instead of bool flags
-        if (isset($rawResult['result'])) {
-            $rawResult['created'] = $rawResult['updated'] = false;
-            $rawResult[$rawResult['result']] = true;
-        } else {
-            switch (true) {
-                case !empty($rawResult['created']):
-                    $rawResult['result'] = 'created';
-                    break;
-
-                case !empty($rawResult['updated']):
-                    $rawResult['result'] = 'updated';
-                    break;
-            }
-        }
-
-        return $rawResult;
     }
 }

@@ -106,7 +106,7 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
         $className = $this->configuration->entity();
 
         if (!$entity instanceof $className) {
-            throw new TypeError('Entity must be an instance of '.$className);
+            throw new TypeError('Entity must be an instance of ' . $className);
         }
 
         $document = [];

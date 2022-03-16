@@ -6,6 +6,7 @@ use Bdf\Collection\Util\Functor\Transformer\Getter;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Bdf\Prime\Indexer\IndexTestCase;
 use City;
 use CityIndex;
@@ -54,7 +55,7 @@ class ElasticsearchIndexTest extends IndexTestCase
 
         $this->index->refresh();
 
-        $indexed = $this->index->query()->where(new Match('name', 'Paris'))->stream()->first()->get();
+        $indexed = $this->index->query()->where(new MatchBoolean('name', 'Paris'))->stream()->first()->get();
         $this->assertEquals($city, $indexed);
     }
 
@@ -74,7 +75,7 @@ class ElasticsearchIndexTest extends IndexTestCase
 
         $this->index->refresh();
 
-        $indexed = $this->index->query()->where(new Match('name', 'Paris'))->stream()->first()->get();
+        $indexed = $this->index->query()->where(new MatchBoolean('name', 'Paris'))->stream()->first()->get();
         $this->assertEquals($city, $indexed);
     }
 
@@ -96,13 +97,13 @@ class ElasticsearchIndexTest extends IndexTestCase
         $this->addCities();
 
         $this->assertCount(4, $this->index->query()->stream());
-        $city = $this->index->query()->where(new Match('name', 'Cavaillon'))->stream()->first()->get();
+        $city = $this->index->query()->where(new MatchBoolean('name', 'Cavaillon'))->stream()->first()->get();
 
         $this->index->remove($city);
         $this->index->refresh();
 
         $this->assertCount(3, $this->index->query()->stream());
-        $this->assertCount(0, $this->index->query()->where(new Match('name', 'Cavaillon'))->stream());
+        $this->assertCount(0, $this->index->query()->where(new MatchBoolean('name', 'Cavaillon'))->stream());
     }
 
     /**
@@ -343,40 +344,27 @@ class ElasticsearchIndexTest extends IndexTestCase
                     ],
                 ],
                 'mappings' => [
-                    'city' => [
-                        'properties' => [
-                            'name' => [
-                                'type' => 'string'
-                            ],
-                            'population' => [
-                                'type' => 'integer'
-                            ],
-                            'zipCode' => [
-                                'type' => 'string'
-                            ],
-                            'country' => [
-                                'index' => 'not_analyzed',
-                                'type' => 'string'
-                            ],
-                            'enabled' => [
-                                'type' => 'boolean'
-                            ],
+                    'properties' => [
+                        'name' => [
+                            'type' => 'text'
+                        ],
+                        'population' => [
+                            'type' => 'integer'
+                        ],
+                        'zipCode' => [
+                            'type' => 'keyword'
+                        ],
+                        'country' => [
+                            'index' => false,
+                            'type' => 'keyword'
+                        ],
+                        'enabled' => [
+                            'type' => 'boolean'
                         ],
                     ],
                 ],
             ],
         ];
-
-        if (self::minimalElasticsearchVersion('5.0')) {
-            $expected['body']['mappings']['city']['properties']['name']['type'] = 'text';
-            $expected['body']['mappings']['city']['properties']['zipCode']['type'] = 'keyword';
-            $expected['body']['mappings']['city']['properties']['country']['type'] = 'keyword';
-            $expected['body']['mappings']['city']['properties']['country']['index'] = false;
-        }
-
-        if (self::minimalElasticsearchVersion('7.0')) {
-            $expected['body']['mappings'] = $expected['body']['mappings']['city'];
-        }
 
         $client = $this->createMock(Client::class);
         $indices = $this->createMock(IndicesNamespace::class);
@@ -416,45 +404,29 @@ class ElasticsearchIndexTest extends IndexTestCase
                     ],
                 ],
                 'mappings' => [
-                    'user' => [
-                        'properties' => [
-                            'name' => [
-                                'type' => 'string',
-                            ],
-                            'email' => [
-                                'type' => 'string',
-                            ],
-                            'login' => [
-                                'type' => 'string',
-                                'index' => 'not_analyzed',
-                            ],
-                            'password' => [
-                                'type' => 'string',
-                                'index' => 'not_analyzed',
-                            ],
-                            'roles' => [
-                                'type' => 'string',
-                                'analyzer' => 'csv',
-                            ],
+                    'properties' => [
+                        'name' => [
+                            'type' => 'text',
+                        ],
+                        'email' => [
+                            'type' => 'text',
+                        ],
+                        'login' => [
+                            'type' => 'keyword',
+                            'index' => false,
+                        ],
+                        'password' => [
+                            'type' => 'keyword',
+                            'index' => false,
+                        ],
+                        'roles' => [
+                            'type' => 'text',
+                            'analyzer' => 'csv',
                         ],
                     ],
                 ],
             ],
         ];
-
-        if (self::minimalElasticsearchVersion('5.0')) {
-            $expected['body']['mappings']['user']['properties']['name']['type'] = 'text';
-            $expected['body']['mappings']['user']['properties']['email']['type'] = 'text';
-            $expected['body']['mappings']['user']['properties']['login']['type'] = 'keyword';
-            $expected['body']['mappings']['user']['properties']['login']['index'] = false;
-            $expected['body']['mappings']['user']['properties']['password']['type'] = 'keyword';
-            $expected['body']['mappings']['user']['properties']['password']['index'] = false;
-            $expected['body']['mappings']['user']['properties']['roles']['type'] = 'text';
-        }
-
-        if (self::minimalElasticsearchVersion('7.0')) {
-            $expected['body']['mappings'] = $expected['body']['mappings']['user'];
-        }
 
         $client = $this->createMock(Client::class);
         $indices = $this->createMock(IndicesNamespace::class);
@@ -494,15 +466,13 @@ class ElasticsearchIndexTest extends IndexTestCase
                     ],
                 ],
                 'mappings' => [
-                    'anon_analyzer' => [
-                        'properties' => [
-                            'name' => [
-                                'type' => 'string',
-                            ],
-                            'values' => [
-                                'type' => 'string',
-                                'analyzer' => 'values_anon_analyzer',
-                            ],
+                    'properties' => [
+                        'name' => [
+                            'type' => 'keyword',
+                        ],
+                        'values' => [
+                            'type' => 'text',
+                            'analyzer' => 'values_anon_analyzer',
                         ],
                     ],
                 ],

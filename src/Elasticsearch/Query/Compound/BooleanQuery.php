@@ -12,38 +12,18 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
  */
 final class BooleanQuery implements CompilableExpressionInterface
 {
-    const COMPOSITE_AND = 'AND';
-    const COMPOSITE_OR = 'OR';
-    const COMPOSITE_FILTER = 'FILTER';
-    const COMPOSITE_SHOULD = 'SHOULD';
-    const COMPOSITE_MUST = 'MUST';
-    const COMPOSITE_MUST_NOT = 'MUST_NOT';
+    public const COMPOSITE_AND = 'AND';
+    public const COMPOSITE_OR = 'OR';
+    public const COMPOSITE_FILTER = 'FILTER';
+    public const COMPOSITE_SHOULD = 'SHOULD';
+    public const COMPOSITE_MUST = 'MUST';
+    public const COMPOSITE_MUST_NOT = 'MUST_NOT';
 
-    /**
-     * @var array
-     */
-    private $options = [];
-
-    /**
-     * @var array
-     */
-    private $must = [];
-
-    /**
-     * @var array
-     */
-    private $mustNot = [];
-
-    /**
-     * @var array
-     */
-    private $filter = [];
-
-    /**
-     * @var array
-     */
-    private $should = [];
-
+    private array $options = [];
+    private array $must = [];
+    private array $mustNot = [];
+    private array $filter = [];
+    private array $should = [];
 
     /**
      * The clause (query) must appear in matching documents and will contribute to the score.

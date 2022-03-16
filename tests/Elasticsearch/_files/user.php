@@ -135,11 +135,6 @@ class UserIndex implements ElasticsearchIndexConfigurationInterface
         return 'test_users';
     }
 
-    public function type(): string
-    {
-        return IndexTestCase::minimalElasticsearchVersion('7.0') ? '' : 'user';
-    }
-
     public function id(): ?PropertyAccessorInterface
     {
         return null;
@@ -147,23 +142,13 @@ class UserIndex implements ElasticsearchIndexConfigurationInterface
 
     public function properties(PropertiesBuilder $builder): void
     {
-        if (IndexTestCase::minimalElasticsearchVersion('5.0')) {
-            $builder
-                ->text('name')
-                ->text('email')
-                ->keyword('login')->accessor('email')->disableIndexing()
-                ->keyword('password')->disableIndexing()
-                ->text('roles')->analyzer('csv')
-            ;
-        } else {
-            $builder
-                ->string('name')
-                ->string('email')
-                ->string('login')->accessor('email')->notAnalyzed()
-                ->string('password')->notAnalyzed()
-                ->string('roles')->analyzer('csv')
-            ;
-        }
+        $builder
+            ->text('name')
+            ->text('email')
+            ->keyword('login')->accessor('email')->disableIndexing()
+            ->keyword('password')->disableIndexing()
+            ->text('roles')->analyzer('csv')
+        ;
     }
 
     public function analyzers(): array
@@ -181,7 +166,7 @@ class UserIndex implements ElasticsearchIndexConfigurationInterface
 
 class UserMapper extends \Bdf\Prime\Mapper\Mapper
 {
-    public function schema()
+    public function schema(): array
     {
         return [
             'connection' => 'test',
@@ -189,7 +174,7 @@ class UserMapper extends \Bdf\Prime\Mapper\Mapper
         ];
     }
 
-    public function buildFields($builder)
+    public function buildFields($builder): void
     {
         $builder
             ->string('name')

@@ -21,12 +21,12 @@ class ElasticsearchIndex implements IndexInterface
     /**
      * @var Client
      */
-    private $client;
+    private Client $client;
 
     /**
      * @var ElasticsearchMapperInterface
      */
-    private $mapper;
+    private ElasticsearchMapperInterface $mapper;
 
 
     /**
@@ -56,7 +56,7 @@ class ElasticsearchIndex implements IndexInterface
     {
         $response = $this->creationQuery()->bulk(false)->values($this->mapper->toIndex($entity))->execute();
 
-        $this->mapper->setId($entity, $response['_id']);
+        $this->mapper->setId($entity, $response->id());
     }
 
     /**
@@ -72,10 +72,6 @@ class ElasticsearchIndex implements IndexInterface
             'index' => $this->mapper->configuration()->index(),
             'id' => $id,
         ];
-
-        if ($type = $this->mapper->configuration()->type()) {
-            $parameters['type'] = $type;
-        }
 
         /** @var bool */
         return $this->client->exists($parameters);
@@ -96,10 +92,6 @@ class ElasticsearchIndex implements IndexInterface
             'index' => $this->mapper->configuration()->index(),
             'id' => $id,
         ];
-
-        if ($type = $this->mapper->configuration()->type()) {
-            $parameters['type'] = $type;
-        }
 
         try {
             $this->client->delete($parameters);
@@ -130,10 +122,6 @@ class ElasticsearchIndex implements IndexInterface
             ],
         ];
 
-        if ($type = $this->mapper->configuration()->type()) {
-            $parameters['type'] = $type;
-        }
-
         $this->client->update($parameters);
     }
 
@@ -145,7 +133,7 @@ class ElasticsearchIndex implements IndexInterface
     public function query(bool $withDefaultScope = true): QueryInterface
     {
         $query = (new ElasticsearchQuery($this->client, $this->mapper->scopes()))
-            ->from($this->mapper->configuration()->index(), $this->mapper->configuration()->type())
+            ->from($this->mapper->configuration()->index())
             ->map([$this->mapper, 'fromIndex'])
         ;
 
@@ -175,18 +163,18 @@ class ElasticsearchIndex implements IndexInterface
         $index = $this->mapper->configuration()->index();
 
         if ($options['useAlias']) {
-            $index .= '_'.uniqid();
+            $index .= '_' . uniqid();
         }
 
         try {
-            $options['logger']->info('Creating index '.$index);
+            $options['logger']->info('Creating index ' . $index);
             $this->createSchema($index);
 
-            $options['logger']->info('Insert entities into '.$index);
+            $options['logger']->info('Insert entities into ' . $index);
             $this->insertAll($index, $options['chunkSize'], $entities);
 
             if ($options['useAlias']) {
-                $options['logger']->info('Adding alias for '.$index.' to '.$this->mapper->configuration()->index());
+                $options['logger']->info('Adding alias for ' . $index . ' to ' . $this->mapper->configuration()->index());
                 $this->client->indices()->putAlias([
                     'index' => $index,
                     'name'  => $this->mapper->configuration()->index()
@@ -202,7 +190,7 @@ class ElasticsearchIndex implements IndexInterface
                 $this->refresh();
             }
         } catch (\Exception $e) {
-            $options['logger']->info('Failed creating index '.$index.' : '.$e->getMessage());
+            $options['logger']->info('Failed creating index ' . $index . ' : ' . $e->getMessage());
 
             // Delete the index on failure, if alias is used
             if ($options['useAlias'] && $this->client->indices()->exists(['index' => $index])) {
@@ -242,7 +230,7 @@ class ElasticsearchIndex implements IndexInterface
     public function creationQuery(): ElasticsearchCreateQuery
     {
         return (new ElasticsearchCreateQuery($this->client))
-            ->into($this->mapper->configuration()->index(), $this->mapper->configuration()->type())
+            ->into($this->mapper->configuration()->index())
         ;
     }
 
@@ -286,24 +274,14 @@ class ElasticsearchIndex implements IndexInterface
      */
     private function createSchema(string $index)
     {
-        $type = $this->mapper->configuration()->type();
         $body = [
             'settings' => [
                 'analysis' => $this->compileAnalysis(),
             ],
-        ];
-
-        if ($type) {
-            $body['mappings'] = [
-                $type => [
-                    'properties' => $this->compileProperties(),
-                ],
-            ];
-        } else {
-            $body['mappings'] = [
+            'mappings' => [
                 'properties' => $this->compileProperties(),
-            ];
-        }
+            ],
+        ];
 
         $this->client->indices()->create([
             'index' => $index,
@@ -344,7 +322,7 @@ class ElasticsearchIndex implements IndexInterface
                         $declaration['filter'][] = $filterDeclaration;
                     } else {
                         if (is_int($filter)) {
-                            $filter = 'filter_'.$filter;
+                            $filter = 'filter_' . $filter;
                         }
 
                         $declaration['filter'][] = $filter;
@@ -367,7 +345,9 @@ class ElasticsearchIndex implements IndexInterface
     private function compileProperties(): array
     {
         return Streams::wrap($this->mapper->properties())
-            ->map(function (Property $property) { return ['type' => $property->type()] + $property->declaration(); })
+            ->map(function (Property $property) {
+                return ['type' => $property->type()] + $property->declaration();
+            })
             ->toArray()
         ;
     }
@@ -381,10 +361,7 @@ class ElasticsearchIndex implements IndexInterface
      */
     private function insertAll(string $index, int $chunkSize, iterable $entities): void
     {
-        $query = $this
-            ->creationQuery()
-            ->into($index, $this->mapper->configuration()->type())
-        ;
+        $query = $this->creationQuery()->into($index);
 
         foreach ($entities as $entity) {
             $query->values($this->mapper->toIndex($entity));

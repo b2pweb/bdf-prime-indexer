@@ -48,7 +48,7 @@ class PropertiesBuilderTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Analyzer not_found is not declared');
 
-        $this->builder->string('my_field')->analyzer('not_found');
+        $this->builder->text('my_field')->analyzer('not_found');
     }
 
     /**
@@ -56,17 +56,8 @@ class PropertiesBuilderTest extends TestCase
      */
     public function test_analyzer()
     {
-        $this->builder->string('my_field')->analyzer('csv');
-        $this->assertEquals(['my_field' => new Property('my_field', ['analyzer' => 'csv'], new CsvAnalyzer(), 'string', new SimplePropertyAccessor('my_field'))], $this->builder->build());
-    }
-
-    /**
-     *
-     */
-    public function test_notAnalyzed()
-    {
-        $this->builder->string('my_field')->notAnalyzed();
-        $this->assertEquals(['my_field' => new Property('my_field', ['index' => 'not_analyzed'], new StandardAnalyzer(), 'string', new SimplePropertyAccessor('my_field'))], $this->builder->build());
+        $this->builder->text('my_field')->analyzer('csv');
+        $this->assertEquals(['my_field' => new Property('my_field', ['analyzer' => 'csv'], new CsvAnalyzer(), 'text', new SimplePropertyAccessor('my_field'))], $this->builder->build());
     }
 
     /**
@@ -74,8 +65,8 @@ class PropertiesBuilderTest extends TestCase
      */
     public function test_disableIndexing()
     {
-        $this->builder->string('my_field')->disableIndexing();
-        $this->assertEquals(['my_field' => new Property('my_field', ['index' => false], new StandardAnalyzer(), 'string', new SimplePropertyAccessor('my_field'))], $this->builder->build());
+        $this->builder->text('my_field')->disableIndexing();
+        $this->assertEquals(['my_field' => new Property('my_field', ['index' => false], new StandardAnalyzer(), 'text', new SimplePropertyAccessor('my_field'))], $this->builder->build());
     }
 
     /**
@@ -83,8 +74,8 @@ class PropertiesBuilderTest extends TestCase
      */
     public function test_accessor_string()
     {
-        $this->builder->string('my_field')->accessor('other_field');
-        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'string', new SimplePropertyAccessor('other_field'))], $this->builder->build());
+        $this->builder->text('my_field')->accessor('other_field');
+        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'text', new SimplePropertyAccessor('other_field'))], $this->builder->build());
     }
 
     /**
@@ -94,8 +85,8 @@ class PropertiesBuilderTest extends TestCase
     {
         $accessor = $this->createMock(PropertyAccessorInterface::class);
 
-        $this->builder->string('my_field')->accessor($accessor);
-        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'string', $accessor)], $this->builder->build());
+        $this->builder->keyword('my_field')->accessor($accessor);
+        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'keyword', $accessor)], $this->builder->build());
     }
 
     /**
@@ -103,8 +94,8 @@ class PropertiesBuilderTest extends TestCase
      */
     public function test_accessor_closure()
     {
-        $this->builder->string('my_field')->accessor(function () {});
-        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'string', new CustomAccessor(function () {}))], $this->builder->build());
+        $this->builder->text('my_field')->accessor(function () {});
+        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'text', new CustomAccessor(function () {}))], $this->builder->build());
     }
 
     /**
@@ -112,8 +103,8 @@ class PropertiesBuilderTest extends TestCase
      */
     public function test_accessor_embedded()
     {
-        $this->builder->string('my_field')->accessor(['embedded' => \User::class, 'name']);
-        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'string', new EmbeddedAccessor(['embedded' => \User::class, 'name']))], $this->builder->build());
+        $this->builder->keyword('my_field')->accessor(['embedded' => \User::class, 'name']);
+        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'keyword', new EmbeddedAccessor(['embedded' => \User::class, 'name']))], $this->builder->build());
     }
 
     /**
@@ -124,7 +115,7 @@ class PropertiesBuilderTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid accessor given');
 
-        $this->builder->string('my_field')->accessor(null);
+        $this->builder->keyword('my_field')->accessor(null);
     }
 
     /**
@@ -132,8 +123,8 @@ class PropertiesBuilderTest extends TestCase
      */
     public function test_readOnly()
     {
-        $this->builder->string('my_field')->readOnly();
-        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'string', new ReadOnlyAccessor('my_field'))], $this->builder->build());
+        $this->builder->keyword('my_field')->readOnly();
+        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'keyword', new ReadOnlyAccessor('my_field'))], $this->builder->build());
     }
 
     /**
@@ -141,8 +132,8 @@ class PropertiesBuilderTest extends TestCase
      */
     public function test_readOnly_with_custom_accessor()
     {
-        $this->builder->string('my_field')->accessor('field')->readOnly();
-        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'string', new ReadOnlyAccessor(new SimplePropertyAccessor('field')))], $this->builder->build());
+        $this->builder->keyword('my_field')->accessor('field')->readOnly();
+        $this->assertEquals(['my_field' => new Property('my_field', [], new StandardAnalyzer(), 'keyword', new ReadOnlyAccessor(new SimplePropertyAccessor('field')))], $this->builder->build());
     }
 
     /**
@@ -150,8 +141,8 @@ class PropertiesBuilderTest extends TestCase
      */
     public function test_anonymous_analyzer()
     {
-        $this->builder->string('my_field')->analyzer($analyzer = new CsvAnalyzer());
-        $this->assertEquals(['my_field' => new Property('my_field', ['analyzer' => 'my_field_anon_analyzer'], $analyzer, 'string', new SimplePropertyAccessor('my_field'))], $this->builder->build());
+        $this->builder->text('my_field')->analyzer($analyzer = new CsvAnalyzer());
+        $this->assertEquals(['my_field' => new Property('my_field', ['analyzer' => 'my_field_anon_analyzer'], $analyzer, 'text', new SimplePropertyAccessor('my_field'))], $this->builder->build());
         $this->assertSame(['my_field_anon_analyzer' => $analyzer], $this->builder->analyzers());
     }
 
@@ -160,8 +151,8 @@ class PropertiesBuilderTest extends TestCase
      */
     public function test_anonymous_analyzer_array()
     {
-        $this->builder->string('my_field')->analyzer(['foo' => 'bar']);
-        $this->assertEquals(['my_field' => new Property('my_field', ['analyzer' => 'my_field_anon_analyzer'], new ArrayAnalyzer(['foo' => 'bar']), 'string', new SimplePropertyAccessor('my_field'))], $this->builder->build());
+        $this->builder->text('my_field')->analyzer(['foo' => 'bar']);
+        $this->assertEquals(['my_field' => new Property('my_field', ['analyzer' => 'my_field_anon_analyzer'], new ArrayAnalyzer(['foo' => 'bar']), 'text', new SimplePropertyAccessor('my_field'))], $this->builder->build());
         $this->assertEquals(['my_field_anon_analyzer' => new ArrayAnalyzer(['foo' => 'bar'])], $this->builder->analyzers());
     }
 
@@ -171,7 +162,7 @@ class PropertiesBuilderTest extends TestCase
     public function test_anonymous_analyzer_invalid()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->builder->string('my_field')->analyzer(new \stdClass());
+        $this->builder->text('my_field')->analyzer(new \stdClass());
     }
 
     /**
@@ -218,11 +209,11 @@ class PropertiesBuilderTest extends TestCase
      */
     public function test_fields()
     {
-        $this->builder->string('name')->field('raw', ['type' => 'string', 'index' => 'not_analyzed']);
+        $this->builder->keyword('name')->field('raw', ['type' => 'keyword', 'index' => 'not_analyzed']);
         $this->assertEquals([
             'fields' => [
                 'raw' => [
-                    'type' => 'string',
+                    'type' => 'keyword',
                     'index' => 'not_analyzed',
                 ]
             ]
@@ -232,7 +223,7 @@ class PropertiesBuilderTest extends TestCase
         $this->assertEquals([
             'fields' => [
                 'raw' => [
-                    'type' => 'string',
+                    'type' => 'keyword',
                     'index' => 'not_analyzed',
                 ],
                 'other' => [
@@ -248,7 +239,8 @@ class PropertiesBuilderTest extends TestCase
     public function provideTypeMethods()
     {
         return [
-            ['string', new Property('my_field', [], new StandardAnalyzer(), 'string', new SimplePropertyAccessor('my_field'))],
+            ['text', new Property('my_field', [], new StandardAnalyzer(), 'text', new SimplePropertyAccessor('my_field'))],
+            ['keyword', new Property('my_field', [], new StandardAnalyzer(), 'keyword', new SimplePropertyAccessor('my_field'))],
             ['long', new Property('my_field', [], new StandardAnalyzer(), 'long', new SimplePropertyAccessor('my_field'))],
             ['integer', new Property('my_field', [], new StandardAnalyzer(), 'integer', new SimplePropertyAccessor('my_field'))],
             ['short', new Property('my_field', [], new StandardAnalyzer(), 'short', new SimplePropertyAccessor('my_field'))],

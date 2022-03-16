@@ -12,7 +12,8 @@ interface AnalyzerInterface
 {
     /**
      * Get the analyzer declaration
-     * The tokenizer and filter parameters are optional and will be added corresponding to tokenizer() and filters() methods
+     * The tokenizer and filter parameters are optional
+     * and will be added corresponding to tokenizer() and filters() methods
      *
      * <code>
      * public function declaration()

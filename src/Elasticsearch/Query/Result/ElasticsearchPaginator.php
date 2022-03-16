@@ -8,6 +8,7 @@ use Bdf\Prime\Query\Pagination\AbstractPaginator;
 use Bdf\Prime\Query\Pagination\Paginator;
 use Bdf\Prime\Query\Pagination\PaginatorInterface;
 use IteratorAggregate;
+use Traversable;
 
 /**
  * Implements paginator for elasticsearch
@@ -60,7 +61,7 @@ class ElasticsearchPaginator extends AbstractPaginator implements IteratorAggreg
     /**
      * {@inheritdoc}
      */
-    public function getIterator()
+    public function getIterator(): Traversable
     {
         return $this->collection;
     }
@@ -68,7 +69,7 @@ class ElasticsearchPaginator extends AbstractPaginator implements IteratorAggreg
     /**
      * {@inheritdoc}
      */
-    protected function buildSize()
+    protected function buildSize(): void
     {
         // No-op
     }
@@ -76,7 +77,7 @@ class ElasticsearchPaginator extends AbstractPaginator implements IteratorAggreg
     /**
      * {@inheritdoc}
      */
-    protected function loadCollection()
+    protected function loadCollection(): void
     {
         if ($this->maxRows > -1) {
             $this->query->limitPage($this->page, $this->maxRows);

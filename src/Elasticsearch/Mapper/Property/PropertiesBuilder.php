@@ -69,22 +69,6 @@ class PropertiesBuilder
     }
 
     /**
-     * Add a string property
-     *
-     * @param string $name The index property name
-     *
-     * @return $this
-     *
-     * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/string.html
-     *
-     * @deprecated Use text or keyword types instead on elasticsearch >= 5.0
-     */
-    public function string(string $name): PropertiesBuilder
-    {
-        return $this->add($name, 'string');
-    }
-
-    /**
      * Add a text property
      *
      * @param string $name The index property name
@@ -269,7 +253,7 @@ class PropertiesBuilder
     {
         $this->add($name, $type);
 
-        $analyzerName = 'csv_'.ord($separator);
+        $analyzerName = 'csv_' . ord($separator);
 
         if (!isset($this->analyzers[$analyzerName])) {
             $this->analyzers[$analyzerName] = new CsvAnalyzer($separator);
@@ -284,7 +268,8 @@ class PropertiesBuilder
      * Configure the analyzer for the property
      *
      * You can pass a string for use an analyzer declared into @see ElasticsearchIndexConfigurationInterface::analyzers()
-     * You can also use an anonymous analyzer by passing an AnalyzerInterface instance (or an array, which will be cast to ArrayAnalyzer).
+     * You can also use an anonymous analyzer by passing an AnalyzerInterface instance
+     * or an array, which will be cast to ArrayAnalyzer
      * With an anonymous analyzer, the analyzer will be declared using a generated name
      *
      * @param string|array|AnalyzerInterface $analyzer The analyzer name, or value
@@ -295,7 +280,7 @@ class PropertiesBuilder
     {
         if (is_string($analyzer)) {
             if (!isset($this->mapper->analyzers()[$analyzer])) {
-                throw new InvalidArgumentException('Analyzer '.$analyzer.' is not declared');
+                throw new InvalidArgumentException('Analyzer ' . $analyzer . ' is not declared');
             }
         } else {
             if (is_array($analyzer)) {
@@ -306,26 +291,12 @@ class PropertiesBuilder
                 throw new InvalidArgumentException('The parameter $analyzer must be a valid analyzer');
             }
 
-            $name = $this->current.'_anon_analyzer';
+            $name = $this->current . '_anon_analyzer';
             $this->analyzers[$name] = $analyzer;
             $analyzer = $name;
         }
 
         return $this->option('analyzer', $analyzer);
-    }
-
-    /**
-     * Disable full-text analysis on the property
-     * Use this to permit term level queries
-     *
-     * @return $this
-     *
-     * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/mapping-index.html
-     * @deprecated Since ES v5.0, removed on ES v6.0. Use disableIndexing() instead
-     */
-    public function notAnalyzed(): PropertiesBuilder
-    {
-        return $this->option('index', 'not_analyzed');
     }
 
     /**
@@ -416,7 +387,8 @@ class PropertiesBuilder
             case is_string($accessor):
                 return $this->option('accessor', new SimplePropertyAccessor($accessor));
 
-            // Check callable after string, but before array for allow [$this, 'method'] syntax, but disallow global functions
+            // Check callable after string, but before array for allow [$this, 'method'] syntax,
+            // but disallow global functions
             case is_callable($accessor):
                 return $this->option('accessor', new CustomAccessor($accessor));
 

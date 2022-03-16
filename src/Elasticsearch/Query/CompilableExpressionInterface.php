@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
