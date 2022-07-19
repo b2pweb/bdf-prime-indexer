@@ -3,26 +3,26 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Adapter;
 
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\InvalidRequestException;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\NoNodeAvailableException;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\NotFoundException;
-use Elastic\Elasticsearch\Client;
-use Elastic\Elasticsearch\ClientBuilder;
-use Elastic\Transport\Exception\NoNodeAvailableException;
+use Elasticsearch\Client;
+use Elasticsearch\ClientBuilder;
 use PHPUnit\Framework\TestCase;
 
 /**
  *
  */
-class ES8ClientTest extends TestCase
+class ES7ClientTest extends TestCase
 {
-    private ES8Client $client;
+    private ES7Client $client;
 
     protected function setUp(): void
     {
         if (!class_exists(Client::class)) {
-            $this->markTestSkipped('"elasticsearch/elasticsearch" v8 is not installed at version 8');
+            $this->markTestSkipped('"elasticsearch/elasticsearch" v7 is not installed at version 8');
         }
 
-        $this->client = new ES8Client(ClientBuilder::fromConfig([
+        $this->client = new ES7Client(ClientBuilder::fromConfig([
             'hosts' => [ELASTICSEARCH_HOST],
             'basicAuthentication' => [ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD],
         ]));
@@ -405,7 +405,7 @@ class ES8ClientTest extends TestCase
     public function test_NoNodeAvailableException_error()
     {
         $this->expectException(NoNodeAvailableException::class);
-        $client = new ES8Client(ClientBuilder::fromConfig([
+        $client = new ES7Client(ClientBuilder::fromConfig([
             'hosts' => ['127.0.0.15'],
         ]));
 

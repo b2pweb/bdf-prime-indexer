@@ -10,16 +10,22 @@ use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\NotFoundException;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\RuntimeException;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Response\Aliases;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Response\SearchResults;
-use Elastic\Elasticsearch\Client;
-use Elastic\Elasticsearch\Exception\ClientResponseException;
-use Elastic\Elasticsearch\Exception\ElasticsearchException;
-use Elastic\Elasticsearch\Exception\ServerResponseException;
-use Elastic\Transport\Exception\NoNodeAvailableException as DriverNoNodeAvailableException;
+use Elasticsearch\Client;
+use Elasticsearch\Common\Exceptions\BadRequest400Exception;
+use Elasticsearch\Common\Exceptions\Conflict409Exception;
+use Elasticsearch\Common\Exceptions\ElasticsearchException;
+use Elasticsearch\Common\Exceptions\Forbidden403Exception;
+use Elasticsearch\Common\Exceptions\Missing404Exception;
+use Elasticsearch\Common\Exceptions\NoNodesAvailableException as DriverNoNodesAvailableException;
+use Elasticsearch\Common\Exceptions\RequestTimeout408Exception;
+use Elasticsearch\Common\Exceptions\ScriptLangNotSupportedException;
+use Elasticsearch\Common\Exceptions\ServerErrorResponseException;
+use Elasticsearch\Common\Exceptions\Unauthorized401Exception;
 
 /**
- * Client adapter for PHP elasticsearch client v8
+ * Client adapter for PHP elasticsearch client v7
  */
-final class ES8Client implements ClientInterface
+final class ES7Client implements ClientInterface
 {
     private Client $client;
 
@@ -47,7 +53,7 @@ final class ES8Client implements ClientInterface
     public function hasAlias(string $name): bool
     {
         try {
-            return $this->client->indices()->existsAlias(['name' => $name])->asBool();
+            return $this->client->indices()->existsAlias(['name' => $name]);
         } catch (ElasticsearchException $e) {
             $this->handleException($e, true);
         }
@@ -63,7 +69,7 @@ final class ES8Client implements ClientInterface
         try {
             $response = $this->client->indices()->getAlias(['name' => $name]);
 
-            foreach ($response->asArray() as $index => $data) {
+            foreach ($response as $index => $data) {
                 return new Aliases($this, $index, $data['aliases']);
             }
         } catch (ElasticsearchException $e) {
@@ -83,7 +89,7 @@ final class ES8Client implements ClientInterface
         try {
             $response = $this->client->indices()->getAlias($name ? ['name' => $name] : []);
 
-            foreach ($response->asArray() as $index => $data) {
+            foreach ($response as $index => $data) {
                 $aliases[$index] = new Aliases($this, $index, $data['aliases']);
             }
         } catch (ElasticsearchException $e) {
@@ -123,7 +129,7 @@ final class ES8Client implements ClientInterface
     public function exists(string $index, string $id): bool
     {
         try {
-            return $this->client->exists(['index' => $index, 'id' => $id])->asBool();
+            return $this->client->exists(['index' => $index, 'id' => $id]);
         } catch (ElasticsearchException $e) {
             $this->handleException($e);
         }
@@ -135,7 +141,8 @@ final class ES8Client implements ClientInterface
     public function delete(string $index, string $id): bool
     {
         try {
-            return $this->client->delete(['index' => $index, 'id' => $id])->asBool();
+            $this->client->delete(['index' => $index, 'id' => $id]);
+            return true;
         } catch (ElasticsearchException $e) {
             $this->handleException($e, true);
         }
@@ -149,7 +156,8 @@ final class ES8Client implements ClientInterface
     public function update(string $index, string $id, array $body): bool
     {
         try {
-            return $this->client->update(['index' => $index, 'id' => $id, 'body' => $body])->asBool();
+            $this->client->update(['index' => $index, 'id' => $id, 'body' => $body]);
+            return true;
         } catch (ElasticsearchException $e) {
             $this->handleException($e, true);
         }
@@ -163,7 +171,7 @@ final class ES8Client implements ClientInterface
     public function index(string $index, array $data, $refresh = false): array
     {
         try {
-            return $this->client->index(['index' => $index, 'body' => $data, 'refresh' => $refresh])->asArray();
+            return $this->client->index(['index' => $index, 'body' => $data, 'refresh' => $refresh]);
         } catch (ElasticsearchException $e) {
             $this->handleException($e);
         }
@@ -175,7 +183,7 @@ final class ES8Client implements ClientInterface
     public function create(string $index, string $id, array $data, $refresh = false): array
     {
         try {
-            return $this->client->create(['index' => $index, 'id' => $id, 'body' => $data, 'refresh' => $refresh])->asArray();
+            return $this->client->create(['index' => $index, 'id' => $id, 'body' => $data, 'refresh' => $refresh]);
         } catch (ElasticsearchException $e) {
             $this->handleException($e);
         }
@@ -187,7 +195,7 @@ final class ES8Client implements ClientInterface
     public function replace(string $index, string $id, array $data, $refresh = false): array
     {
         try {
-            return $this->client->index(['index' => $index, 'id' => $id, 'body' => $data, 'refresh' => $refresh])->asArray();
+            return $this->client->index(['index' => $index, 'id' => $id, 'body' => $data, 'refresh' => $refresh]);
         } catch (ElasticsearchException $e) {
             $this->handleException($e);
         }
@@ -199,7 +207,7 @@ final class ES8Client implements ClientInterface
     public function search(string $index, array $query): SearchResults
     {
         try {
-            $results = $this->client->search(['index' => $index, 'body' => $query])->asArray();
+            $results = $this->client->search(['index' => $index, 'body' => $query]);
         } catch (ElasticsearchException $e) {
             $this->handleException($e);
         }
@@ -226,7 +234,7 @@ final class ES8Client implements ClientInterface
             return $this->client->bulk([
                 'body' => $operations,
                 'refresh' => $refresh
-            ])->asArray();
+            ]);
         } catch (ElasticsearchException $e) {
             $this->handleException($e);
         }
@@ -238,7 +246,8 @@ final class ES8Client implements ClientInterface
     public function deleteIndex(string ...$index): bool
     {
         try {
-            return $this->client->indices()->delete(['index' => implode(',', $index), 'ignore_unavailable' => count($index) > 1])->asBool();
+            $this->client->indices()->delete(['index' => implode(',', $index), 'ignore_unavailable' => count($index) > 1]);
+            return true;
         } catch (ElasticsearchException $e) {
             $this->handleException($e, true);
         }
@@ -252,7 +261,8 @@ final class ES8Client implements ClientInterface
     public function refreshIndex(string $index): bool
     {
         try {
-            return $this->client->indices()->refresh(['index' => $index])->asBool();
+            $this->client->indices()->refresh(['index' => $index]);
+            return true;
         } catch (ElasticsearchException $e) {
             $this->handleException($e);
         }
@@ -276,7 +286,7 @@ final class ES8Client implements ClientInterface
     public function hasIndex(string $index): bool
     {
         try {
-            return $this->client->indices()->exists(['index' => $index])->asBool();
+            return $this->client->indices()->exists(['index' => $index]);
         } catch (ElasticsearchException $e) {
             $this->handleException($e);
         }
@@ -288,7 +298,7 @@ final class ES8Client implements ClientInterface
     public function getAllIndexes(): array
     {
         try {
-            return array_keys($this->client->indices()->getMapping()->asArray());
+            return array_keys($this->client->indices()->getMapping());
         } catch (ElasticsearchException $e) {
             $this->handleException($e);
         }
@@ -300,7 +310,7 @@ final class ES8Client implements ClientInterface
     public function getAllIndexesMapping(): array
     {
         try {
-            return $this->client->indices()->getMapping()->asArray();
+            return $this->client->indices()->getMapping();
         } catch (ElasticsearchException $e) {
             $this->handleException($e);
         }
@@ -312,7 +322,7 @@ final class ES8Client implements ClientInterface
     public function info(): array
     {
         try {
-            return $this->client->info()->asArray();
+            return $this->client->info();
         } catch (ElasticsearchException $e) {
             $this->handleException($e);
         }
@@ -331,22 +341,25 @@ final class ES8Client implements ClientInterface
     private function handleException(ElasticsearchException $exception, bool $ignoreNotFound = false): void
     {
         switch (true) {
-            case $exception instanceof DriverNoNodeAvailableException:
+            case $exception instanceof DriverNoNodesAvailableException:
                 throw new NoNodeAvailableException($exception->getMessage(), $exception->getCode(), $exception);
 
-            case $exception instanceof ClientResponseException: {
-                if ($exception->getResponse()->getStatusCode() === 404) {
-                    if ($ignoreNotFound) {
-                        return;
-                    }
-
-                    throw new NotFoundException($exception->getMessage(), $exception->getCode(), $exception);
+            case $exception instanceof Missing404Exception:
+                if ($ignoreNotFound) {
+                    return;
                 }
 
-                throw new InvalidRequestException($exception->getMessage(), $exception->getCode(), $exception);
-            }
+                throw new NotFoundException($exception->getMessage(), $exception->getCode(), $exception);
 
-            case $exception instanceof ServerResponseException:
+            case $exception instanceof Unauthorized401Exception:
+            case $exception instanceof Forbidden403Exception:
+            case $exception instanceof Conflict409Exception:
+            case $exception instanceof ScriptLangNotSupportedException:
+            case $exception instanceof RequestTimeout408Exception:
+            case $exception instanceof BadRequest400Exception:
+                throw new InvalidRequestException($exception->getMessage(), $exception->getCode(), $exception);
+
+            case $exception instanceof ServerErrorResponseException:
                 throw new InternalServerException($exception->getMessage(), $exception->getCode(), $exception);
 
             default:
