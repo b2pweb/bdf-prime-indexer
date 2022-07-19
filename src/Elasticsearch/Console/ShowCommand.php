@@ -2,6 +2,8 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Console;
 
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\Response\Aliases;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -9,6 +11,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Class ShowCommand
  */
+#[AsCommand('elasticsearch:show', 'Affiche la liste des index')]
 class ShowCommand extends AbstractCommand
 {
     protected static $defaultName = 'elasticsearch:show';
@@ -31,18 +34,16 @@ class ShowCommand extends AbstractCommand
         $style = new SymfonyStyle($input, $output);
         $client = $this->getClient();
 
-        $aliases = $client->indices()->getAlias();
+        $aliases = $client->getAllAliases();
 
         $headers = ['Indices', 'Properties', 'Aliases'];
         $rows = [];
 
-        foreach ($client->indices()->getMapping() as $index => $definition) {
+        foreach ($client->getAllIndexesMapping() as $index => $definition) {
             $rows[] = [$index, $this->getProperties($definition), $this->getAliasesColumn($aliases, $index)];
         }
 
-        usort($rows, function ($a, $b) {
-            return strcmp($a[0], $b[0]);
-        });
+        usort($rows, fn($a, $b) => strcmp($a[0], $b[0]));
 
         $style->createTable()
             ->setStyle('box-double')
@@ -77,18 +78,18 @@ class ShowCommand extends AbstractCommand
     }
 
     /**
-     * @param array $aliases
+     * @param array<string, Aliases> $aliases
      * @param string $index
      *
      * @return string
      */
-    protected function getAliasesColumn(array $aliases, $index)
+    protected function getAliasesColumn(array $aliases, string $index)
     {
-        if (empty($aliases[$index]) || empty($aliases[$index]['aliases'])) {
+        if (empty($aliases[$index])) {
             return '';
         }
 
-        $indexAliases = array_keys($aliases[$index]['aliases']);
+        $indexAliases = $aliases[$index]->all();
 
         sort($indexAliases);
 

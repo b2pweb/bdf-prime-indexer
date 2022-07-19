@@ -3,12 +3,11 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
 use Bdf\Prime\Connection\Result\ResultSetInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\InvalidRequestException;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Bdf\Prime\Indexer\IndexTestCase;
-use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Elasticsearch\Common\Exceptions\Conflict409Exception;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Class ElasticsearchCreateQueryTest
@@ -27,8 +26,8 @@ class ElasticsearchCreateQueryTest extends IndexTestCase
 
     protected function tearDown(): void
     {
-        if (self::getClient()->indices()->exists(['index' => ['test_persons']])) {
-            self::getClient()->indices()->delete(['index' => ['test_persons']]);
+        if (self::getClient()->hasIndex('test_persons')) {
+            self::getClient()->deleteIndex('test_persons');
         }
     }
 
@@ -73,7 +72,7 @@ class ElasticsearchCreateQueryTest extends IndexTestCase
         $this->assertTrue($response->all()[1]['index']['forced_refresh']);
         $this->assertNotEmpty($response->all()[1]['index']['_id']);
 
-        $this->assertEquals(2, $this->search()->execute()['hits']['total']);
+        $this->assertEquals(2, $this->search()->execute()->total());
         $this->assertEquals([
             'firstName' => 'Mickey',
             'lastName' => 'Mouse'
@@ -149,7 +148,7 @@ class ElasticsearchCreateQueryTest extends IndexTestCase
         $this->assertTrue($response['errors']);
         $this->assertContains($response['items'][0]['create']['error']['type'], ['document_already_exists_exception', 'version_conflict_engine_exception']);
 
-        $this->assertEquals(1, $this->search()->execute()['hits']['total']);
+        $this->assertEquals(1, $this->search()->execute()->total());
 
         $this->assertEquals([
             'firstName' => 'Mickey',
@@ -185,7 +184,7 @@ class ElasticsearchCreateQueryTest extends IndexTestCase
         ;
 
         $this->assertFalse($response['errors']);
-        $this->assertEquals(1, $this->search()->execute()['hits']['total']);
+        $this->assertEquals(1, $this->search()->execute()->total());
 
         sleep(2);
 
@@ -283,7 +282,7 @@ class ElasticsearchCreateQueryTest extends IndexTestCase
         $this->assertArrayHasKey('result', $response);
         $this->assertArrayNotHasKey('foo', $response);
 
-        $this->assertEquals(1, $this->search()->execute()['hits']['total']);
+        $this->assertEquals(1, $this->search()->execute()->total());
         $this->assertEquals([
             'firstName' => 'Mickey',
             'lastName' => 'Mouse'
@@ -295,7 +294,8 @@ class ElasticsearchCreateQueryTest extends IndexTestCase
      */
     public function test_insert_same_id_twice()
     {
-        $this->expectException(Conflict409Exception::class);
+        $this->expectException(InvalidRequestException::class);
+        $this->expectExceptionMessage('version conflict, document already exists');
 
         $this->query
             ->into('test_persons')
@@ -361,7 +361,7 @@ class ElasticsearchCreateQueryTest extends IndexTestCase
         $this->assertEmpty($response->all());
         $this->assertSame($response, $response->asAssociative()->asList()->asObject()->asClass(\stdClass::class)->asColumn(1)->fetchMode(ResultSetInterface::FETCH_ASSOC));
 
-        $this->assertEquals(1, $this->search()->execute()['hits']['total']);
+        $this->assertEquals(1, $this->search()->execute()->total());
         $this->assertEquals([
             'firstName' => 'Minnie',
             'lastName' => 'Mouse'

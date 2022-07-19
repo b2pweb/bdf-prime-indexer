@@ -11,6 +11,7 @@ use Bdf\Prime\Repository\EntityRepository;
 use Bdf\Prime\ServiceLocator;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
@@ -24,6 +25,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Create the index for the given entity
  */
+#[AsCommand('prime:indexer:create', 'Create the index for the given entity')]
 class CreateIndexCommand extends Command
 {
     /**
@@ -140,8 +142,7 @@ class CreateIndexCommand extends Command
 
         $query = $repository->queries()->keyValue();
 
-        // Check if paginationCount() exists for compatibility with BDF 1.5
-        if (!$query instanceof Paginable || !method_exists($query, 'paginationCount')) {
+        if (!$query instanceof Paginable) {
             $query = $repository->queries()->builder();
         }
 
@@ -204,15 +205,5 @@ class CreateIndexCommand extends Command
         }
 
         return Streams::wrap($entities)->filter([$config, 'shouldBeIndexed']);
-    }
-
-    /**
-     * Compatibility with old bdf framework
-     *
-     * @return string[]
-     */
-    public static function names()
-    {
-        return [static::$defaultName];
     }
 }

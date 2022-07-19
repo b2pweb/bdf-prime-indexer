@@ -4,11 +4,19 @@ parameters:
 
 services:
     Elasticsearch\Client:
-        class: Elasticsearch\Client
-        factory: ['Elasticsearch\ClientBuilder', 'fromConfig']
+        deprecated:
+            package: 'b2pweb/bdf-prime-indexer'
+            version: 2.0
+            message: 'Direct usage of elasticsearch driver client using service "%service_id%" is deprecated since 2.0'
+        factory: ['@Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface', 'getInternalClient']
+        public: true
+
+    Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface:
+        class: Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface
+        public: true
+        factory: [ 'Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientFactory', 'fromArray' ]
         arguments:
             - '%prime.indexer.configuration.elasticsearch%'
-        public: true
 
     Bdf\Prime\Indexer\IndexFactory:
         class: Bdf\Prime\Indexer\IndexFactory
@@ -25,14 +33,14 @@ services:
     Bdf\Prime\Indexer\Elasticsearch\Console\ShowCommand:
         class: Bdf\Prime\Indexer\Elasticsearch\Console\ShowCommand
         arguments:
-            - '@Elasticsearch\Client'
+            - '@Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface'
             - '%prime.indexer.configuration%'
         tags: ['console.command']
 
     Bdf\Prime\Indexer\Elasticsearch\Console\DeleteCommand:
         class: Bdf\Prime\Indexer\Elasticsearch\Console\DeleteCommand
         arguments:
-            - '@Elasticsearch\Client'
+            - '@Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface'
             - '%prime.indexer.configuration%'
         tags: ['console.command']
 

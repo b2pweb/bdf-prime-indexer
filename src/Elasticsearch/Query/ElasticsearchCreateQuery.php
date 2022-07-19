@@ -3,12 +3,12 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
 use Bdf\Prime\Connection\Result\ResultSetInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\BulkResultSet;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\WriteResultSet;
 use Bdf\Prime\Query\Contract\BulkWriteBuilderInterface;
 use Bdf\Prime\Query\Contract\SelfExecutable;
 use Countable;
-use Elasticsearch\Client;
 
 /**
  * Query for create documents into an elasticsearch index
@@ -58,9 +58,9 @@ class ElasticsearchCreateQuery implements BulkWriteBuilderInterface, SelfExecuta
     private const PK_FIELD = '_id';
 
     /**
-     * @var Client
+     * @var ClientInterface
      */
-    private Client $client;
+    private ClientInterface $client;
 
     /**
      * Enable bulk insert ?
@@ -108,9 +108,9 @@ class ElasticsearchCreateQuery implements BulkWriteBuilderInterface, SelfExecuta
     /**
      * ElasticsearchCreateQuery constructor.
      *
-     * @param Client $client
+     * @param ClientInterface $client
      */
-    public function __construct(Client $client)
+    public function __construct(ClientInterface $client)
     {
         $this->client = $client;
     }
@@ -201,10 +201,22 @@ class ElasticsearchCreateQuery implements BulkWriteBuilderInterface, SelfExecuta
     public function execute($columns = null): ResultSetInterface
     {
         if ($this->bulk) {
-            return new BulkResultSet($this->client->bulk($this->compileBulk()));
+            $query = $this->compileBulk();
+
+            return new BulkResultSet($this->client->bulk($query['body'], $query['refresh'] ?? false));
         }
 
-        return new WriteResultSet($this->client->{$this->operation()}($this->compileSimple()));
+        $query = $this->compileSimple();
+
+        if (!isset($query['id'])) {
+            $result = $this->client->index($query['index'], $query['body'], $query['refresh'] ?? false);
+        } elseif ($this->mode === self::MODE_REPLACE) {
+            $result = $this->client->replace($query['index'], $query['id'], $query['body'], $query['refresh'] ?? false);
+        } else {
+            $result = $this->client->create($query['index'], $query['id'], $query['body'], $query['refresh'] ?? false);
+        }
+
+        return new WriteResultSet($result);
     }
 
     /**
@@ -319,26 +331,6 @@ class ElasticsearchCreateQuery implements BulkWriteBuilderInterface, SelfExecuta
         }
 
         return $query;
-    }
-
-    /**
-     * Get the operation name from the mode
-     *
-     * @return string
-     * @psalm-return 'index'|'create'
-     */
-    private function operation()
-    {
-        if ($this->mode === self::MODE_REPLACE) {
-            return 'index';
-        }
-
-        // No id given : create cannot be used
-        if (!$this->bulk && !isset($this->values[0][self::PK_FIELD])) {
-            return 'index';
-        }
-
-        return 'create';
     }
 
     /**

@@ -2,8 +2,8 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Console;
 
-use Elasticsearch\Client;
-use Elasticsearch\ClientBuilder;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientFactory;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -14,7 +14,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class AbstractCommand extends Command
 {
-    private Client $client;
+    private ClientInterface $client;
     private array $config;
     protected InputInterface $input;
     protected OutputInterface $output;
@@ -22,10 +22,10 @@ class AbstractCommand extends Command
     /**
      * AbstractCommand constructor.
      *
-     * @param Client $client
+     * @param ClientInterface $client
      * @param array $config
      */
-    public function __construct(Client $client, array $config)
+    public function __construct(ClientInterface $client, array $config)
     {
         parent::__construct();
 
@@ -54,12 +54,12 @@ class AbstractCommand extends Command
     }
 
     /**
-     * @return Client
+     * @return ClientInterface
      */
-    protected function getClient(): Client
+    protected function getClient(): ClientInterface
     {
         if ($this->input->getOption('config') || $this->input->getOption('hosts')) {
-            return ClientBuilder::fromConfig($this->getClientConfig());
+            return ClientFactory::fromArray($this->getClientConfig());
         }
 
         return $this->client;
@@ -87,16 +87,5 @@ class AbstractCommand extends Command
         }
 
         return $clientConfig;
-    }
-
-    /**
-     * Compatibility with old bdf framework
-     *
-     * @return string[]
-     */
-    public static function names()
-    {
-        /** @var string[] */
-        return [static::$defaultName];
     }
 }

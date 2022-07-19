@@ -3,14 +3,13 @@
 namespace Bdf\Prime\Indexer\Elasticsearch;
 
 use Bdf\Collection\Stream\Streams;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\IndexInterface;
 use Bdf\Prime\Indexer\QueryInterface;
-use Elasticsearch\Client;
-use Elasticsearch\Common\Exceptions\Missing404Exception;
 use Psr\Log\NullLogger;
 
 /**
@@ -19,9 +18,9 @@ use Psr\Log\NullLogger;
 class ElasticsearchIndex implements IndexInterface
 {
     /**
-     * @var Client
+     * @var ClientInterface
      */
-    private Client $client;
+    private ClientInterface $client;
 
     /**
      * @var ElasticsearchMapperInterface
@@ -32,10 +31,10 @@ class ElasticsearchIndex implements IndexInterface
     /**
      * ElasticsearchIndex constructor.
      *
-     * @param Client $client
+     * @param ClientInterface $client
      * @param ElasticsearchMapperInterface $mapper
      */
-    public function __construct(Client $client, ElasticsearchMapperInterface $mapper)
+    public function __construct(ClientInterface $client, ElasticsearchMapperInterface $mapper)
     {
         $this->client = $client;
         $this->mapper = $mapper;
@@ -68,13 +67,7 @@ class ElasticsearchIndex implements IndexInterface
             return false;
         }
 
-        $parameters = [
-            'index' => $this->mapper->configuration()->index(),
-            'id' => $id,
-        ];
-
-        /** @var bool */
-        return $this->client->exists($parameters);
+        return $this->client->exists($this->mapper->configuration()->index(), $id);
     }
 
     /**
@@ -88,16 +81,7 @@ class ElasticsearchIndex implements IndexInterface
             throw new \InvalidArgumentException('Cannot extract id from the entity');
         }
 
-        $parameters = [
-            'index' => $this->mapper->configuration()->index(),
-            'id' => $id,
-        ];
-
-        try {
-            $this->client->delete($parameters);
-        } catch (Missing404Exception $e) {
-            // Ignore deleting not found entities
-        }
+        $this->client->delete($this->mapper->configuration()->index(), $id);
     }
 
     /**
@@ -114,15 +98,7 @@ class ElasticsearchIndex implements IndexInterface
         $id = $document['_id'];
         unset($document['_id']);
 
-        $parameters = [
-            'index' => $this->mapper->configuration()->index(),
-            'id' => $id,
-            'body' => [
-                'doc' => $document,
-            ],
-        ];
-
-        $this->client->update($parameters);
+        $this->client->update($this->mapper->configuration()->index(), $id, ['doc' => $document]);
     }
 
     /**
@@ -173,17 +149,21 @@ class ElasticsearchIndex implements IndexInterface
             $options['logger']->info('Insert entities into ' . $index);
             $this->insertAll($index, $options['chunkSize'], $entities);
 
-            if ($options['useAlias']) {
-                $options['logger']->info('Adding alias for ' . $index . ' to ' . $this->mapper->configuration()->index());
-                $this->client->indices()->putAlias([
-                    'index' => $index,
-                    'name'  => $this->mapper->configuration()->index()
-                ]);
+            if ($options['dropPreviousIndexes']) {
+                $previousAlias = $this->client->getAlias($this->mapper->configuration()->index());
+                $previousIndex = $previousAlias ? $previousAlias->index() : null;
+            } else {
+                $previousIndex = null;
             }
 
-            if ($options['dropPreviousIndexes']) {
+            if ($options['useAlias']) {
+                $options['logger']->info('Adding alias for ' . $index . ' to ' . $this->mapper->configuration()->index());
+                $this->client->addAlias($index, $this->mapper->configuration()->index());
+            }
+
+            if ($options['dropPreviousIndexes'] && $previousIndex) {
                 $options['logger']->info('Removing previous indexes');
-                $this->dropPreviousIndexes($index);
+                $this->client->deleteIndex($previousIndex);
             }
 
             if ($options['refresh']) {
@@ -193,8 +173,8 @@ class ElasticsearchIndex implements IndexInterface
             $options['logger']->info('Failed creating index ' . $index . ' : ' . $e->getMessage());
 
             // Delete the index on failure, if alias is used
-            if ($options['useAlias'] && $this->client->indices()->exists(['index' => $index])) {
-                $this->client->indices()->delete(['index' => $index]);
+            if ($options['useAlias'] && $this->client->hasIndex($index)) {
+                $this->client->deleteIndex($index);
             }
 
             throw $e;
@@ -206,20 +186,12 @@ class ElasticsearchIndex implements IndexInterface
      */
     public function drop(): void
     {
-        try {
-            if ($this->client->indices()->existsAlias(['name' => $this->mapper->configuration()->index()])) {
-                $alias = $this->client->indices()->getAlias(['name' => $this->mapper->configuration()->index()]);
-                $this->client->indices()->deleteAlias([
-                    'index' => key($alias),
-                    'name' => $this->mapper->configuration()->index(),
-                ]);
-                return;
-            }
-
-            $this->client->indices()->delete(['index' => $this->mapper->configuration()->index()]);
-        } catch (Missing404Exception $e) {
-            // Index not found : do not raise the exception
+        if ($alias = $this->client->getAlias($this->mapper->configuration()->index())) {
+            $alias->delete();
+            return;
         }
+
+        $this->client->deleteIndex($this->mapper->configuration()->index());
     }
 
     /**
@@ -242,7 +214,7 @@ class ElasticsearchIndex implements IndexInterface
      */
     public function refresh(): void
     {
-        $this->client->indices()->refresh(['index' => $this->mapper->configuration()->index()]);
+        $this->client->refreshIndex($this->mapper->configuration()->index());
     }
 
     /**
@@ -283,10 +255,7 @@ class ElasticsearchIndex implements IndexInterface
             ],
         ];
 
-        $this->client->indices()->create([
-            'index' => $index,
-            'body' => $body,
-        ]);
+        $this->client->createIndex($index, $body);
     }
 
     /**
@@ -374,28 +343,6 @@ class ElasticsearchIndex implements IndexInterface
 
         if (count($query)) {
             $query->execute();
-        }
-    }
-
-    /**
-     * Drop all previous indexes, excluding the current one
-     *
-     * @param string $index The current index (to keep)
-     */
-    private function dropPreviousIndexes(string $index): void
-    {
-        $alias = $this->mapper->configuration()->index();
-
-        if (!$this->client->indices()->existsAlias(['name' => $alias])) {
-            return;
-        }
-
-        // Get indexes, and remove the current
-        $indexes = $this->client->indices()->getAlias(['name' => $alias]);
-        unset($indexes[$index]);
-
-        if (!empty($indexes)) {
-            $this->client->indices()->delete(['index' => implode(',', array_keys($indexes))]);
         }
     }
 }

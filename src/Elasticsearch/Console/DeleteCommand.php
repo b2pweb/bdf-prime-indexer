@@ -2,6 +2,7 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Console;
 
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -11,6 +12,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Class DeleteCommand
  */
+#[AsCommand('elasticsearch:delete', 'Supprime un ou plusieurs index')]
 class DeleteCommand extends AbstractCommand
 {
     protected static $defaultName = 'elasticsearch:delete';
@@ -40,7 +42,7 @@ class DeleteCommand extends AbstractCommand
         $indices = $input->getArgument('indices');
 
         if ($input->getOption('all')) {
-            $indices = array_keys($client->indices()->getMapping());
+            $indices = $client->getAllIndexes();
         }
 
         if (!$indices) {
@@ -50,18 +52,18 @@ class DeleteCommand extends AbstractCommand
         }
 
         if ($style->confirm('Confirmez-vous la suppression des index : ' . implode(', ', $indices) . ' ?')) {
-            foreach ($client->indices()->getAliases() as $index => $alias) {
+            foreach ($client->getAllAliases() as $index => $alias) {
                 foreach ($indices as $k => $toDelete) {
-                    if (isset($alias['aliases'][$toDelete])) {
+                    if ($alias->contains($toDelete)) {
                         unset($indices[$k]);
-                        $client->indices()->deleteAlias(['index' => $index, 'name' => $toDelete]);
+                        $client->deleteAliases($index, [$toDelete]);
                     }
                 }
             }
 
             if (!empty($indices)) {
                 foreach (array_chunk($indices, 10) as $chunk) {
-                    $client->indices()->delete(['index' => implode(',', $chunk)]);
+                    $client->deleteIndex(...$chunk);
                 }
             }
         }

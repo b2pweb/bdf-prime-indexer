@@ -2,17 +2,17 @@
 
 namespace Bdf\Prime\Indexer;
 
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientFactory;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
-use Elasticsearch\Client;
-use Elasticsearch\ClientBuilder;
 use PHPUnit\Framework\TestCase;
 
 class IndexTestCase extends TestCase
 {
     /**
-     * @var Client
+     * @var ClientInterface
      */
     protected static $client;
 
@@ -29,13 +29,13 @@ class IndexTestCase extends TestCase
         self::getClient();
     }
 
-    public static function getClient(): Client
+    public static function getClient(): ClientInterface
     {
         if (self::$client) {
             return self::$client;
         }
 
-        return self::$client = ClientBuilder::fromConfig([
+        return self::$client = ClientFactory::fromArray([
             'hosts' => [ELASTICSEARCH_HOST],
             'basicAuthentication' => [ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD],
         ]);

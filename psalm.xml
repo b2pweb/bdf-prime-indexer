@@ -10,8 +10,7 @@
         <directory name="src" />
         <ignoreFiles>
             <directory name="vendor" />
-            <file name="src/PrimeIndexerSynchronizationProvider.php" />
-            <file name="src/PrimeIndexerServiceProvider.php" />
+            <file name="src/Elasticsearch/Adapter/ES8Client.php" />
         </ignoreFiles>
     </projectFiles>
 </psalm>

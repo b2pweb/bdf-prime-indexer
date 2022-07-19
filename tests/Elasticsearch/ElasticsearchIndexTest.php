@@ -3,16 +3,13 @@
 namespace Bdf\Prime\Indexer\Elasticsearch;
 
 use Bdf\Collection\Util\Functor\Transformer\Getter;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
-use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Match;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Bdf\Prime\Indexer\IndexTestCase;
 use City;
 use CityIndex;
-use Elasticsearch\Client;
-use Elasticsearch\Common\Exceptions\Missing404Exception;
-use Elasticsearch\Namespaces\IndicesNamespace;
 
 /**
  * Class ElasticsearchIndexTest
@@ -172,7 +169,7 @@ class ElasticsearchIndexTest extends IndexTestCase
     {
         $this->addCities();
 
-        $indexes = array_keys(self::$client->indices()->getAlias(['name' => 'test_cities']));
+        $indexes = array_keys(self::$client->getAllAliases('test_cities'));
         $this->assertCount(1, $indexes);
         $this->assertStringStartsWith('test_cities_', $indexes[0]);
 
@@ -180,12 +177,12 @@ class ElasticsearchIndexTest extends IndexTestCase
 
         $this->index->drop();
 
-        $this->assertFalse(self::$client->indices()->existsAlias(['name' => 'test_cities']));
+        $this->assertFalse(self::$client->hasAlias('test_cities'));
 
         try {
             $this->index->query()->execute();
             $this->fail('Expects exception');
-        } catch (Missing404Exception $e) {
+        } catch (\Exception $e) {
             $this->assertStringContainsString('index_not_found_exception', $e->getMessage());
         }
     }
@@ -198,7 +195,7 @@ class ElasticsearchIndexTest extends IndexTestCase
         $this->addCities();
         $this->addCities();
 
-        $indexes = array_keys(self::$client->indices()->getAlias(['name' => 'test_cities']));
+        $indexes = array_keys(self::$client->getAllAliases('test_cities'));
         $this->assertCount(1, $indexes);
         $this->assertStringStartsWith('test_cities_', $indexes[0]);
 
@@ -213,7 +210,7 @@ class ElasticsearchIndexTest extends IndexTestCase
         $this->addCities(['dropPreviousIndexes' => false]);
         $this->addCities(['dropPreviousIndexes' => false]);
 
-        $indexes = array_keys(self::$client->indices()->getAlias(['name' => 'test_cities']));
+        $indexes = array_keys(self::$client->getAllAliases('test_cities'));
         $this->assertCount(2, $indexes);
         $this->assertStringStartsWith('test_cities_', $indexes[0]);
         $this->assertStringStartsWith('test_cities_', $indexes[1]);
@@ -330,48 +327,43 @@ class ElasticsearchIndexTest extends IndexTestCase
     public function test_unit_create_schema()
     {
         $expected = [
-            'index' => 'test_cities',
-            'body' => [
-                'settings' => [
-                    'analysis' => [
-                        'analyzer' => [
-                            'default' => [
-                                'type'      => 'custom',
-                                'tokenizer' => 'standard',
-                                'filter'    => ['lowercase', 'asciifolding'],
-                            ]
-                        ],
+            'settings' => [
+                'analysis' => [
+                    'analyzer' => [
+                        'default' => [
+                            'type'      => 'custom',
+                            'tokenizer' => 'standard',
+                            'filter'    => ['lowercase', 'asciifolding'],
+                        ]
                     ],
                 ],
-                'mappings' => [
-                    'properties' => [
-                        'name' => [
-                            'type' => 'text'
-                        ],
-                        'population' => [
-                            'type' => 'integer'
-                        ],
-                        'zipCode' => [
-                            'type' => 'keyword'
-                        ],
-                        'country' => [
-                            'index' => false,
-                            'type' => 'keyword'
-                        ],
-                        'enabled' => [
-                            'type' => 'boolean'
-                        ],
+            ],
+            'mappings' => [
+                'properties' => [
+                    'name' => [
+                        'type' => 'text'
+                    ],
+                    'population' => [
+                        'type' => 'integer'
+                    ],
+                    'zipCode' => [
+                        'type' => 'keyword'
+                    ],
+                    'country' => [
+                        'index' => false,
+                        'type' => 'keyword'
+                    ],
+                    'enabled' => [
+                        'type' => 'boolean'
                     ],
                 ],
             ],
         ];
 
-        $client = $this->createMock(Client::class);
-        $indices = $this->createMock(IndicesNamespace::class);
+        $client = $this->createMock(ClientInterface::class);
         $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new CityIndex()));
 
-        $client->expects($this->any())->method('indices')->willReturn($indices);
-        $indices->expects($this->once())->method('create')->with($expected);
+        $client->expects($this->once())->method('createIndex')->with('test_cities', $expected);
 
         $index->create([], ['useAlias' => false]);
     }
@@ -382,58 +374,53 @@ class ElasticsearchIndexTest extends IndexTestCase
     public function test_unit_create_schema_with_custom_analyzer()
     {
         $expected = [
-            'index' => 'test_users',
-            'body' => [
-                'settings' => [
-                    'analysis' => [
-                        'analyzer' => [
-                            'csv' => [
-                                'type' => 'custom',
-                                'tokenizer' => 'csv',
-                            ],
-                            'default' => [
-                                'type' => 'standard',
-                            ],
+            'settings' => [
+                'analysis' => [
+                    'analyzer' => [
+                        'csv' => [
+                            'type' => 'custom',
+                            'tokenizer' => 'csv',
                         ],
-                        'tokenizer' => [
-                            'csv' => [
-                                'type' => 'pattern',
-                                'pattern' => ',',
-                            ],
+                        'default' => [
+                            'type' => 'standard',
+                        ],
+                    ],
+                    'tokenizer' => [
+                        'csv' => [
+                            'type' => 'pattern',
+                            'pattern' => ',',
                         ],
                     ],
                 ],
-                'mappings' => [
-                    'properties' => [
-                        'name' => [
-                            'type' => 'text',
-                        ],
-                        'email' => [
-                            'type' => 'text',
-                        ],
-                        'login' => [
-                            'type' => 'keyword',
-                            'index' => false,
-                        ],
-                        'password' => [
-                            'type' => 'keyword',
-                            'index' => false,
-                        ],
-                        'roles' => [
-                            'type' => 'text',
-                            'analyzer' => 'csv',
-                        ],
+            ],
+            'mappings' => [
+                'properties' => [
+                    'name' => [
+                        'type' => 'text',
+                    ],
+                    'email' => [
+                        'type' => 'text',
+                    ],
+                    'login' => [
+                        'type' => 'keyword',
+                        'index' => false,
+                    ],
+                    'password' => [
+                        'type' => 'keyword',
+                        'index' => false,
+                    ],
+                    'roles' => [
+                        'type' => 'text',
+                        'analyzer' => 'csv',
                     ],
                 ],
             ],
         ];
 
-        $client = $this->createMock(Client::class);
-        $indices = $this->createMock(IndicesNamespace::class);
+        $client = $this->createMock(ClientInterface::class);
         $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new \UserIndex()));
 
-        $client->expects($this->any())->method('indices')->willReturn($indices);
-        $indices->expects($this->once())->method('create')->with($expected);
+        $client->expects($this->once())->method('createIndex')->with('test_users', $expected);
 
         $index->create([], ['useAlias' => false]);
     }
@@ -444,47 +431,42 @@ class ElasticsearchIndexTest extends IndexTestCase
     public function test_unit_create_schema_with_custom_anonymous_analyzer()
     {
         $expected = [
-            'index' => 'test_anon_analyzers',
-            'body' => [
-                'settings' => [
-                    'analysis' => [
-                        'analyzer' => [
-                            'values_anon_analyzer' => [
-                                'type' => 'custom',
-                                'tokenizer' => 'values_anon_analyzer',
-                            ],
-                            'default' => [
-                                'type' => 'standard',
-                            ],
+            'settings' => [
+                'analysis' => [
+                    'analyzer' => [
+                        'values_anon_analyzer' => [
+                            'type' => 'custom',
+                            'tokenizer' => 'values_anon_analyzer',
                         ],
-                        'tokenizer' => [
-                            'values_anon_analyzer' => [
-                                'type' => 'pattern',
-                                'pattern' => ';',
-                            ],
+                        'default' => [
+                            'type' => 'standard',
+                        ],
+                    ],
+                    'tokenizer' => [
+                        'values_anon_analyzer' => [
+                            'type' => 'pattern',
+                            'pattern' => ';',
                         ],
                     ],
                 ],
-                'mappings' => [
-                    'properties' => [
-                        'name' => [
-                            'type' => 'keyword',
-                        ],
-                        'values' => [
-                            'type' => 'text',
-                            'analyzer' => 'values_anon_analyzer',
-                        ],
+            ],
+            'mappings' => [
+                'properties' => [
+                    'name' => [
+                        'type' => 'keyword',
+                    ],
+                    'values' => [
+                        'type' => 'text',
+                        'analyzer' => 'values_anon_analyzer',
                     ],
                 ],
             ],
         ];
 
-        $client = $this->createMock(Client::class);
-        $indices = $this->createMock(IndicesNamespace::class);
+        $client = $this->createMock(ClientInterface::class);
         $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new \WithAnonAnalyzerIndex()));
 
-        $client->expects($this->any())->method('indices')->willReturn($indices);
-        $indices->expects($this->once())->method('create')->with($expected);
+        $client->expects($this->once())->method('createIndex')->with('test_anon_analyzers', $expected);
 
         $index->create([], ['useAlias' => false]);
     }

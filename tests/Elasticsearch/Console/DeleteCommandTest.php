@@ -3,8 +3,8 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Console;
 
 use Bdf\Prime\Indexer\CommandTestCase;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\IndexFactory;
-use Elasticsearch\Client;
 
 /**
  * Class DeleteCommandTest
@@ -37,8 +37,8 @@ class DeleteCommandTest extends CommandTestCase
 
         $this->execute('elasticsearch:delete', ['indices' => ['test_users']], ['inputs' => ['yes']]);
 
-        $this->assertFalse($this->client()->indices()->existsAlias(['name' => 'test_users']));
-        $this->assertTrue($this->client()->indices()->existsAlias(['name' => 'test_cities']));
+        $this->assertFalse($this->client()->hasAlias('test_users'));
+        $this->assertTrue($this->client()->hasAlias('test_cities'));
     }
 
     /**
@@ -51,8 +51,8 @@ class DeleteCommandTest extends CommandTestCase
 
         $this->execute('elasticsearch:delete', ['indices' => ['test_users', 'test_cities']], ['inputs' => ['yes']]);
 
-        $this->assertFalse($this->client()->indices()->existsAlias(['name' => 'test_users']));
-        $this->assertFalse($this->client()->indices()->existsAlias(['name' => 'test_cities']));
+        $this->assertFalse($this->client()->hasAlias('test_users'));
+        $this->assertFalse($this->client()->hasAlias('test_cities'));
     }
 
     /**
@@ -65,8 +65,8 @@ class DeleteCommandTest extends CommandTestCase
 
         $this->execute('elasticsearch:delete', ['--all' => true], ['inputs' => ['yes']]);
 
-        $this->assertFalse($this->client()->indices()->existsAlias(['name' => 'test_users']));
-        $this->assertFalse($this->client()->indices()->existsAlias(['name' => 'test_cities']));
+        $this->assertFalse($this->client()->hasAlias('test_users'));
+        $this->assertFalse($this->client()->hasAlias('test_cities'));
     }
 
     /**
@@ -79,9 +79,9 @@ class DeleteCommandTest extends CommandTestCase
         $this->assertStringContainsString('Aucun index à supprimer', $output);
     }
 
-    private function client(): Client
+    private function client(): ClientInterface
     {
-        return $this->app->getKernel()->getContainer()->get(Client::class);
+        return $this->app->getKernel()->getContainer()->get(ClientInterface::class);
     }
 
     private function factory(): IndexFactory

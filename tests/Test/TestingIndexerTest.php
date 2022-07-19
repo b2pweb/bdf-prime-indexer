@@ -2,10 +2,10 @@
 
 namespace Bdf\Prime\Indexer\Test;
 
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\TestKernel;
 use City;
-use Elasticsearch\Client;
 use PHPUnit\Framework\TestCase;
 use User;
 
@@ -25,7 +25,7 @@ class TestingIndexerTest extends TestCase
     private $app;
 
     /**
-     * @var Client
+     * @var ClientInterface
      */
     private $client;
 
@@ -34,7 +34,7 @@ class TestingIndexerTest extends TestCase
         $this->app = new TestKernel('dev', false);
         $this->app->boot();
 
-        $this->client = $this->app->getContainer()->get(Client::class);
+        $this->client = $this->app->getContainer()->get(ClientInterface::class);
         $this->indexer = new TestingIndexer($this->app->getContainer());
     }
 
@@ -57,8 +57,8 @@ class TestingIndexerTest extends TestCase
         $this->assertInstanceOf(ElasticsearchIndex::class, $index);
         $this->assertInstanceOf(ElasticsearchTestingIndexConfig::class, $index->config());
 
-        $this->assertTrue($this->client->indices()->existsAlias(['name' => 'test_test_users']));
-        $this->assertFalse($this->client->indices()->existsAlias(['name' => 'test_users']));
+        $this->assertTrue($this->client->hasAlias('test_test_users'));
+        $this->assertFalse($this->client->hasAlias('test_users'));
     }
 
     /**
@@ -71,8 +71,8 @@ class TestingIndexerTest extends TestCase
 
         $this->indexer->destroy();
 
-        $this->assertFalse($this->client->indices()->existsAlias(['name' => 'test_test_users']));
-        $this->assertFalse($this->client->indices()->existsAlias(['name' => 'test_test_cities']));
+        $this->assertFalse($this->client->hasAlias('test_test_users'));
+        $this->assertFalse($this->client->hasAlias('test_test_cities'));
     }
 
     /**

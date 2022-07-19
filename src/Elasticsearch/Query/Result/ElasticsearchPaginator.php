@@ -3,6 +3,7 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Query\Result;
 
 use Bdf\Prime\Collection\ArrayCollection;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\Response\SearchResults;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Query\Pagination\AbstractPaginator;
 use Bdf\Prime\Query\Pagination\Paginator;
@@ -17,10 +18,8 @@ class ElasticsearchPaginator extends AbstractPaginator implements IteratorAggreg
 {
     /**
      * The raw Elasticsearch result
-     *
-     * @var array
      */
-    private $result;
+    private SearchResults $result;
 
     /**
      * The result transformation function, declared into the query
@@ -55,7 +54,7 @@ class ElasticsearchPaginator extends AbstractPaginator implements IteratorAggreg
      */
     public function size()
     {
-        return $this->result['total'];
+        return $this->result->total();
     }
 
     /**
@@ -83,8 +82,8 @@ class ElasticsearchPaginator extends AbstractPaginator implements IteratorAggreg
             $this->query->limitPage($this->page, $this->maxRows);
         }
 
-        $this->result = $this->query->execute()['hits'];
-        $this->collection = new ArrayCollection($this->result['hits']);
+        $this->result = $this->query->execute();
+        $this->collection = new ArrayCollection($this->result->hits());
 
         if ($this->transformer) {
             $this->collection = $this->collection->map($this->transformer);

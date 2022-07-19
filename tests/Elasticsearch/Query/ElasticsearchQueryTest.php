@@ -12,7 +12,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Range;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Wildcard;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\ElasticsearchPaginator;
 use Bdf\Prime\Indexer\IndexTestCase;
-use Elasticsearch\Client;
+use Elastic\Elasticsearch\Client;
 
 /**
  * Class ElasticsearchQueryTest
@@ -31,8 +31,8 @@ class ElasticsearchQueryTest extends IndexTestCase
 
     protected function tearDown(): void
     {
-        if (self::getClient()->indices()->exists(['index' => 'test_cities'])) {
-            self::getClient()->indices()->delete(['index' => 'test_cities']);
+        if (self::getClient()->hasIndex('test_cities')) {
+            self::getClient()->deleteIndex('test_cities');
         }
     }
 
@@ -763,20 +763,20 @@ class ElasticsearchQueryTest extends IndexTestCase
                 ;
             })
             ->filter(new MatchBoolean('country', 'FR'))
-            ->execute()['hits']
+            ->execute()
         ;
 
-        $this->assertEquals(2, $response['total']);
+        $this->assertEquals(2, $response->total());
         $this->assertEquals([
             'name' => 'Paris',
             'population' => 2201578,
             'country' => 'FR'
-        ], $response['hits'][0]['_source']);
+        ], $response->hits()[0]['_source']);
         $this->assertEquals([
             'name' => 'Parthenay',
             'population' => 11599,
             'country' => 'FR'
-        ], $response['hits'][1]['_source']);
+        ], $response->hits()[1]['_source']);
     }
 
     /**

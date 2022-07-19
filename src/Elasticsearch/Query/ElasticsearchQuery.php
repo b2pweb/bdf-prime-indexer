@@ -5,6 +5,8 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 use Bdf\Collection\Stream\ArrayStream;
 use Bdf\Collection\Stream\StreamInterface;
 use Bdf\Collection\Util\OptionalInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\Response\SearchResults;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammar;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Compound\BooleanQuery;
@@ -17,7 +19,6 @@ use Bdf\Prime\Indexer\QueryInterface;
 use Bdf\Prime\Query\Contract\Limitable;
 use Bdf\Prime\Query\Contract\Orderable;
 use Closure;
-use Elasticsearch\Client;
 
 /**
  * Query for perform index search
@@ -37,9 +38,9 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * The Elastichsearch client
      *
-     * @var Client
+     * @var ClientInterface
      */
-    private Client $client;
+    private ClientInterface $client;
 
     /**
      * The query grammar
@@ -113,10 +114,10 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * ElasticsearchQuery constructor.
      *
-     * @param Client $client
+     * @param ClientInterface $client
      * @param callable[] $customFilters
      */
-    public function __construct(Client $client, array $customFilters = [])
+    public function __construct(ClientInterface $client, array $customFilters = [])
     {
         $this->client = $client;
         $this->grammar = new ElasticsearchGrammar();
@@ -537,16 +538,9 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * {@inheritdoc}
      */
-    public function execute()
+    public function execute(): SearchResults
     {
-        $result = $this->client->search([
-            'index' => $this->index,
-            'body' => $this->compile()
-        ]);
-
-        $result['hits']['total'] = $result['hits']['total']['value'];
-
-        return $result;
+        return $this->client->search($this->index, $this->compile());
     }
 
     /**
@@ -618,7 +612,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      */
     public function stream(): StreamInterface
     {
-        $stream = new ArrayStream($this->execute()['hits']['hits']);
+        $stream = new ArrayStream($this->execute()->hits());
 
         return $this->transformer ? $stream->map($this->transformer) : $stream;
     }

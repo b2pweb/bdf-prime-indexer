@@ -5,7 +5,7 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query\Result;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\IndexTestCase;
-use Elasticsearch\Client;
+use Elastic\Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use PHPUnit\Framework\TestCase;
 
@@ -55,8 +55,8 @@ class ElasticsearchPaginatorTest extends IndexTestCase
 
     protected function tearDown(): void
     {
-        if (self::getClient()->indices()->exists(['index' => 'test_cities'])) {
-            self::getClient()->indices()->delete(['index' => 'test_cities']);
+        if (self::getClient()->hasIndex('test_cities')) {
+            self::getClient()->deleteIndex('test_cities');
         }
     }
 
