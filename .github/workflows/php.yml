@@ -6,6 +6,10 @@ env:
   ELASTICSEARCH_HOST: '127.0.0.1:9200'
   ELASTICSEARCH_USER: 'elastic'
   ELASTICSEARCH_PASSWORD: 'changeme'
+  discovery.type: single-node
+  bootstrap.memory_lock: true
+  xpack.security.enable: false
+  xpack.license.self_generated.type: basic
 
 jobs:
   build:
