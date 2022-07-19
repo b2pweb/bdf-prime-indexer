@@ -406,7 +406,7 @@ class ES7ClientTest extends TestCase
     {
         $this->expectException(NoNodeAvailableException::class);
         $client = new ES7Client(ClientBuilder::fromConfig([
-            'hosts' => ['127.0.0.15'],
+            'hosts' => ['127.0.0.15:12345'],
         ]));
 
         $client->info();
