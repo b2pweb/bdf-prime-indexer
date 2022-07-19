@@ -10,7 +10,9 @@
         <directory name="src" />
         <ignoreFiles>
             <directory name="vendor" />
+            <!-- Ignore adapter classes because driver classes may not exist -->
             <file name="src/Elasticsearch/Adapter/ES8Client.php" />
+            <file name="src/Elasticsearch/Adapter/ClientFactory.php" />
         </ignoreFiles>
     </projectFiles>
 </psalm>

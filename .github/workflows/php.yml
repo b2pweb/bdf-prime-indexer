@@ -106,14 +106,14 @@ jobs:
 
     - name: Install ES Lib ${{ matrix.versions.lib }}
       run: composer require --dev 'elasticsearch/elasticsearch:~${{ matrix.versions.lib }}' --with-all-dependencies
-
-    - name: Wait for ES
-      uses: cygnetdigital/wait_for_response@v2.0.0
-      with:
-        url: 'http://localhost:9200/'
-        responseCode: '200'
-        timeout: 10000
-        interval: 100
+#
+#    - name: Wait for ES
+#      uses: cygnetdigital/wait_for_response@v2.0.0
+#      with:
+#        url: 'http://localhost:9200/'
+#        responseCode: '200'
+#        timeout: 10000
+#        interval: 100
 
     - name: Run test suite
       run: composer run-script tests

@@ -33,8 +33,10 @@ final class ES8Client implements ClientInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @return Client
      */
-    public function getInternalClient(): Client
+    public function getInternalClient(): object
     {
         return $this->client;
     }

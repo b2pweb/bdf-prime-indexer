@@ -337,5 +337,5 @@ interface ClientInterface
      *
      * @return object
      */
-    public function getInternalClient(): object;
+    public function getInternalClient();
 }
