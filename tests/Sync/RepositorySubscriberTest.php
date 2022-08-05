@@ -9,7 +9,8 @@ use Bdf\Prime\Indexer\TestKernel;
 use Bdf\Prime\Prime;
 use Bdf\Prime\Repository\EntityRepository;
 use Bdf\Prime\Test\TestPack;
-use City;
+use ElasticsearchTestFiles\City;
+use ElasticsearchTestFiles\CityIndex;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -50,21 +51,21 @@ class RepositorySubscriberTest extends TestCase
         $this->app->boot();
 
         $this->indexTester = new TestingIndexer($this->app->getContainer());
-        $this->index = $this->indexTester->index(\City::class);
+        $this->index = $this->indexTester->index(City::class);
 
         Prime::configure($this->app->getContainer()->get('prime'));
 
         $this->testPack = new TestPack();
         $this->testPack
-            ->declareEntity(\City::class)
+            ->declareEntity(City::class)
             ->initialize()
         ;
 
         $this->indexTester = new TestingIndexer($this->app->getContainer());
-        $this->index = $this->indexTester->index(\City::class);
+        $this->index = $this->indexTester->index(City::class);
 
-        (new RepositorySubscriber($this->app->getContainer()->get('messenger.default_bus'), \City::class, new \CityIndex()))
-            ->subscribe($this->repository = Prime::repository(\City::class));
+        (new RepositorySubscriber($this->app->getContainer()->get('messenger.default_bus'), City::class, new CityIndex()))
+            ->subscribe($this->repository = Prime::repository(City::class));
     }
 
     protected function tearDown(): void

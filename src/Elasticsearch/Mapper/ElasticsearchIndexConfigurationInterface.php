@@ -4,11 +4,12 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Mapper;
 
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
+use Bdf\Prime\Indexer\IndexConfigurationInterface;
 
 /**
  * Configuration for an elasticsearch index
  */
-interface ElasticsearchIndexConfigurationInterface
+interface ElasticsearchIndexConfigurationInterface extends IndexConfigurationInterface
 {
     /**
      * Defines the index name
@@ -16,13 +17,6 @@ interface ElasticsearchIndexConfigurationInterface
      * @return string
      */
     public function index(): string;
-
-    /**
-     * Defines the entity class name
-     *
-     * @return string
-     */
-    public function entity(): string;
 
     /**
      * Accessor for get or set the document id (_id property)

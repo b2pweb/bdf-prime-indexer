@@ -10,8 +10,9 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
 use Bdf\Prime\Indexer\IndexTestCase;
-use City;
-use WithAnonAnalyzerIndex;
+use ElasticsearchTestFiles\City;
+use ElasticsearchTestFiles\CityIndex;
+use ElasticsearchTestFiles\WithAnonAnalyzerIndex;
 
 /**
  * Class ElasticsearchMapperTest
@@ -25,7 +26,7 @@ class ElasticsearchMapperTest extends IndexTestCase
 
     protected function setUp(): void
     {
-        $this->mapper = new ElasticsearchMapper(new \CityIndex());
+        $this->mapper = new ElasticsearchMapper(new CityIndex());
     }
 
     /**
@@ -33,7 +34,7 @@ class ElasticsearchMapperTest extends IndexTestCase
      */
     public function test_configuration()
     {
-        $this->assertInstanceOf(\CityIndex::class, $this->mapper->configuration());
+        $this->assertInstanceOf(CityIndex::class, $this->mapper->configuration());
     }
 
     /**
@@ -79,7 +80,7 @@ class ElasticsearchMapperTest extends IndexTestCase
      */
     public function test_scopes()
     {
-        $this->assertEquals((new \CityIndex())->scopes(), $this->mapper->scopes());
+        $this->assertEquals((new CityIndex())->scopes(), $this->mapper->scopes());
         $this->assertSame($this->mapper->scopes(), $this->mapper->scopes());
     }
 
@@ -89,7 +90,7 @@ class ElasticsearchMapperTest extends IndexTestCase
     public function test_toIndex_bad_entity()
     {
         $this->expectException(\TypeError::class);
-        $this->expectExceptionMessage('Entity must be an instance of City');
+        $this->expectExceptionMessage('Entity must be an instance of ElasticsearchTestFiles\City');
 
         $this->mapper->toIndex(new \stdClass());
     }

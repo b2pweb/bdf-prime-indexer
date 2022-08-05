@@ -3,6 +3,7 @@
 namespace Bdf\Prime\Indexer\Bundle\DependencyInjection;
 
 use Bdf\Prime\Indexer\Bundle\Factory\IndexFactoryInterface;
+use Bdf\Prime\Indexer\IndexConfigurationInterface;
 use Bdf\Prime\Indexer\IndexFactory;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -34,8 +35,12 @@ class PrimeIndexerExtension extends Extension
             ->addTag('prime.indexer.factory')
         ;
 
+        $container->registerForAutoconfiguration(IndexConfigurationInterface::class)
+            ->setPublic(true)
+            ->addTag('prime.indexer.configuration')
+        ;
+
         $this->configureIndexes($config, $container);
-        $this->configureFactories($config, $container);
     }
 
     private function configureIndexes(array $config, ContainerBuilder $container): void
@@ -43,22 +48,12 @@ class PrimeIndexerExtension extends Extension
         $factory = $container->findDefinition(IndexFactory::class);
 
         foreach ($config['indexes'] as $entity => $index) {
-            if (!$container->hasDefinition($index)) {
-                $definition = $container->register($index, $index)->setAutowired(true);
-                $factory->addMethodCall('register', [$entity, $definition]);
-            }
-        }
-    }
+            $definition = $container->hasDefinition($index)
+                ? $container->findDefinition($index)
+                : $container->register($index, $index)->setAutowired(true)
+            ;
 
-    private function configureFactories(array $config, ContainerBuilder $container): void
-    {
-//        $factory = $container->findDefinition(IndexFactory::class);
-//        $factories = [];
-//
-//        foreach ($container->findTaggedServiceIds('prime.indexer.factory') as $id => $tags) {
-//            $factories[$id::type()] = new Reference($id);
-//        }
-//
-//        $factory->replaceArgument(0, $factories);
+            $factory->addMethodCall('register', [$entity, $definition]);
+        }
     }
 }
