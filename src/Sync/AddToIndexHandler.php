@@ -10,10 +10,7 @@ use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
  */
 final class AddToIndexHandler implements MessageHandlerInterface
 {
-    /**
-     * @var IndexFactory
-     */
-    private $factory;
+    private IndexFactory $factory;
 
     /**
      * AddToIndexHandler constructor.

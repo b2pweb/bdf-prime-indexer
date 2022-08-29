@@ -66,9 +66,9 @@ class AbstractCommand extends Command
     }
 
     /**
-     * @return array
+     * @return array{hosts: list<string>}
      */
-    protected function getClientConfig()
+    protected function getClientConfig(): array
     {
         $clientConfig = [
             'hosts' => ['localhost']

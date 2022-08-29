@@ -67,7 +67,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * Query to execute
      *
-     * @var CompilableExpressionInterface
+     * @var CompilableExpressionInterface|null
      */
     private ?CompilableExpressionInterface $query = null;
 

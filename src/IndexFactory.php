@@ -8,19 +8,19 @@ namespace Bdf\Prime\Indexer;
 class IndexFactory
 {
     /**
-     * @var callable[]
+     * @var array<class-string, callable(object):IndexInterface>
      */
     private array $factories = [];
 
     /**
-     * @var array
+     * @var array<string, object>
      */
     private array $configurations = [];
 
     /**
      * Index instances, by entity class name
      *
-     * @var IndexInterface[]
+     * @var array<string, IndexInterface>
      */
     private array $indexes = [];
 

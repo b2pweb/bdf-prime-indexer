@@ -19,7 +19,7 @@ class ShowCommand extends AbstractCommand
     /**
      * {@inheritdoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
@@ -29,7 +29,7 @@ class ShowCommand extends AbstractCommand
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $style = new SymfonyStyle($input, $output);
         $client = $this->getClient();
@@ -62,7 +62,7 @@ class ShowCommand extends AbstractCommand
      *
      * @return string
      */
-    protected function getProperties(array $definition)
+    protected function getProperties(array $definition): string
     {
         if (empty($definition['mappings']['properties'])) {
             return '';
@@ -83,7 +83,7 @@ class ShowCommand extends AbstractCommand
      *
      * @return string
      */
-    protected function getAliasesColumn(array $aliases, string $index)
+    protected function getAliasesColumn(array $aliases, string $index): string
     {
         if (empty($aliases[$index])) {
             return '';

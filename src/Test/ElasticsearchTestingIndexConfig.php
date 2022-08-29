@@ -11,11 +11,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
  */
 class ElasticsearchTestingIndexConfig implements ElasticsearchIndexConfigurationInterface
 {
-    /**
-     * @var ElasticsearchIndexConfigurationInterface
-     */
-    private $config;
-
+    private ElasticsearchIndexConfigurationInterface $config;
 
     /**
      * ElasticsearchTestingIndexConfig constructor.

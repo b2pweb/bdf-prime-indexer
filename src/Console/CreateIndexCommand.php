@@ -33,25 +33,10 @@ class CreateIndexCommand extends Command
      */
     protected static $defaultName = 'prime:indexer:create';
 
-    /**
-     * @var IndexFactory
-     */
-    private $indexes;
-
-    /**
-     * @var ServiceLocator
-     */
-    private $prime;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * @var ProgressBar
-     */
-    private $progressBar;
+    private IndexFactory $indexes;
+    private ServiceLocator $prime;
+    private ?LoggerInterface $logger;
+    private ?ProgressBar $progressBar = null;
 
 
     /**
@@ -73,7 +58,7 @@ class CreateIndexCommand extends Command
     /**
      * {@inheritdoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setDescription('Create the index for the given entity')
@@ -86,7 +71,7 @@ class CreateIndexCommand extends Command
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
@@ -125,7 +110,7 @@ class CreateIndexCommand extends Command
      *
      * @throws \Bdf\Prime\Exception\PrimeException
      */
-    private function entities($config, InputInterface $input, StyleInterface $io): iterable
+    private function entities(object $config, InputInterface $input, StyleInterface $io): iterable
     {
         if ($config instanceof CustomEntitiesConfigurationInterface) {
             return $config->entities();
@@ -198,7 +183,7 @@ class CreateIndexCommand extends Command
      *
      * @return iterable
      */
-    private function filterNotIndexableEntities($config, iterable $entities): iterable
+    private function filterNotIndexableEntities(object $config, iterable $entities): iterable
     {
         if (!$config instanceof ShouldBeIndexedConfigurationInterface) {
             return $entities;

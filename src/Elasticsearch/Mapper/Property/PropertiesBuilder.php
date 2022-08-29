@@ -21,26 +21,30 @@ class PropertiesBuilder
     /**
      * @var ElasticsearchMapperInterface
      */
-    private $mapper;
+    private ElasticsearchMapperInterface $mapper;
 
     /**
-     * @var array
+     * @var array<string, array{
+     *     type: string,
+     *     analyzer?: string,
+     *     index?: bool,
+     *     accessor?: PropertyAccessorInterface,
+     *     fields?: array,
+     * }>
      */
-    private $properties = [];
+    private array $properties = [];
 
     /**
      * Anonymous analyzers
      *
-     * @var AnalyzerInterface[]
+     * @var array<string, AnalyzerInterface>
      */
-    private $analyzers = [];
+    private array $analyzers = [];
 
     /**
      * The current property name
-     *
-     * @var string
      */
-    private $current;
+    private ?string $current = null;
 
     /**
      * PropertiesBuilder constructor.
@@ -434,7 +438,7 @@ class PropertiesBuilder
     /**
      * Build the properties
      *
-     * @return Property[]
+     * @return array<string, Property>
      */
     public function build(): array
     {
@@ -462,7 +466,7 @@ class PropertiesBuilder
     /**
      * Get all anonymous analysers
      *
-     * @return AnalyzerInterface[]
+     * @return array<string, AnalyzerInterface>
      */
     public function analyzers(): array
     {

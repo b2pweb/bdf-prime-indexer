@@ -17,10 +17,7 @@ use Psr\Container\ContainerInterface;
  */
 final class ElasticsearchIndexFactory implements IndexFactoryInterface
 {
-    /**
-     * @var ContainerInterface
-     */
-    private $container;
+    private ContainerInterface $container;
 
     /**
      * ElasticsearchIndexFactory constructor.

@@ -49,7 +49,7 @@ final class CustomAccessor implements PropertyAccessorInterface
     /**
      * {@inheritdoc}
      */
-    public function writeToModel($entity, $indexedValue)
+    public function writeToModel($entity, $indexedValue): void
     {
         ($this->callback)($entity, $indexedValue);
     }

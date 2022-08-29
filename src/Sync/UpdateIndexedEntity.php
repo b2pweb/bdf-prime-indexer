@@ -12,12 +12,12 @@ final class UpdateIndexedEntity
     /**
      * @var string
      */
-    private $index;
+    private string $index;
 
     /**
      * @var object
      */
-    private $entity;
+    private object $entity;
 
 
     /**
@@ -26,7 +26,7 @@ final class UpdateIndexedEntity
      * @param string $index The index name
      * @param object $entity The entity to update
      */
-    public function __construct(string $index, $entity)
+    public function __construct(string $index, object $entity)
     {
         $this->index = $index;
         $this->entity = $entity;
@@ -45,7 +45,7 @@ final class UpdateIndexedEntity
     /**
      * @return object
      */
-    public function entity()
+    public function entity(): object
     {
         return $this->entity;
     }

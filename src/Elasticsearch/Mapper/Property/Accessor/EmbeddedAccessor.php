@@ -10,7 +10,7 @@ final class EmbeddedAccessor implements PropertyAccessorInterface
     /**
      * @var array
      */
-    private $path;
+    private array $path;
 
     /**
      * EmbeddedAccessor constructor.
@@ -45,7 +45,7 @@ final class EmbeddedAccessor implements PropertyAccessorInterface
     /**
      * {@inheritdoc}
      */
-    public function writeToModel($entity, $indexedValue)
+    public function writeToModel($entity, $indexedValue): void
     {
         $path = $this->path;
         $last = array_pop($path);
