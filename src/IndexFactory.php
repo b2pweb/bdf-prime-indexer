@@ -15,7 +15,6 @@ class IndexFactory
 {
     /**
      * @var array<class-string, callable(object, IndexFactory):IndexInterface>
-     * @var array<class-string, callable(object):IndexInterface>
      */
     private $factories;
 
@@ -36,7 +35,7 @@ class IndexFactory
      * IndexerFactory constructor.
      *
      * @param array<class-string, callable(object, IndexFactory):IndexInterface> $factories
-     * @param IndexResolverInterface|array<class-string, object> $resolver
+     * @param IndexResolverInterface|array<class-string, IndexConfigurationInterface> $resolver
      */
     public function __construct(array $factories, /*IndexResolverInterface */$resolver)
     {
@@ -63,7 +62,9 @@ class IndexFactory
     }
 
     /**
-     * @param string $entity
+     * Create the index for the given entity
+     *
+     * @param class-string $entity Entity class name
      *
      * @return IndexInterface
      */
@@ -91,7 +92,7 @@ class IndexFactory
     /**
      * Register a new entity in the indexer system
      *
-     * @param string $entity The entity class name
+     * @param class-string $entity The entity class name
      * @param object $config The index configuration
      *
      * @deprecated Since 2.0. Inject IndexResolverInterface at constructor instead.
@@ -102,6 +103,7 @@ class IndexFactory
             throw new \LogicException('Cannot call register on the given IndexResolverInterface instance.');
         }
 
+        /** @psalm-suppress ArgumentTypeCoercion */
         $this->resolver->register($config, $entity);
     }
 }

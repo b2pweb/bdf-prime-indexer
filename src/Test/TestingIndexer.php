@@ -118,7 +118,7 @@ class TestingIndexer
      *
      * Creates the index, if not yet created
      *
-     * @param string|object $entity The entity class, or object
+     * @param class-string|object $entity The entity class, or object
      *
      * @return IndexInterface
      */

@@ -25,7 +25,13 @@ final class RegisterIndexConfigurationCompilerPass implements CompilerPassInterf
                 $definition = $container->findDefinition($id);
                 $definition->setPublic(true);
 
-                $r = new \ReflectionClass($definition->getClass());
+                $className = $definition->getClass();
+
+                if (!$className || !class_exists($className)) {
+                    continue;
+                }
+
+                $r = new \ReflectionClass($className);
                 $config = $r->newInstanceWithoutConstructor();
 
                 $resolverDefinition->addMethodCall('register', [$id, $config->entity()]);
