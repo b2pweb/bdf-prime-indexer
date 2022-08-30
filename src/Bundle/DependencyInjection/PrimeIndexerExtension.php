@@ -18,6 +18,8 @@ class PrimeIndexerExtension extends Extension
 {
     /**
      * {@inheritdoc}
+     *
+     * @psalm-suppress PossiblyNullArgument
      */
     public function load(array $configs, ContainerBuilder $container)
     {

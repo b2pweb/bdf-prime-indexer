@@ -13,7 +13,7 @@ final class RemoveFromIndexHandler implements MessageHandlerInterface
     /**
      * @var IndexFactory
      */
-    private $factory;
+    private IndexFactory $factory;
 
     /**
      * AddToIndexHandler constructor.

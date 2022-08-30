@@ -3,6 +3,7 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Query\Result;
 
 use Bdf\Prime\Collection\ArrayCollection;
+use Bdf\Prime\Collection\CollectionInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Response\SearchResults;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Query\Pagination\AbstractPaginator;
@@ -13,6 +14,12 @@ use Traversable;
 
 /**
  * Implements paginator for elasticsearch
+ *
+ * @template R as array|object
+ * @extends AbstractPaginator<R>
+ * @implements IteratorAggregate<array-key, R>
+ *
+ * @psalm-suppress PropertyNotSetInConstructor
  */
 class ElasticsearchPaginator extends AbstractPaginator implements IteratorAggregate, PaginatorInterface
 {
@@ -24,12 +31,23 @@ class ElasticsearchPaginator extends AbstractPaginator implements IteratorAggreg
     /**
      * The result transformation function, declared into the query
      *
-     * @var callable|null
+     * @var (callable(mixed):R)|null
      *
      * @see ElasticsearchQuery::map()
      */
     private $transformer;
 
+    /**
+     * @var ElasticsearchQuery
+     * @psalm-suppress NonInvariantDocblockPropertyType
+     */
+    protected $query;
+
+    /**
+     * @var CollectionInterface<R>
+     * @psalm-suppress NonInvariantDocblockPropertyType
+     */
+    protected $collection;
 
     /**
      * ElasticsearchPaginator constructor.
@@ -37,7 +55,7 @@ class ElasticsearchPaginator extends AbstractPaginator implements IteratorAggreg
      * @param ElasticsearchQuery $query
      * @param int|null $maxRows
      * @param int|null $page
-     * @param callable|null $transformer
+     * @param (callable(mixed):R)|null $transformer
      */
     public function __construct(ElasticsearchQuery $query, ?int $maxRows = null, ?int $page = null, ?callable $transformer = null)
     {
@@ -83,10 +101,13 @@ class ElasticsearchPaginator extends AbstractPaginator implements IteratorAggreg
         }
 
         $this->result = $this->query->execute();
-        $this->collection = new ArrayCollection($this->result->hits());
+        $collection = new ArrayCollection($this->result->hits());
 
         if ($this->transformer) {
-            $this->collection = $this->collection->map($this->transformer);
+            $this->collection = $collection->map($this->transformer);
+        } else {
+            /** @psalm-suppress InvalidPropertyAssignmentValue */
+            $this->collection = $collection;
         }
     }
 }

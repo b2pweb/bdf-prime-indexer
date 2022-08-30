@@ -10,7 +10,7 @@ final class ArrayAnalyzer implements AnalyzerInterface
     /**
      * @var array
      */
-    private $declaration;
+    private array $declaration;
 
 
     /**

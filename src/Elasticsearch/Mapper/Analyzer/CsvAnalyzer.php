@@ -10,12 +10,12 @@ final class CsvAnalyzer implements AnalyzerInterface
     /**
      * @var string
      */
-    private $separator;
+    private string $separator;
 
     /**
      * @var array
      */
-    private $filters;
+    private array $filters;
 
 
     /**
@@ -43,7 +43,7 @@ final class CsvAnalyzer implements AnalyzerInterface
     /**
      * {@inheritdoc}
      */
-    public function fromIndex($value)
+    public function fromIndex($value): array
     {
         return explode($this->separator, $value);
     }
@@ -51,7 +51,7 @@ final class CsvAnalyzer implements AnalyzerInterface
     /**
      * {@inheritdoc}
      */
-    public function toIndex($value)
+    public function toIndex($value): ?string
     {
         return $value ? implode($this->separator, $value) : null;
     }
@@ -59,7 +59,7 @@ final class CsvAnalyzer implements AnalyzerInterface
     /**
      * {@inheritdoc}
      */
-    public function tokenizer()
+    public function tokenizer(): array
     {
         return [
             'type' => 'pattern',

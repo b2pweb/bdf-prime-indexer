@@ -11,6 +11,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class AbstractCommand
+ *
+ * @psalm-suppress PropertyNotSetInConstructor
  */
 class AbstractCommand extends Command
 {
@@ -36,7 +38,7 @@ class AbstractCommand extends Command
     /**
      * {@inheritDoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->addOption('config', 'c', InputOption::VALUE_OPTIONAL, 'Identifiant de configuration à utiliser')
@@ -47,7 +49,7 @@ class AbstractCommand extends Command
     /**
      * {@inheritDoc}
      */
-    protected function initialize(InputInterface $input, OutputInterface $output)
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->input = $input;
         $this->output = $output;
@@ -66,9 +68,9 @@ class AbstractCommand extends Command
     }
 
     /**
-     * @return array
+     * @return array{hosts: list<string>}
      */
-    protected function getClientConfig()
+    protected function getClientConfig(): array
     {
         $clientConfig = [
             'hosts' => ['localhost']
@@ -78,6 +80,7 @@ class AbstractCommand extends Command
             $config = $this->config;
 
             if (isset($config[$this->input->getOption('config')]['hosts'])) {
+                /** @var list<string> */
                 $clientConfig['hosts'] = $config[$this->input->getOption('config')]['hosts'];
             }
         }

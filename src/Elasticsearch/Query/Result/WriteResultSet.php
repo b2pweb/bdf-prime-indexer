@@ -9,6 +9,8 @@ use EmptyIterator;
 
 /**
  * ResultSet wrapper for a single document write result
+ *
+ * @implements ResultSetInterface<array<string, mixed>>
  */
 final class WriteResultSet extends EmptyIterator implements ResultSetInterface, ArrayAccess
 {

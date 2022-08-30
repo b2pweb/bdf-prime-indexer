@@ -21,12 +21,12 @@ final class RepositorySubscriber
     /**
      * @var string
      */
-    private $index;
+    private string $index;
 
     /**
      * @var object
      */
-    private $config;
+    private object $config;
 
 
     /**
@@ -37,7 +37,7 @@ final class RepositorySubscriber
      * @param string $index The index name
      * @param object $config The index configuration
      */
-    public function __construct($dispatcher, string $index, $config)
+    public function __construct($dispatcher, string $index, object $config)
     {
         $this->dispatcher = $dispatcher;
         $this->index = $index;
@@ -50,7 +50,7 @@ final class RepositorySubscriber
      *
      * @param object $entity
      */
-    public function inserted($entity): void
+    public function inserted(object $entity): void
     {
         if ($this->shouldBeIndexed($entity)) {
             $this->dispatcher->dispatch(new AddToIndex($this->index, $entity));
@@ -65,7 +65,7 @@ final class RepositorySubscriber
      *
      * @param object $entity
      */
-    public function updated($entity): void
+    public function updated(object $entity): void
     {
         if ($this->shouldBeIndexed($entity)) {
             $this->dispatcher->dispatch(new UpdateIndexedEntity($this->index, $entity));
@@ -80,7 +80,7 @@ final class RepositorySubscriber
      *
      * @param object $entity
      */
-    public function deleted($entity): void
+    public function deleted(object $entity): void
     {
         $this->dispatcher->dispatch(new RemoveFromIndex($this->index, $entity));
     }
@@ -104,7 +104,7 @@ final class RepositorySubscriber
      *
      * @return bool
      */
-    private function shouldBeIndexed($entity): bool
+    private function shouldBeIndexed(object $entity): bool
     {
         return !$this->config instanceof ShouldBeIndexedConfigurationInterface
             || $this->config->shouldBeIndexed($entity)

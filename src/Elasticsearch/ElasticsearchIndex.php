@@ -4,29 +4,25 @@ namespace Bdf\Prime\Indexer\Elasticsearch;
 
 use Bdf\Collection\Stream\Streams;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Result\WriteResultSet;
 use Bdf\Prime\Indexer\IndexInterface;
 use Bdf\Prime\Indexer\QueryInterface;
 use Psr\Log\NullLogger;
 
 /**
  * Index implementation for Elasticsearch
+ *
+ * @final
  */
 class ElasticsearchIndex implements IndexInterface
 {
-    /**
-     * @var ClientInterface
-     */
     private ClientInterface $client;
-
-    /**
-     * @var ElasticsearchMapperInterface
-     */
     private ElasticsearchMapperInterface $mapper;
-
 
     /**
      * ElasticsearchIndex constructor.
@@ -43,7 +39,7 @@ class ElasticsearchIndex implements IndexInterface
     /**
      * {@inheritdoc}
      */
-    public function config()
+    public function config(): ElasticsearchIndexConfigurationInterface
     {
         return $this->mapper->configuration();
     }
@@ -53,6 +49,7 @@ class ElasticsearchIndex implements IndexInterface
      */
     public function add($entity): void
     {
+        /** @var WriteResultSet $response */
         $response = $this->creationQuery()->bulk(false)->values($this->mapper->toIndex($entity))->execute();
 
         $this->mapper->setId($entity, $response->id());
@@ -244,7 +241,7 @@ class ElasticsearchIndex implements IndexInterface
      *
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/indices-create-index.html
      */
-    private function createSchema(string $index)
+    private function createSchema(string $index): void
     {
         $body = [
             'settings' => [

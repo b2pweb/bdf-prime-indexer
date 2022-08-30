@@ -14,7 +14,7 @@ class ElasticsearchGrammar implements ElasticsearchGrammarInterface
     /**
      * {@inheritdoc}
      */
-    public function escape($value)
+    public function escape($value): string
     {
         $value = str_replace('\\', '\\\\', $value);
 
@@ -28,7 +28,7 @@ class ElasticsearchGrammar implements ElasticsearchGrammarInterface
     /**
      * {@inheritdoc}
      */
-    public function operator($field, $operator, $value)
+    public function operator($field, $operator, $value): array
     {
         switch ($operator) {
             case '<':
@@ -129,7 +129,7 @@ class ElasticsearchGrammar implements ElasticsearchGrammarInterface
     /**
      * {@inheritdoc}
      */
-    public function not($expression)
+    public function not($expression): array
     {
         if ($expression instanceof CompilableExpressionInterface) {
             $expression = $expression->compile($this);
@@ -141,7 +141,7 @@ class ElasticsearchGrammar implements ElasticsearchGrammarInterface
     /**
      * {@inheritdoc}
      */
-    public function or(array $expressions)
+    public function or(array $expressions): array
     {
         $should = [];
 
@@ -159,7 +159,7 @@ class ElasticsearchGrammar implements ElasticsearchGrammarInterface
     /**
      * {@inheritdoc}
      */
-    public function likeToWildcard($query, bool $escape = true)
+    public function likeToWildcard($query, bool $escape = true): string
     {
         if ($escape) {
             $query = $this->escape($query);

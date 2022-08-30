@@ -67,7 +67,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * Query to execute
      *
-     * @var CompilableExpressionInterface
+     * @var CompilableExpressionInterface|null
      */
     private ?CompilableExpressionInterface $query = null;
 
@@ -223,6 +223,9 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
 
     /**
      * {@inheritdoc}
+     *
+     * @param string|\Bdf\Prime\Query\QueryInterface|\Bdf\Prime\Query\Expression\ExpressionInterface|array|CompilableExpressionInterface $raw
+     * @psalm-suppress PossiblyInvalidArgument
      */
     public function whereRaw($raw, string $type = BooleanQuery::COMPOSITE_AND)
     {
@@ -275,6 +278,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
         $callback($this);
 
         // Reset the query
+        /** @var CompilableExpressionInterface|null $nestedQuery */
         $nestedQuery = $this->query;
         $this->query = $query;
 
@@ -292,6 +296,10 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     public function order($sort, ?string $order = 'asc')
     {
         if (!is_array($sort)) {
+            if (!is_string($sort)) {
+                throw new \TypeError('$sort must be of type string or array');
+            }
+
             $this->order = [$sort => $order];
         } else {
             $this->order = $sort;
@@ -308,6 +316,10 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
         if (is_array($sort)) {
             $this->order = array_replace($this->order, $sort);
         } else {
+            if (!is_string($sort)) {
+                throw new \TypeError('$sort must be of type string or array');
+            }
+
             $this->order[$sort] = $order;
         }
 
@@ -341,7 +353,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
         $page     = ($page > 0) ? $page : 1;
         $rowCount = ($rowCount > 0) ? $rowCount : 1;
 
-        $this->limit((int) $rowCount, (int) $rowCount * ($page - 1));
+        $this->limit($rowCount, $rowCount * ($page - 1));
 
         return $this;
     }
@@ -351,7 +363,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      */
     public function getPage(): int
     {
-        if ($this->size === null) {
+        if ($this->size === null || $this->from === null) {
             return 1;
         }
 
@@ -424,7 +436,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      * $query->should(new Exists('optional-field'));
      * </code>
      *
-     * @param array|string|Closure $column The expression to compile. Can be name of the column, array expression, or closure
+     * @param string|array<string,mixed>|callable(static):void $column The expression to compile. Can be name of the column, array expression, or closure
      * @param string|mixed $operator The operator (if first argument is column name), or value if value is not given
      * @param mixed $value The comparison value if first argument is the column name
      *
@@ -456,7 +468,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      * });
      * </code>
      *
-     * @param array|string|Closure $column The expression to compile. Can be name of the column, array expression, or closure
+     * @param string|array<string,mixed>|callable(static):void $column The expression to compile. Can be name of the column, array expression, or closure
      * @param string|mixed $operator The operator (if first argument is column name), or value if value is not given
      * @param mixed $value The comparison value if first argument is the column name
      *
@@ -490,7 +502,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      * });
      * </code>
      *
-     * @param array|string|Closure $column The expression to compile. Can be name of the column, array expression, or closure
+     * @param string|array<string,mixed>|callable(static):void $column The expression to compile. Can be name of the column, array expression, or closure
      * @param string|mixed $operator The operator (if first argument is column name), or value if value is not given
      * @param mixed $value The comparison value if first argument is the column name
      *
@@ -522,7 +534,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      * });
      * </code>
      *
-     * @param array|string|Closure $column The expression to compile. Can be name of the column, array expression, or closure
+     * @param string|array<string,mixed>|callable(static):void $column The expression to compile. Can be name of the column, array expression, or closure
      * @param string|mixed $operator The operator (if first argument is column name), or value if value is not given
      * @param mixed $value The comparison value if first argument is the column name
      *
@@ -631,11 +643,16 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      * Get "bool" filter query
      *
      * @return BooleanQuery
+     * @psalm-assert BooleanQuery $this->query
      */
     public function bool(): BooleanQuery
     {
         if (empty($this->query)) {
             return $this->query = new BooleanQuery();
+        }
+
+        if (!$this->query instanceof BooleanQuery) {
+            throw new \LogicException('This query is not configured as boolean query.');
         }
 
         return $this->query;
@@ -644,7 +661,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     /**
      * Build simple where expression
      *
-     * @param array|string|Closure $expression The expression to compile. Can be name of the column, array expression, or closure
+     * @param string|array<string,mixed>|callable(static):void $expression The expression to compile. Can be name of the column, array expression, or closure
      * @param string|mixed $operator The operator (if first argument is column name), or value if value is not given
      * @param mixed $value The comparison value if first argument is the column name
      * @param string $type The composite expression type (and/or)
@@ -657,7 +674,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
             return $this->whereRaw($expression, $type);
         }
 
-        if ($expression instanceof Closure) {
+        if (!is_string($expression) && is_callable($expression)) {
             return $this->nested($expression, $type);
         }
 
@@ -671,6 +688,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
             $operator = '=';
         }
 
+        /** @var string $expression */
         if (isset($this->customFilters[$expression])) {
             // Custom filter
             $this->customFilters[$expression]($this, $value);

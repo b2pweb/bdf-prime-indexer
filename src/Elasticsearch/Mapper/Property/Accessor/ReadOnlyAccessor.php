@@ -10,7 +10,7 @@ final class ReadOnlyAccessor implements PropertyAccessorInterface
     /**
      * @var PropertyAccessorInterface
      */
-    private $inner;
+    private PropertyAccessorInterface $inner;
 
 
     /**
@@ -34,7 +34,7 @@ final class ReadOnlyAccessor implements PropertyAccessorInterface
     /**
      * {@inheritdoc}
      */
-    public function writeToModel($entity, $indexedValue)
+    public function writeToModel($entity, $indexedValue): void
     {
     }
 }

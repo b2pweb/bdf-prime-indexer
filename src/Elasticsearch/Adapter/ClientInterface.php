@@ -271,7 +271,7 @@ interface ClientInterface
      * Create a new index
      *
      * @param string $index Index name
-     * @param array{settings: array, mapping: array} $body Index configuration
+     * @param array{settings: array, mappings: array} $body Index configuration
      *
      * @throws InternalServerException When http 500 error occurs
      * @throws InvalidRequestException When request is malformed

@@ -28,30 +28,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand('prime:indexer:create', 'Create the index for the given entity')]
 class CreateIndexCommand extends Command
 {
-    /**
-     * @var string
-     */
     protected static $defaultName = 'prime:indexer:create';
 
-    /**
-     * @var IndexFactory
-     */
-    private $indexes;
-
-    /**
-     * @var ServiceLocator
-     */
-    private $prime;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * @var ProgressBar
-     */
-    private $progressBar;
+    private IndexFactory $indexes;
+    private ServiceLocator $prime;
+    private ?LoggerInterface $logger;
+    private ?ProgressBar $progressBar = null;
 
 
     /**
@@ -73,7 +55,7 @@ class CreateIndexCommand extends Command
     /**
      * {@inheritdoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setDescription('Create the index for the given entity')
@@ -86,7 +68,7 @@ class CreateIndexCommand extends Command
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
@@ -125,17 +107,17 @@ class CreateIndexCommand extends Command
      *
      * @throws \Bdf\Prime\Exception\PrimeException
      */
-    private function entities($config, InputInterface $input, StyleInterface $io): iterable
+    private function entities(object $config, InputInterface $input, StyleInterface $io): iterable
     {
         if ($config instanceof CustomEntitiesConfigurationInterface) {
             return $config->entities();
         }
 
-        /** @var EntityRepository $repository */
+        /** @var EntityRepository|null $repository */
         $repository = $this->prime->repository($input->getArgument('entity'));
 
         if ($repository === null) {
-            $io->alert('Cannot load entities');
+            $io->error('Cannot load entities');
 
             return [];
         }
@@ -168,7 +150,8 @@ class CreateIndexCommand extends Command
         }
 
         $this->progressBar = $io->createProgressBar($size);
-        return Streams::wrap($entities)->map(function ($entity) {
+        return Streams::wrap($entities)->map(function (object $entity) {
+            /** @psalm-suppress PossiblyNullReference */
             $this->progressBar->advance();
 
             return $entity;
@@ -198,7 +181,7 @@ class CreateIndexCommand extends Command
      *
      * @return iterable
      */
-    private function filterNotIndexableEntities($config, iterable $entities): iterable
+    private function filterNotIndexableEntities(object $config, iterable $entities): iterable
     {
         if (!$config instanceof ShouldBeIndexedConfigurationInterface) {
             return $entities;

@@ -9,6 +9,8 @@ use Bdf\Prime\Connection\Result\ResultSetInterface;
 
 /**
  * ResultSet wrapper for a bulk write result
+ *
+ * @implements ResultSetInterface<array<string, mixed>>
  */
 final class BulkResultSet implements ResultSetInterface, ArrayAccess
 {

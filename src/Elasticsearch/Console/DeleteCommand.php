@@ -11,6 +11,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Class DeleteCommand
+ *
+ * @psalm-suppress PropertyNotSetInConstructor
  */
 #[AsCommand('elasticsearch:delete', 'Supprime un ou plusieurs index')]
 class DeleteCommand extends AbstractCommand
@@ -20,7 +22,7 @@ class DeleteCommand extends AbstractCommand
     /**
      * {@inheritdoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
@@ -34,7 +36,7 @@ class DeleteCommand extends AbstractCommand
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $style = new SymfonyStyle($input, $output);
         $client = $this->getClient();

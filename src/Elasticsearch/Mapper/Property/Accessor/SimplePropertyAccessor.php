@@ -2,6 +2,8 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor;
 
+use LogicException;
+
 /**
  * Basic property accessor using getter and setter
  */
@@ -10,7 +12,7 @@ final class SimplePropertyAccessor implements PropertyAccessorInterface
     /**
      * @var string
      */
-    private $propertyName;
+    private string $propertyName;
 
 
     /**
@@ -18,7 +20,7 @@ final class SimplePropertyAccessor implements PropertyAccessorInterface
      *
      * @param string $propertyName
      */
-    public function __construct($propertyName)
+    public function __construct(string $propertyName)
     {
         $this->propertyName = $propertyName;
     }
@@ -34,13 +36,13 @@ final class SimplePropertyAccessor implements PropertyAccessorInterface
             }
         }
 
-        throw new \LogicException('Cannot find getter for property '.$this->propertyName.' on entity '.get_class($entity));
+        throw new LogicException('Cannot find getter for property '.$this->propertyName.' on entity '.get_class($entity));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function writeToModel($entity, $indexedValue)
+    public function writeToModel($entity, $indexedValue): void
     {
         $entity->{'set' . ucfirst($this->propertyName)}($indexedValue);
     }

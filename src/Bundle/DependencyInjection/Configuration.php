@@ -9,6 +9,8 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 /**
  * Class Configuration
  * @package Bdf\Prime\Indexer\Bundle\DependencyInjection
+ *
+ * @psalm-suppress PossiblyUndefinedMethod
  */
 class Configuration implements ConfigurationInterface
 {

@@ -15,6 +15,7 @@ class IndexFactory
 {
     /**
      * @var array<class-string, callable(object, IndexFactory):IndexInterface>
+     * @var array<class-string, callable(object):IndexInterface>
      */
     private $factories;
 

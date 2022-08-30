@@ -15,34 +15,38 @@ final class Property implements PropertyAccessorInterface
     /**
      * @var string
      */
-    private $name;
+    private string $name;
 
     /**
-     * @var array
+     * @var array{
+     *     index?: bool,
+     *     fields?: array,
+     *     analyzer?: string,
+     * }
      */
-    private $declaration;
+    private array $declaration;
 
     /**
      * @var AnalyzerInterface
      */
-    private $analyzer;
+    private AnalyzerInterface $analyzer;
 
     /**
      * @var string
      */
-    private $type;
+    private string $type;
 
     /**
      * @var PropertyAccessorInterface
      */
-    private $accessor;
+    private PropertyAccessorInterface $accessor;
 
 
     /**
      * Property constructor.
      *
      * @param string $name
-     * @param array $declaration
+     * @param array{index?: bool, fields?: array, analyzer?: string} $declaration
      * @param AnalyzerInterface $analyzer
      * @param string $type
      * @param PropertyAccessorInterface $accessor

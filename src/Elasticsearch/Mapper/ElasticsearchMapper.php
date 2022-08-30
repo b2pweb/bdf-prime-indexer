@@ -20,32 +20,32 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
     /**
      * @var ElasticsearchIndexConfigurationInterface
      */
-    private $configuration;
+    private ElasticsearchIndexConfigurationInterface $configuration;
 
     /**
      * @var InstantiatorInterface
      */
-    private $instantiator;
+    private InstantiatorInterface $instantiator;
 
     /**
-     * @var Property[]
+     * @var array<string, Property>
      */
-    private $properties = null;
+    private array $properties;
 
     /**
-     * @var AnalyzerInterface[]
+     * @var array<string, AnalyzerInterface>
      */
-    private $analyzers = null;
+    private array $analyzers;
 
     /**
      * @var PropertyAccessorInterface|null
      */
-    private $id = null;
+    private ?PropertyAccessorInterface $id = null;
 
     /**
      * @var callable[]
      */
-    private $scopes = null;
+    private ?array $scopes = null;
 
 
     /**
@@ -208,7 +208,7 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
     }
 
     /**
-     * @return Property[]
+     * @return array<string, Property>
      */
     private function buildProperties(): array
     {
@@ -224,7 +224,7 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
     }
 
     /**
-     * @return AnalyzerInterface[]
+     * @return array<string, AnalyzerInterface>
      */
     private function buildAnalyzers(): array
     {

@@ -13,6 +13,7 @@ use Bdf\Prime\Indexer\IndexFactory;
 use Bdf\Prime\Indexer\IndexInterface;
 use Bdf\Prime\Indexer\Resolver\MappingResolver;
 use Psr\Container\ContainerInterface;
+use ReflectionProperty;
 
 /**
  * Testing tool for setUp and use indexes
@@ -22,34 +23,35 @@ class TestingIndexer
     /**
      * @var ContainerInterface
      */
-    private $container;
+    private ContainerInterface $container;
 
     /**
-     * @var IndexFactory
+     * @var IndexFactory|null
      */
-    private $factory;
+    private ?IndexFactory $factory = null;
 
     /**
      * Set of initialized indexes
      *
      * @var SetInterface|IndexInterface[]
+     * @psalm-var SetInterface<IndexInterface>
      */
-    private $indexes;
+    private SetInterface $indexes;
 
     /**
-     * @var array
+     * @var array|null
      */
-    private $lastIndexesConfigurations;
+    private ?array $lastIndexesConfigurations = null;
 
     /**
-     * @var \ReflectionProperty
+     * @var ReflectionProperty|null
      */
-    private $configProperty;
+    private ?ReflectionProperty $configProperty = null;
 
     /**
-     * @var \ReflectionProperty
+     * @var ReflectionProperty|null
      */
-    private $indexesProperty;
+    private ?ReflectionProperty $indexesProperty = null;
 
 
     /**
@@ -88,7 +90,7 @@ class TestingIndexer
      */
     public function push($entities): TestingIndexer
     {
-        $this->execute($entities, function (IndexInterface $index, $entity) {
+        $this->execute($entities, function (IndexInterface $index, object $entity) {
             $index->add($entity);
         });
 
@@ -104,7 +106,7 @@ class TestingIndexer
      */
     public function remove($entities)
     {
-        $this->execute($entities, function (IndexInterface $index, $entity) {
+        $this->execute($entities, function (IndexInterface $index, object $entity) {
             $index->remove($entity);
         });
 
@@ -158,7 +160,7 @@ class TestingIndexer
     }
 
     /**
-     * Execute an action on an index, on each entities
+     * Execute an action on an index, on each entity
      *
      * @param object|object[] $entities
      * @param callable $action
@@ -203,13 +205,13 @@ class TestingIndexer
         return $this->factory;
     }
 
-    private function configurationsProperty(): \ReflectionProperty
+    private function configurationsProperty(): ReflectionProperty
     {
         if ($this->configProperty) {
             return $this->configProperty;
         }
 
-        $this->configProperty = new \ReflectionProperty(MappingResolver::class, 'mapping');
+        $this->configProperty = new ReflectionProperty(MappingResolver::class, 'mapping');
         $this->configProperty->setAccessible(true);
 
         return $this->configProperty;
@@ -228,14 +230,21 @@ class TestingIndexer
     private function resetIndexesProperty(): void
     {
         if (!$this->indexesProperty) {
-            $this->indexesProperty = new \ReflectionProperty($this->factory, 'indexes');
+            $this->indexesProperty = new ReflectionProperty($this->factory, 'indexes');
             $this->indexesProperty->setAccessible(true);
         }
 
         $this->indexesProperty->setValue($this->factory, []);
     }
 
-    private function toTestingConfiguration($config)
+    /**
+     * @param object|string $config
+     *
+     * @return object
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
+     */
+    private function toTestingConfiguration($config): object
     {
         if (is_string($config)) {
             $config = $this->container->get($config);
