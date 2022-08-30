@@ -3,13 +3,17 @@
 namespace Bdf\Prime\Indexer\Elasticsearch;
 
 use Bdf\Collection\Stream\Streams;
+use Bdf\Prime\Exception\PrimeException;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\ElasticsearchExceptionInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\WriteResultSet;
+use Bdf\Prime\Indexer\Exception\InvalidQueryException;
+use Bdf\Prime\Indexer\Exception\QueryExecutionException;
 use Bdf\Prime\Indexer\IndexInterface;
 use Bdf\Prime\Indexer\QueryInterface;
 use Psr\Log\NullLogger;
@@ -64,7 +68,11 @@ class ElasticsearchIndex implements IndexInterface
             return false;
         }
 
-        return $this->client->exists($this->mapper->configuration()->index(), $id);
+        try {
+            return $this->client->exists($this->mapper->configuration()->index(), $id);
+        } catch (ElasticsearchExceptionInterface $e) {
+            throw new QueryExecutionException($e->getMessage(), 0, $e);
+        }
     }
 
     /**
@@ -75,10 +83,14 @@ class ElasticsearchIndex implements IndexInterface
         $id = $this->mapper->id($entity);
 
         if (empty($id)) {
-            throw new \InvalidArgumentException('Cannot extract id from the entity');
+            throw new InvalidQueryException('Cannot extract id from the entity');
         }
 
-        $this->client->delete($this->mapper->configuration()->index(), $id);
+        try {
+            $this->client->delete($this->mapper->configuration()->index(), $id);
+        } catch (ElasticsearchExceptionInterface $e) {
+            throw new QueryExecutionException($e->getMessage(), 0, $e);
+        }
     }
 
     /**
@@ -89,13 +101,17 @@ class ElasticsearchIndex implements IndexInterface
         $document = $this->mapper->toIndex($entity, $attributes);
 
         if (empty($document['_id'])) {
-            throw new \InvalidArgumentException('Cannot extract id from the entity');
+            throw new InvalidQueryException('Cannot extract id from the entity');
         }
 
         $id = $document['_id'];
         unset($document['_id']);
 
-        $this->client->update($this->mapper->configuration()->index(), $id, ['doc' => $document]);
+        try {
+            $this->client->update($this->mapper->configuration()->index(), $id, ['doc' => $document]);
+        } catch (ElasticsearchExceptionInterface $e) {
+            throw new QueryExecutionException($e->getMessage(), 0, $e);
+        }
     }
 
     /**
@@ -166,15 +182,19 @@ class ElasticsearchIndex implements IndexInterface
             if ($options['refresh']) {
                 $this->refresh();
             }
-        } catch (\Exception $e) {
+        } catch (\Exception|ElasticsearchExceptionInterface $e) {
             $options['logger']->info('Failed creating index ' . $index . ' : ' . $e->getMessage());
 
-            // Delete the index on failure, if alias is used
-            if ($options['useAlias'] && $this->client->hasIndex($index)) {
-                $this->client->deleteIndex($index);
+            try {
+                // Delete the index on failure, if alias is used
+                if ($options['useAlias'] && $this->client->hasIndex($index)) {
+                    $this->client->deleteIndex($index);
+                }
+            } catch (ElasticsearchExceptionInterface $e) {
+                $options['logger']->error('Failed to remove index ' . $index . ' : ' . $e->getMessage());
             }
 
-            throw $e;
+            throw new QueryExecutionException($e->getMessage(), 0, $e);
         }
     }
 
@@ -183,12 +203,17 @@ class ElasticsearchIndex implements IndexInterface
      */
     public function drop(): void
     {
-        if ($alias = $this->client->getAlias($this->mapper->configuration()->index())) {
-            $alias->delete();
-            return;
-        }
+        try {
+            if ($alias = $this->client->getAlias($this->mapper->configuration()->index())) {
+                $alias->delete();
 
-        $this->client->deleteIndex($this->mapper->configuration()->index());
+                return;
+            }
+
+            $this->client->deleteIndex($this->mapper->configuration()->index());
+        } catch (ElasticsearchExceptionInterface $e) {
+            throw new QueryExecutionException($e->getMessage(), 0, $e);
+        }
     }
 
     /**
@@ -211,7 +236,11 @@ class ElasticsearchIndex implements IndexInterface
      */
     public function refresh(): void
     {
-        $this->client->refreshIndex($this->mapper->configuration()->index());
+        try {
+            $this->client->refreshIndex($this->mapper->configuration()->index());
+        } catch (ElasticsearchExceptionInterface $e) {
+            throw new QueryExecutionException($e->getMessage(), 0, $e);
+        }
     }
 
     /**
@@ -225,7 +254,7 @@ class ElasticsearchIndex implements IndexInterface
     public function __call(string $name, array $arguments): QueryInterface
     {
         if (!isset($this->mapper->scopes()[$name])) {
-            throw new \BadMethodCallException('The scope '.$name.' cannot be found');
+            throw new InvalidQueryException('The scope '.$name.' cannot be found');
         }
 
         $query = $this->query();
@@ -239,6 +268,7 @@ class ElasticsearchIndex implements IndexInterface
      *
      * @param string $index The index name to use
      *
+     * @throws ElasticsearchExceptionInterface
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/indices-create-index.html
      */
     private function createSchema(string $index): void
@@ -324,6 +354,8 @@ class ElasticsearchIndex implements IndexInterface
      * @param string $index The index name to use
      * @param int $chunkSize The insert chunk size
      * @param iterable $entities
+     *
+     * @throws QueryExecutionException
      */
     private function insertAll(string $index, int $chunkSize, iterable $entities): void
     {

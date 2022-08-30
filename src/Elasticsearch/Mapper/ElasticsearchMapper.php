@@ -10,6 +10,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\StandardAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
+use Bdf\Prime\Indexer\Exception\IndexConfigurationException;
 use TypeError;
 
 /**
@@ -53,6 +54,8 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
      *
      * @param ElasticsearchIndexConfigurationInterface $configuration
      * @param InstantiatorInterface|null $instantiator
+     *
+     * @throws IndexConfigurationException When mapper build failed
      */
     public function __construct(ElasticsearchIndexConfigurationInterface $configuration, ?InstantiatorInterface $instantiator = null)
     {
@@ -200,6 +203,8 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
 
     /**
      * Build the mapper
+     *
+     * @throws IndexConfigurationException When mapper build failed
      */
     private function build(): void
     {
@@ -209,6 +214,7 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
 
     /**
      * @return array<string, Property>
+     * @throws IndexConfigurationException When mapper build failed
      */
     private function buildProperties(): array
     {
@@ -225,6 +231,7 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
 
     /**
      * @return array<string, AnalyzerInterface>
+     * @throws IndexConfigurationException When mapper build failed
      */
     private function buildAnalyzers(): array
     {
@@ -236,7 +243,7 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
             } elseif (is_array($analyzer)) {
                 $analyzers[$name] = new ArrayAnalyzer($analyzer);
             } else {
-                throw new \LogicException('Invalid analyzer declaration. Expects array or AnalyzerInterface');
+                throw new IndexConfigurationException('Invalid analyzer declaration. Expects array or AnalyzerInterface');
             }
         }
 

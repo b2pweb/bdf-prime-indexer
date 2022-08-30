@@ -2,6 +2,7 @@
 
 namespace Bdf\Prime\Indexer\Bundle\Factory;
 
+use Bdf\Prime\Indexer\Exception\IndexConfigurationException;
 use Bdf\Prime\Indexer\IndexInterface;
 
 /**
@@ -24,6 +25,8 @@ interface IndexFactoryInterface
      * @param T $config The configuration object
      *
      * @return IndexInterface
+     *
+     * @throws IndexConfigurationException When an error occur during creation of the index
      */
     public function __invoke($config): IndexInterface;
 }

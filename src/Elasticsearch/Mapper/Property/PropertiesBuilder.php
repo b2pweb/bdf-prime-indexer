@@ -11,6 +11,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\EmbeddedAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\ReadOnlyAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAccessor;
+use Bdf\Prime\Indexer\Exception\IndexConfigurationException;
 use InvalidArgumentException;
 
 /**
@@ -279,6 +280,8 @@ class PropertiesBuilder
      * @param string|array|AnalyzerInterface $analyzer The analyzer name, or value
      *
      * @return $this
+     *
+     * @throws IndexConfigurationException When invalid analyzer is given
      */
     public function analyzer($analyzer): PropertiesBuilder
     {
@@ -286,7 +289,7 @@ class PropertiesBuilder
 
         if (is_string($analyzer)) {
             if (!isset($this->mapper->analyzers()[$analyzer])) {
-                throw new InvalidArgumentException('Analyzer ' . $analyzer . ' is not declared');
+                throw new IndexConfigurationException('Analyzer ' . $analyzer . ' is not declared');
             }
         } else {
             if (is_array($analyzer)) {
@@ -294,7 +297,7 @@ class PropertiesBuilder
             }
 
             if (!$analyzer instanceof AnalyzerInterface) {
-                throw new InvalidArgumentException('The parameter $analyzer must be a valid analyzer');
+                throw new IndexConfigurationException('The parameter $analyzer must be a valid analyzer');
             }
 
             $name = $this->current . '_anon_analyzer';
@@ -390,6 +393,8 @@ class PropertiesBuilder
      * @param PropertyAccessorInterface|string|array|callable $accessor The accessor
      *
      * @return $this
+     *
+     * @throws IndexConfigurationException When invalid accessor is given
      */
     public function accessor($accessor): PropertiesBuilder
     {
@@ -409,7 +414,7 @@ class PropertiesBuilder
                 return $this->option('accessor', $accessor);
 
             default:
-                throw new InvalidArgumentException('Invalid accessor given');
+                throw new IndexConfigurationException('Invalid accessor given');
         }
     }
 

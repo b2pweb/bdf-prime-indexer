@@ -5,6 +5,8 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 use Bdf\Prime\Connection\Result\ResultSetInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\InvalidRequestException;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
+use Bdf\Prime\Indexer\Exception\InvalidQueryException;
+use Bdf\Prime\Indexer\Exception\QueryExecutionException;
 use Bdf\Prime\Indexer\IndexTestCase;
 use Elasticsearch\ClientBuilder;
 use Elasticsearch\Common\Exceptions\Conflict409Exception;
@@ -294,7 +296,7 @@ class ElasticsearchCreateQueryTest extends IndexTestCase
      */
     public function test_insert_same_id_twice()
     {
-        $this->expectException(InvalidRequestException::class);
+        $this->expectException(QueryExecutionException::class);
         $this->expectExceptionMessage('version conflict, document already exists');
 
         $this->query
@@ -373,7 +375,7 @@ class ElasticsearchCreateQueryTest extends IndexTestCase
      */
     public function test_compile_simple_empty()
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidQueryException::class);
         $this->expectExceptionMessage('No value to create');
 
         $this->query->into('test_persons', 'person')->bulk(false)->compile();

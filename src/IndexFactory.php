@@ -2,6 +2,8 @@
 
 namespace Bdf\Prime\Indexer;
 
+use Bdf\Prime\Indexer\Exception\IndexConfigurationException;
+
 /**
  * Creates indexes
  */
@@ -41,6 +43,7 @@ class IndexFactory
      * @param string $entity
      *
      * @return IndexInterface
+     * @throws IndexConfigurationException When cannot find any valid configuration for the given entity
      */
     public function for(string $entity): IndexInterface
     {
@@ -48,7 +51,11 @@ class IndexFactory
             return $this->indexes[$entity];
         }
 
-        $configuration = $this->configurations[$entity];
+        $configuration = $this->configurations[$entity] ?? null;
+
+        if (!$configuration) {
+            throw new IndexConfigurationException('Cannot found a configuration for entity ' . $entity);
+        }
 
         foreach ($this->factories as $name => $factory) {
             if ($configuration instanceof $name) {
@@ -56,7 +63,7 @@ class IndexFactory
             }
         }
 
-        throw new \LogicException('Cannot found any factory for configuration '.get_class($configuration));
+        throw new IndexConfigurationException('Cannot found any factory for configuration '.get_class($configuration));
     }
 
     /**
