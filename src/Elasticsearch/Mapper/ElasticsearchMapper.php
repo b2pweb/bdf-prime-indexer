@@ -28,14 +28,14 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
     private InstantiatorInterface $instantiator;
 
     /**
-     * @var array<string, Property>|null
+     * @var array<string, Property>
      */
-    private ?array $properties = null;
+    private array $properties;
 
     /**
      * @var array<string, AnalyzerInterface>
      */
-    private ?array $analyzers = null;
+    private array $analyzers;
 
     /**
      * @var PropertyAccessorInterface|null

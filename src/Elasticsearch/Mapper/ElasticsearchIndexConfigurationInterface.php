@@ -20,7 +20,7 @@ interface ElasticsearchIndexConfigurationInterface
     /**
      * Defines the entity class name
      *
-     * @return string
+     * @return class-string
      */
     public function entity(): string;
 

@@ -282,6 +282,8 @@ class PropertiesBuilder
      */
     public function analyzer($analyzer): PropertiesBuilder
     {
+        assert($this->current !== null);
+
         if (is_string($analyzer)) {
             if (!isset($this->mapper->analyzers()[$analyzer])) {
                 throw new InvalidArgumentException('Analyzer ' . $analyzer . ' is not declared');
@@ -330,6 +332,8 @@ class PropertiesBuilder
      */
     public function field(string $name, array $options): PropertiesBuilder
     {
+        assert($this->current !== null);
+
         if (!isset($this->properties[$this->current]['fields'])) {
             $this->properties[$this->current]['fields'] = [$name => $options];
         } else {
@@ -348,9 +352,11 @@ class PropertiesBuilder
      * @return $this
      *
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/mapping-params.html
+     * @psalm-suppress PropertyTypeCoercion
      */
     public function option(string $name, $value): PropertiesBuilder
     {
+        assert($this->current !== null);
         $this->properties[$this->current][$name] = $value;
 
         return $this;
@@ -426,6 +432,8 @@ class PropertiesBuilder
      */
     public function readOnly(): PropertiesBuilder
     {
+        assert($this->current !== null);
+
         if (isset($this->properties[$this->current]['accessor'])) {
             $this->properties[$this->current]['accessor'] = new ReadOnlyAccessor($this->properties[$this->current]['accessor']);
         } else {

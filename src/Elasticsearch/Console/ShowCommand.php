@@ -10,6 +10,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Class ShowCommand
+ *
+ * @psalm-suppress PropertyNotSetInConstructor
  */
 #[AsCommand('elasticsearch:show', 'Affiche la liste des index')]
 class ShowCommand extends AbstractCommand

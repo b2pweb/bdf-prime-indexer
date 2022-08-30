@@ -53,7 +53,7 @@ final class UpdateIndexedEntity
     /**
      * {@inheritdoc}
      */
-    public function handle(IndexFactory $factory)
+    public function handle(IndexFactory $factory): void
     {
         $index = $factory->for($this->index);
 

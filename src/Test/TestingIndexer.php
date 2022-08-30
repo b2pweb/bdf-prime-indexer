@@ -88,7 +88,7 @@ class TestingIndexer
      */
     public function push($entities): TestingIndexer
     {
-        $this->execute($entities, function (IndexInterface $index, $entity) {
+        $this->execute($entities, function (IndexInterface $index, object $entity) {
             $index->add($entity);
         });
 
@@ -104,7 +104,7 @@ class TestingIndexer
      */
     public function remove($entities)
     {
-        $this->execute($entities, function (IndexInterface $index, $entity) {
+        $this->execute($entities, function (IndexInterface $index, object $entity) {
             $index->remove($entity);
         });
 
@@ -204,11 +204,13 @@ class TestingIndexer
 
     private function getConfigurations(): array
     {
+        assert(!!$this->factory);
         return $this->configurationsProperty()->getValue($this->factory);
     }
 
     private function setConfigurations(array $configurations): void
     {
+        assert(!!$this->factory);
         $this->configurationsProperty()->setValue($this->factory, $configurations);
     }
 
@@ -222,7 +224,7 @@ class TestingIndexer
         $this->indexesProperty->setValue($this->factory, []);
     }
 
-    private static function toTestingConfiguration($config)
+    private static function toTestingConfiguration(object $config): object
     {
         if ($config instanceof ElasticsearchIndexConfigurationInterface) {
             return new ElasticsearchTestingIndexConfig($config);

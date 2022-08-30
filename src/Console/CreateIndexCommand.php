@@ -28,9 +28,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand('prime:indexer:create', 'Create the index for the given entity')]
 class CreateIndexCommand extends Command
 {
-    /**
-     * @var string
-     */
     protected static $defaultName = 'prime:indexer:create';
 
     private IndexFactory $indexes;
@@ -116,11 +113,11 @@ class CreateIndexCommand extends Command
             return $config->entities();
         }
 
-        /** @var EntityRepository $repository */
+        /** @var EntityRepository|null $repository */
         $repository = $this->prime->repository($input->getArgument('entity'));
 
         if ($repository === null) {
-            $io->alert('Cannot load entities');
+            $io->error('Cannot load entities');
 
             return [];
         }
@@ -153,7 +150,8 @@ class CreateIndexCommand extends Command
         }
 
         $this->progressBar = $io->createProgressBar($size);
-        return Streams::wrap($entities)->map(function ($entity) {
+        return Streams::wrap($entities)->map(function (object $entity) {
+            /** @psalm-suppress PossiblyNullReference */
             $this->progressBar->advance();
 
             return $entity;

@@ -64,7 +64,7 @@ final class Wildcard implements CompilableExpressionInterface
         return ['wildcard' => [$this->field => $value]];
     }
 
-    private function isPrefixSearch($value)
+    private function isPrefixSearch(string $value): bool
     {
         // Do not ends with wildcard, or wildcard is escaped
         if ($value[-1] !== '*' || $value[-2] === '\\') {

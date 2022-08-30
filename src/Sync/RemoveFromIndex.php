@@ -53,7 +53,7 @@ final class RemoveFromIndex
     /**
      * {@inheritdoc}
      */
-    public function handle(IndexFactory $factory)
+    public function handle(IndexFactory $factory): void
     {
         $factory->for($this->index)->remove($this->entity);
     }

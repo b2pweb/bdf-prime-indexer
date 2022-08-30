@@ -9,6 +9,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Result\WriteResultSet;
 use Bdf\Prime\Indexer\IndexInterface;
 use Bdf\Prime\Indexer\QueryInterface;
 use Psr\Log\NullLogger;
@@ -48,6 +49,7 @@ class ElasticsearchIndex implements IndexInterface
      */
     public function add($entity): void
     {
+        /** @var WriteResultSet $response */
         $response = $this->creationQuery()->bulk(false)->values($this->mapper->toIndex($entity))->execute();
 
         $this->mapper->setId($entity, $response->id());
