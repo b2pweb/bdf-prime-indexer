@@ -485,6 +485,22 @@ class ElasticsearchIndexTest extends IndexTestCase
         $this->assertCount(4, $this->index->query()->all());
     }
 
+    public function test_updateQuery()
+    {
+        $this->addCities();
+
+        $this->index->updateQuery()
+            ->script('ctx._source.population += 10000')
+            ->id(
+                $this->index->query()->where('name', 'cavaillon')->first()->id()->get()
+            )
+            ->execute()
+        ;
+
+        $this->index->refresh();
+        $this->assertEquals(36689, $this->index->query()->where('name', 'cavaillon')->first()->population()->get());
+    }
+
     /**
      *
      */

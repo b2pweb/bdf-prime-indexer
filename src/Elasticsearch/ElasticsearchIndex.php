@@ -11,6 +11,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
+use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchUpdateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\WriteResultSet;
 use Bdf\Prime\Indexer\Exception\InvalidQueryException;
 use Bdf\Prime\Indexer\Exception\QueryExecutionException;
@@ -225,6 +226,20 @@ class ElasticsearchIndex implements IndexInterface
     {
         return (new ElasticsearchCreateQuery($this->client))
             ->into($this->mapper->configuration()->index())
+        ;
+    }
+
+    /**
+     * Get query for perform advanced single document update
+     *
+     * @return ElasticsearchUpdateQuery
+     *
+     * @see IndexInterface::update() For perform simple update
+     */
+    public function updateQuery(): ElasticsearchUpdateQuery
+    {
+        return (new ElasticsearchUpdateQuery($this->client, $this->mapper))
+            ->from($this->mapper->configuration()->index())
         ;
     }
 
