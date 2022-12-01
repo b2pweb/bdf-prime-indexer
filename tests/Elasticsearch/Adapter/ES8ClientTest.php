@@ -216,14 +216,12 @@ class ES8ClientTest extends TestCase
         $this->assertEquals([
             [
                 '_index' => 'test_index',
-                '_type' => '_doc',
                 '_id' => 'oof',
                 '_score' => 1.0,
                 '_source' => ['foo' => 'rab'],
             ],
             [
                 '_index' => 'test_index',
-                '_type' => '_doc',
                 '_id' => 'foo',
                 '_score' => 1.0,
                 '_source' => ['foo' => 'bara'],
