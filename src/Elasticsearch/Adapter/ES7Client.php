@@ -156,7 +156,7 @@ final class ES7Client implements ClientInterface
     public function deleteByQuery(string $index, array $query, array $options = []): array
     {
         try {
-            return $this->client->deleteByQuery(['index' => $index, 'body' => $query] + $options)->asArray();
+            return $this->client->deleteByQuery(['index' => $index, 'body' => $query] + $options);
         } catch (ElasticsearchException $e) {
             $this->handleException($e);
         }
@@ -183,7 +183,7 @@ final class ES7Client implements ClientInterface
     public function updateByQuery(string $index, array $query, array $options = []): array
     {
         try {
-            return $this->client->updateByQuery(['index' => $index, 'body' => $query] + $options)->asArray();
+            return $this->client->updateByQuery(['index' => $index, 'body' => $query] + $options);
         } catch (ElasticsearchException $e) {
             $this->handleException($e);
         }
