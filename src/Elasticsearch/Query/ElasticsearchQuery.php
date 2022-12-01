@@ -5,6 +5,7 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 use Bdf\Collection\Stream\ArrayStream;
 use Bdf\Collection\Stream\StreamInterface;
 use Bdf\Collection\Util\OptionalInterface;
+use Bdf\Prime\Connection\Result\ResultSetInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\ElasticsearchExceptionInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Response\SearchResults;
@@ -12,9 +13,11 @@ use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammar;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Compound\BooleanQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Compound\FunctionScoreQuery;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Expression\Script;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Exists;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Missing;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\WhereFilter;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Result\ByQueryWriteResultSet;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\ElasticsearchPaginator;
 use Bdf\Prime\Indexer\Exception\InvalidQueryException;
 use Bdf\Prime\Indexer\Exception\QueryExecutionException;
@@ -589,6 +592,60 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     public function paginate(?int $maxRows = null, ?int $page = null): ElasticsearchPaginator
     {
         return new ElasticsearchPaginator($this, $maxRows, $page, $this->transformer);
+    }
+
+    /**
+     * Execute an update by query operation
+     *
+     * <code>
+     * $query->from('cities')
+     *     ->where('zipcode', '84300')
+     *     ->update('ctx._source.population += 1000')
+     * ;
+     * </code>
+     *
+     * @param Script|string|null $script Script called on all matched document for perform update of source.
+     *
+     * @return ByQueryWriteResultSet
+     *
+     * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html
+     */
+    public function update($script = null): ByQueryWriteResultSet
+    {
+        $query = $this->compile();
+
+        if ($script) {
+            $query['script'] = $script;
+        }
+
+        try {
+            return new ByQueryWriteResultSet($this->client->updateByQuery($this->index, $query));
+        } catch (ElasticsearchExceptionInterface $e) {
+            throw new QueryExecutionException($e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
+     * Delete documents matching with current query
+     *
+     * <code>
+     * $query->from('cities')
+     *     ->where('zipcode', '84300')
+     *     ->delete()
+     * ;
+     * </code>
+     *
+     * @return ByQueryWriteResultSet
+     *
+     * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html
+     */
+    public function delete(): ByQueryWriteResultSet
+    {
+        try {
+            return new ByQueryWriteResultSet($this->client->deleteByQuery($this->index, $this->compile()));
+        } catch (ElasticsearchExceptionInterface $e) {
+            throw new QueryExecutionException($e->getMessage(), 0, $e);
+        }
     }
 
     /**

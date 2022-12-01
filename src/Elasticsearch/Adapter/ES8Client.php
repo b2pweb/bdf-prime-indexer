@@ -146,6 +146,18 @@ final class ES8Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
+    public function deleteByQuery(string $index, array $query, array $options = []): array
+    {
+        try {
+            return $this->client->deleteByQuery(['index' => $index, 'body' => $query] + $options)->asArray();
+        } catch (ElasticsearchException $e) {
+            $this->handleException($e);
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function update(string $index, string $id, array $body): bool
     {
         try {
@@ -155,6 +167,18 @@ final class ES8Client implements ClientInterface
         }
 
         return false;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function updateByQuery(string $index, array $query, array $options = []): array
+    {
+        try {
+            return $this->client->updateByQuery(['index' => $index, 'body' => $query] + $options)->asArray();
+        } catch (ElasticsearchException $e) {
+            $this->handleException($e);
+        }
     }
 
     /**

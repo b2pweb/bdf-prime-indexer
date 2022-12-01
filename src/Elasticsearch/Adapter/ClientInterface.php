@@ -118,6 +118,24 @@ interface ClientInterface
     public function delete(string $index, string $id): bool;
 
     /**
+     * Delete documents which match with the given query
+     *
+     * @param string $index Index to search on and modify
+     * @param array $query Elastisearch query. Should follow format of {@see ClientInterface::search()}.
+     * @param array $options Extra query options.
+     *
+     * @return array Delete result
+     *
+     * @throws InternalServerException When http 500 error occurs
+     * @throws InvalidRequestException When request is malformed
+     * @throws NoNodeAvailableException If elasticsearch server is down
+     * @throws ElasticsearchExceptionInterface When requested cannot be performed
+     *
+     * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html
+     */
+    public function deleteByQuery(string $index, array $query, array $options = []): array;
+
+    /**
      * Update a document body
      *
      * @param string $index Index to modify
@@ -134,6 +152,24 @@ interface ClientInterface
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-update.html
      */
     public function update(string $index, string $id, array $body): bool;
+
+    /**
+     * Update documents which match with the given query
+     *
+     * @param string $index Index to search on and modify
+     * @param array $query Elastisearch query. Should follow format of {@see ClientInterface::search()}.
+     * @param array $options Extra query options.
+     *
+     * @return array Update result
+     *
+     * @throws InternalServerException When http 500 error occurs
+     * @throws InvalidRequestException When request is malformed
+     * @throws NoNodeAvailableException If elasticsearch server is down
+     * @throws ElasticsearchExceptionInterface When requested cannot be performed
+     *
+     * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html
+     */
+    public function updateByQuery(string $index, array $query, array $options = []): array;
 
     /**
      * Perform a search query on an index
