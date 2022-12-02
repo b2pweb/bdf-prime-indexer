@@ -9,6 +9,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\ElasticsearchExceptionInte
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Bulk\ElasticsearchBulkQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchUpdateQuery;
@@ -240,6 +241,20 @@ class ElasticsearchIndex implements IndexInterface
     {
         return (new ElasticsearchUpdateQuery($this->client, $this->mapper))
             ->from($this->mapper->configuration()->index())
+        ;
+    }
+
+    /**
+     * Get query object for perform bulk writes
+     *
+     * @return ElasticsearchBulkQuery
+     *
+     * @see ElasticsearchIndex::creationQuery() If you want to perform only creations
+     */
+    public function bulk(): ElasticsearchBulkQuery
+    {
+        return (new ElasticsearchBulkQuery($this->client, $this->mapper))
+            ->into($this->mapper->configuration()->index())
         ;
     }
 

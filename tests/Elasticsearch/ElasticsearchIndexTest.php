@@ -5,6 +5,7 @@ namespace Bdf\Prime\Indexer\Elasticsearch;
 use Bdf\Collection\Util\Functor\Transformer\Getter;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Bulk\UpdateOperation;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Bdf\Prime\Indexer\Exception\InvalidQueryException;
@@ -499,6 +500,27 @@ class ElasticsearchIndexTest extends IndexTestCase
 
         $this->index->refresh();
         $this->assertEquals(36689, $this->index->query()->where('name', 'cavaillon')->first()->population()->get());
+    }
+
+    public function test_bulk()
+    {
+        $this->addCities();
+
+        $this->index->bulk()
+            ->update(fn (UpdateOperation $op) => $op
+                ->id($this->index->query()->where('name', 'cavaillon')->first()->id()->get())
+                ->script('ctx._source.population += 10000')
+            )
+            ->update(fn (UpdateOperation $op) => $op
+                ->id($this->index->query()->where('name', 'parthenay')->first()->id()->get())
+                ->script('ctx._source.population += 10000')
+            )
+            ->refresh()
+            ->execute()
+        ;
+
+        $this->assertEquals(36689, $this->index->query()->where('name', 'cavaillon')->first()->population()->get());
+        $this->assertEquals(21599, $this->index->query()->where('name', 'parthenay')->first()->population()->get());
     }
 
     /**
