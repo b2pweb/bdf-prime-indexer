@@ -207,6 +207,7 @@ final class ElasticsearchBulkQuery implements SelfExecutable, Countable
             $document = null;
         }
 
+        /** @var array|object|null $document */
         return $this->add(new UpdateOperation($document), $configurator);
     }
 
