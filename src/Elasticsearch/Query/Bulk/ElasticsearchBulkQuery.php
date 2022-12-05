@@ -42,7 +42,7 @@ use function count;
  *
  * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html
  */
-final class ElasticsearchBulkQuery implements SelfExecutable, Countable
+final class ElasticsearchBulkQuery implements BulkQueryInterface
 {
     private ClientInterface $client;
     private ElasticsearchMapperInterface $mapper;

@@ -5,6 +5,7 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 use Bdf\Prime\Connection\Result\ResultSetInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\ElasticsearchExceptionInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Bulk\BulkQueryInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\BulkResultSet;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\WriteResultSet;
 use Bdf\Prime\Indexer\Exception\InvalidQueryException;
@@ -55,7 +56,7 @@ use Countable;
  *
  * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/docs-bulk.html
  */
-class ElasticsearchCreateQuery implements BulkWriteBuilderInterface, SelfExecutable, Countable
+class ElasticsearchCreateQuery implements BulkWriteBuilderInterface, BulkQueryInterface
 {
     /** Field name for store the primary key of the document */
     private const PK_FIELD = '_id';
@@ -120,10 +121,13 @@ class ElasticsearchCreateQuery implements BulkWriteBuilderInterface, SelfExecuta
 
     /**
      * {@inheritdoc}
+     *
+     * @psalm-suppress ParamNameMismatch
+     * @return $this
      */
-    public function into($table)
+    public function into($index): self
     {
-        $this->index = $table;
+        $this->index = $index;
 
         return $this;
     }
@@ -243,7 +247,7 @@ class ElasticsearchCreateQuery implements BulkWriteBuilderInterface, SelfExecuta
      *
      * @return $this
      */
-    public function clear()
+    public function clear(): self
     {
         $this->values = [];
 

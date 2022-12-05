@@ -138,62 +138,54 @@ class ElasticsearchIndex implements IndexInterface
     /**
      * {@inheritdoc}
      */
-    public function create(iterable $entities = [], array $options = []): void
+    public function create(iterable $entities = [], $options = []): void
     {
-        $options += [
-            'useAlias' => true,
-            'dropPreviousIndexes' => true,
-            'chunkSize' => 5000,
-            'refresh' => false,
-        ];
-
-        if (!isset($options['logger'])) {
-            $options['logger'] = new NullLogger();
-        }
+        $options = ElasticsearchCreateIndexOptions::fromOptions($options);
+        $options->logger ??= new NullLogger();
 
         $index = $this->mapper->configuration()->index();
 
-        if ($options['useAlias']) {
+        if ($options->useAlias) {
             $index .= '_' . uniqid();
         }
 
         try {
-            $options['logger']->info('Creating index ' . $index);
+            $options->logger->info('Creating index ' . $index);
             $this->createSchema($index);
 
-            $options['logger']->info('Insert entities into ' . $index);
-            $this->insertAll($index, $options['chunkSize'], $entities);
+            $options->logger->info('Insert entities into ' . $index);
+            $this->insertAll($index, $options, $entities);
 
-            if ($options['dropPreviousIndexes']) {
+            if ($options->dropPreviousIndexes) {
                 $previousAlias = $this->client->getAlias($this->mapper->configuration()->index());
                 $previousIndex = $previousAlias ? $previousAlias->index() : null;
             } else {
                 $previousIndex = null;
             }
 
-            if ($options['useAlias']) {
-                $options['logger']->info('Adding alias for ' . $index . ' to ' . $this->mapper->configuration()->index());
+            if ($options->useAlias) {
+                $options->logger->info('Adding alias for ' . $index . ' to ' . $this->mapper->configuration()->index());
                 $this->client->addAlias($index, $this->mapper->configuration()->index());
             }
 
-            if ($options['dropPreviousIndexes'] && $previousIndex) {
-                $options['logger']->info('Removing previous indexes');
+            if ($options->dropPreviousIndexes && $previousIndex) {
+                $options->logger->info('Removing previous indexes');
                 $this->client->deleteIndex($previousIndex);
             }
 
-            if ($options['refresh']) {
+            if ($options->refresh) {
                 $this->refresh();
             }
         } catch (\Exception|ElasticsearchExceptionInterface $e) {
-            $options['logger']->info('Failed creating index ' . $index . ' : ' . $e->getMessage());
+            $options->logger->info('Failed creating index ' . $index . ' : ' . $e->getMessage());
 
             try {
                 // Delete the index on failure, if alias is used
-                if ($options['useAlias'] && $this->client->hasIndex($index)) {
+                if ($options->useAlias && $this->client->hasIndex($index)) {
                     $this->client->deleteIndex($index);
                 }
             } catch (ElasticsearchExceptionInterface $e) {
-                $options['logger']->error('Failed to remove index ' . $index . ' : ' . $e->getMessage());
+                $options->logger->error('Failed to remove index ' . $index . ' : ' . $e->getMessage());
             }
 
             throw new QueryExecutionException($e->getMessage(), 0, $e);
@@ -382,17 +374,29 @@ class ElasticsearchIndex implements IndexInterface
      * Insert all entities into the index
      *
      * @param string $index The index name to use
-     * @param int $chunkSize The insert chunk size
+     * @param ElasticsearchCreateIndexOptions $options
      * @param iterable $entities
      *
      * @throws QueryExecutionException
      */
-    private function insertAll(string $index, int $chunkSize, iterable $entities): void
+    private function insertAll(string $index, ElasticsearchCreateIndexOptions $options, iterable $entities): void
     {
-        $query = $this->creationQuery()->into($index);
+        $query = $options->useBulkWriteQuery ? $this->bulk() : $this->creationQuery()->bulk();
+        $query->into($index);
+
+        $chunkSize = $options->chunkSize;
+        $configurator = $options->queryConfigurator;
 
         foreach ($entities as $entity) {
-            $query->values($this->mapper->toIndex($entity));
+            if ($configurator) {
+                $configurator($query, $entity);
+            } elseif ($options->useBulkWriteQuery) {
+                /** @var ElasticsearchBulkQuery $query */
+                $query->index($entity);
+            } else {
+                /** @var ElasticsearchCreateQuery $query */
+                $query->values($this->mapper->toIndex($entity));
+            }
 
             if (count($query) >= $chunkSize) {
                 $query->execute();
