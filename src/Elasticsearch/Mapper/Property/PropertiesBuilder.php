@@ -31,6 +31,8 @@ class PropertiesBuilder
      *     index?: bool,
      *     accessor?: PropertyAccessorInterface,
      *     fields?: array,
+     *     properties?: array,
+     *     className?: class-string,
      * }>
      */
     private array $properties = [];
@@ -238,6 +240,32 @@ class PropertiesBuilder
     public function binary(string $name): PropertiesBuilder
     {
         return $this->add($name, 'binary');
+    }
+
+    /**
+     *
+     * @param string $name The indexed property name
+     * @param class-string $className Class name of the embedded object
+     * @param callable(PropertiesBuilder):void $configurator Configurator callback for embedded object properties
+     *
+     * @return $this
+     *
+     * @see https://www.elastic.co/guide/en/elasticsearch/reference/7.17/object.html
+     */
+    public function object(string $name, string $className, callable $configurator): PropertiesBuilder
+    {
+        $properties = clone $this;
+        $properties->properties = [];
+
+        $configurator($properties);
+
+        $this->properties[$name] = [
+            'type' => 'object',
+            'properties' => $properties->build(),
+            'className' => $className,
+        ];
+
+        return $this;
     }
 
     /**
@@ -451,7 +479,7 @@ class PropertiesBuilder
     /**
      * Build the properties
      *
-     * @return array<string, Property>
+     * @return array<string, PropertyInterface>
      */
     public function build(): array
     {
@@ -464,13 +492,17 @@ class PropertiesBuilder
             $accessor = $property['accessor'] ?? new SimplePropertyAccessor($name);
             unset($property['accessor']);
 
-            if (isset($property['analyzer'], $this->analyzers[$property['analyzer']])) {
-                $analyzer = $this->analyzers[$property['analyzer']];
+            if ($type === 'object') {
+                $properties[$name] = new ObjectProperty($name, $property['className'] ?? \stdClass::class, $property['properties'] ?? [], $accessor);
             } else {
-                $analyzer = $this->mapper->analyzers()[$property['analyzer'] ?? 'default'];
-            }
+                if (isset($property['analyzer'], $this->analyzers[$property['analyzer']])) {
+                    $analyzer = $this->analyzers[$property['analyzer']];
+                } else {
+                    $analyzer = $this->mapper->analyzers()[$property['analyzer'] ?? 'default'];
+                }
 
-            $properties[$name] = new Property($name, $property, $analyzer, $type, $accessor);
+                $properties[$name] = new Property($name, $property, $analyzer, $type, $accessor);
+            }
         }
 
         return $properties;
