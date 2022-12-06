@@ -243,6 +243,21 @@ class PropertiesBuilder
     }
 
     /**
+     * Declare an `object` property
+     *
+     * The object property allow to declare an embedded object on the indexed document.
+     * This object is handled as sub-document, with a class and declared properties.
+     *
+     * <code>
+     * $builder->object('address', Address::class, function (PropertiesBuilder $builder) {
+     *     $builder
+     *         ->text('name')
+     *         ->text('address')
+     *         ->keyword('zipCode')
+     *         ->keyword('country')
+     *     ;
+     * });
+     * </code>
      *
      * @param string $name The indexed property name
      * @param class-string $className Class name of the embedded object
