@@ -5,7 +5,11 @@ namespace Bdf\Prime\Indexer\Elasticsearch;
 use Bdf\Collection\Util\Functor\Transformer\Getter;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Bulk\ElasticsearchBulkQuery;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Bulk\UpdateOperation;
+use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Expression\Script;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Bdf\Prime\Indexer\Exception\InvalidQueryException;
 use Bdf\Prime\Indexer\IndexTestCase;
@@ -371,7 +375,7 @@ class ElasticsearchIndexTest extends IndexTestCase
 
         $client->expects($this->once())->method('createIndex')->with('test_cities', $expected);
 
-        $index->create([], ['useAlias' => false]);
+        $index->create([], function (ElasticsearchCreateIndexOptions $options) { $options->useAlias = false; });
     }
 
     /**
@@ -523,6 +527,133 @@ class ElasticsearchIndexTest extends IndexTestCase
         $index->create([], ['useAlias' => false]);
     }
 
+    public function test_create_using_bulk_query()
+    {
+        $this->addCities(function (ElasticsearchCreateIndexOptions $options) {
+            $options->useBulkWriteQuery = true;
+            $options->refresh = true;
+        });
+
+        $this->assertCount(4, $this->index->query()->all());
+    }
+
+    public function test_create_using_query_configurator()
+    {
+        $this->addCities(function (ElasticsearchCreateIndexOptions $options) {
+            $options->queryConfigurator = function (ElasticsearchCreateQuery $query, City $entity) {
+                $query->values([
+                    '_id' => md5($entity->country() . ' ' . $entity->name()),
+                    'name' => $entity->name(),
+                    'population' => $entity->population() * 2,
+                    'country' => $entity->country(),
+                    'zipCode' => $entity->zipCode(),
+                    'enabled' => $entity->enabled(),
+                ]);
+            };
+            $options->refresh = true;
+        });
+
+        $this->assertEqualsCanonicalizing([
+            new City([
+                'id' => '863420f5439b8a8d3f7bed9b65df4912',
+                'name' => 'Paris',
+                'population' => 4403156,
+                'country' => 'FR',
+                'zipCode' => '75000',
+            ]),
+            new City([
+                'id' => 'b4440d111360422d46ac098b87ceea1d',
+                'name' => 'Paris',
+                'population' => 54044,
+                'country' => 'US',
+                'zipCode' => '75460',
+            ]),
+            new City([
+                'id' => 'f34ca5d6719c86c6972286290b6fa507',
+                'name' => 'Parthenay',
+                'population' => 23198,
+                'country' => 'FR',
+                'zipCode' => '79200',
+            ]),
+            new City([
+                'id' => '72c62d08d8d4425130e80553ac31fc20',
+                'name' => 'Cavaillon',
+                'population' => 53378,
+                'country' => 'FR',
+                'zipCode' => '84300',
+            ]),
+        ], $this->index->query()->all());
+    }
+
+    public function test_create_with_upsert()
+    {
+        $this->index->create(
+            [
+                new City([
+                    'name' => 'Paris',
+                    'population' => 2201578,
+                    'country' => 'FR',
+                    'zipCode' => '75000',
+                ]),
+                new City([
+                    'name' => 'Paris',
+                    'population' => 150000,
+                    'country' => 'FR',
+                    'zipCode' => '75000',
+                ]),
+                new City([
+                    'name' => 'Parthenay',
+                    'population' => 11599,
+                    'country' => 'FR',
+                    'zipCode' => '79200',
+                ]),
+                new City([
+                    'name' => 'Cavaillon',
+                    'population' => 26689,
+                    'country' => 'FR',
+                    'zipCode' => '84300',
+                ]),
+            ],
+            function (ElasticsearchCreateIndexOptions $options) {
+                $options->useBulkWriteQuery = true;
+                $options->queryConfigurator = function (ElasticsearchBulkQuery $query, City $entity) {
+                    $query->update(fn (UpdateOperation $op) => $op
+                        ->id(strtolower($entity->name()))
+                        ->script(new Script('ctx._source.population += params.population', Script::LANG_PAINLESS, [
+                            'population' => $entity->population(),
+                        ]))
+                        ->upsert($entity)
+                    );
+                };
+                $options->refresh = true;
+            }
+        );
+
+        $this->assertEqualsCanonicalizing([
+            new City([
+                'id' => 'paris',
+                'name' => 'Paris',
+                'population' => 2351578,
+                'country' => 'FR',
+                'zipCode' => '75000',
+            ]),
+            new City([
+                'id' => 'parthenay',
+                'name' => 'Parthenay',
+                'population' => 11599,
+                'country' => 'FR',
+                'zipCode' => '79200',
+            ]),
+            new City([
+                'id' => 'cavaillon',
+                'name' => 'Cavaillon',
+                'population' => 26689,
+                'country' => 'FR',
+                'zipCode' => '84300',
+            ]),
+        ], $this->index->query()->all());
+    }
+
     /**
      *
      */
@@ -539,7 +670,57 @@ class ElasticsearchIndexTest extends IndexTestCase
     /**
      *
      */
-    private function addCities(array $options = [])
+    public function test_refresh_using_closure_configurator()
+    {
+        $this->addCities(function (ElasticsearchCreateIndexOptions $opt) { $opt->refresh = false; });
+
+        $this->assertEmpty($this->index->query()->all());
+        $this->index->refresh();
+
+        $this->assertCount(4, $this->index->query()->all());
+    }
+
+    public function test_updateQuery()
+    {
+        $this->addCities();
+
+        $this->index->updateQuery()
+            ->script('ctx._source.population += 10000')
+            ->id(
+                $this->index->query()->where('name', 'cavaillon')->first()->id()->get()
+            )
+            ->execute()
+        ;
+
+        $this->index->refresh();
+        $this->assertEquals(36689, $this->index->query()->where('name', 'cavaillon')->first()->population()->get());
+    }
+
+    public function test_bulk()
+    {
+        $this->addCities();
+
+        $this->index->bulk()
+            ->update(fn (UpdateOperation $op) => $op
+                ->id($this->index->query()->where('name', 'cavaillon')->first()->id()->get())
+                ->script('ctx._source.population += 10000')
+            )
+            ->update(fn (UpdateOperation $op) => $op
+                ->id($this->index->query()->where('name', 'parthenay')->first()->id()->get())
+                ->script('ctx._source.population += 10000')
+            )
+            ->refresh()
+            ->execute()
+        ;
+
+        $this->assertEquals(36689, $this->index->query()->where('name', 'cavaillon')->first()->population()->get());
+        $this->assertEquals(21599, $this->index->query()->where('name', 'parthenay')->first()->population()->get());
+    }
+
+    /**
+     * @param array|callable $options
+     */
+    private function addCities($options = [])
     {
         $this->index->create([
             new City([
@@ -573,7 +754,7 @@ class ElasticsearchIndexTest extends IndexTestCase
                 'zipCode' => '000000',
                 'enabled' => false,
             ]),
-        ], $options + ['refresh' => true]);
+        ], is_array($options) ? $options + ['refresh' => true] : $options);
     }
 
     public function test_embedded_functional()

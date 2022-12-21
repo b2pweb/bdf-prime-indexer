@@ -180,6 +180,19 @@ class ES8ClientTest extends TestCase
         $this->assertFalse($this->client->delete('test_index', 'foo'));
     }
 
+    public function test_deleteByQuery()
+    {
+        $this->client->createIndex('test_index', ['mappings' => ['properties' => ['foo' => ['type' => 'text']]]]);
+
+        $this->client->create('test_index', 'foo', ['foo' => 'bar'], true);
+        $this->client->create('test_index', 'oof', ['foo' => 'rab'], true);
+
+        $this->assertSame(1, $this->client->deleteByQuery('test_index', ['query' => ['match' => ['foo' => 'bar']]], ['refresh' => true])['deleted']);
+
+        $this->assertFalse($this->client->exists('test_index', 'foo'));
+        $this->assertTrue($this->client->exists('test_index', 'oof'));
+    }
+
     public function test_update()
     {
         $this->assertFalse($this->client->update('test_index', 'foo', ['doc' => ['foo' => 'rab']]));
@@ -189,6 +202,31 @@ class ES8ClientTest extends TestCase
         $this->client->refreshIndex('test_index');
 
         $this->assertSame(['foo' => 'rab'], $this->client->search('test_index', [])->hits()[0]['_source']);
+    }
+
+    public function test_updateByQuery()
+    {
+        $this->client->createIndex('test_index', ['mappings' => ['properties' => ['foo' => ['type' => 'text']]]]);
+
+        $this->client->create('test_index', 'foo', ['foo' => 'bar'], true);
+        $this->client->create('test_index', 'oof', ['foo' => 'rab'], true);
+
+        $this->assertSame(1, $this->client->updateByQuery('test_index', ['query' => ['match' => ['foo' => 'bar']], 'script' => 'ctx._source.foo += "a"'], ['refresh' => true])['updated']);
+
+        $this->assertEquals([
+            [
+                '_index' => 'test_index',
+                '_id' => 'oof',
+                '_score' => 1.0,
+                '_source' => ['foo' => 'rab'],
+            ],
+            [
+                '_index' => 'test_index',
+                '_id' => 'foo',
+                '_score' => 1.0,
+                '_source' => ['foo' => 'bara'],
+            ],
+        ], $this->client->search('test_index', [])->hits());
     }
 
     public function test_update_invalid_query()

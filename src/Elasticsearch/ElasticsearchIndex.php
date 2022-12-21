@@ -7,9 +7,11 @@ use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\ElasticsearchExceptionInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Bulk\ElasticsearchBulkQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertyInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
+use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchUpdateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\WriteResultSet;
 use Bdf\Prime\Indexer\Exception\InvalidQueryException;
 use Bdf\Prime\Indexer\Exception\QueryExecutionException;
@@ -136,62 +138,54 @@ class ElasticsearchIndex implements IndexInterface
     /**
      * {@inheritdoc}
      */
-    public function create(iterable $entities = [], array $options = []): void
+    public function create(iterable $entities = [], $options = []): void
     {
-        $options += [
-            'useAlias' => true,
-            'dropPreviousIndexes' => true,
-            'chunkSize' => 5000,
-            'refresh' => false,
-        ];
-
-        if (!isset($options['logger'])) {
-            $options['logger'] = new NullLogger();
-        }
+        $options = ElasticsearchCreateIndexOptions::fromOptions($options);
+        $options->logger ??= new NullLogger();
 
         $index = $this->mapper->configuration()->index();
 
-        if ($options['useAlias']) {
+        if ($options->useAlias) {
             $index .= '_' . uniqid();
         }
 
         try {
-            $options['logger']->info('Creating index ' . $index);
+            $options->logger->info('Creating index ' . $index);
             $this->createSchema($index);
 
-            $options['logger']->info('Insert entities into ' . $index);
-            $this->insertAll($index, $options['chunkSize'], $entities);
+            $options->logger->info('Insert entities into ' . $index);
+            $this->insertAll($index, $options, $entities);
 
-            if ($options['dropPreviousIndexes']) {
+            if ($options->dropPreviousIndexes) {
                 $previousAlias = $this->client->getAlias($this->mapper->configuration()->index());
                 $previousIndex = $previousAlias ? $previousAlias->index() : null;
             } else {
                 $previousIndex = null;
             }
 
-            if ($options['useAlias']) {
-                $options['logger']->info('Adding alias for ' . $index . ' to ' . $this->mapper->configuration()->index());
+            if ($options->useAlias) {
+                $options->logger->info('Adding alias for ' . $index . ' to ' . $this->mapper->configuration()->index());
                 $this->client->addAlias($index, $this->mapper->configuration()->index());
             }
 
-            if ($options['dropPreviousIndexes'] && $previousIndex) {
-                $options['logger']->info('Removing previous indexes');
+            if ($options->dropPreviousIndexes && $previousIndex) {
+                $options->logger->info('Removing previous indexes');
                 $this->client->deleteIndex($previousIndex);
             }
 
-            if ($options['refresh']) {
+            if ($options->refresh) {
                 $this->refresh();
             }
         } catch (\Exception|ElasticsearchExceptionInterface $e) {
-            $options['logger']->info('Failed creating index ' . $index . ' : ' . $e->getMessage());
+            $options->logger->info('Failed creating index ' . $index . ' : ' . $e->getMessage());
 
             try {
                 // Delete the index on failure, if alias is used
-                if ($options['useAlias'] && $this->client->hasIndex($index)) {
+                if ($options->useAlias && $this->client->hasIndex($index)) {
                     $this->client->deleteIndex($index);
                 }
             } catch (ElasticsearchExceptionInterface $e) {
-                $options['logger']->error('Failed to remove index ' . $index . ' : ' . $e->getMessage());
+                $options->logger->error('Failed to remove index ' . $index . ' : ' . $e->getMessage());
             }
 
             throw new QueryExecutionException($e->getMessage(), 0, $e);
@@ -224,6 +218,34 @@ class ElasticsearchIndex implements IndexInterface
     public function creationQuery(): ElasticsearchCreateQuery
     {
         return (new ElasticsearchCreateQuery($this->client))
+            ->into($this->mapper->configuration()->index())
+        ;
+    }
+
+    /**
+     * Get query for perform advanced single document update
+     *
+     * @return ElasticsearchUpdateQuery
+     *
+     * @see IndexInterface::update() For perform simple update
+     */
+    public function updateQuery(): ElasticsearchUpdateQuery
+    {
+        return (new ElasticsearchUpdateQuery($this->client, $this->mapper))
+            ->from($this->mapper->configuration()->index())
+        ;
+    }
+
+    /**
+     * Get query object for perform bulk writes
+     *
+     * @return ElasticsearchBulkQuery
+     *
+     * @see ElasticsearchIndex::creationQuery() If you want to perform only creations
+     */
+    public function bulk(): ElasticsearchBulkQuery
+    {
+        return (new ElasticsearchBulkQuery($this->client, $this->mapper))
             ->into($this->mapper->configuration()->index())
         ;
     }
@@ -350,17 +372,29 @@ class ElasticsearchIndex implements IndexInterface
      * Insert all entities into the index
      *
      * @param string $index The index name to use
-     * @param int $chunkSize The insert chunk size
+     * @param ElasticsearchCreateIndexOptions $options
      * @param iterable $entities
      *
      * @throws QueryExecutionException
      */
-    private function insertAll(string $index, int $chunkSize, iterable $entities): void
+    private function insertAll(string $index, ElasticsearchCreateIndexOptions $options, iterable $entities): void
     {
-        $query = $this->creationQuery()->into($index);
+        $query = $options->useBulkWriteQuery ? $this->bulk() : $this->creationQuery()->bulk();
+        $query->into($index);
+
+        $chunkSize = $options->chunkSize;
+        $configurator = $options->queryConfigurator;
 
         foreach ($entities as $entity) {
-            $query->values($this->mapper->toIndex($entity));
+            if ($configurator) {
+                $configurator($query, $entity);
+            } elseif ($options->useBulkWriteQuery) {
+                /** @var ElasticsearchBulkQuery $query */
+                $query->index($entity);
+            } else {
+                /** @var ElasticsearchCreateQuery $query */
+                $query->values($this->mapper->toIndex($entity));
+            }
 
             if (count($query) >= $chunkSize) {
                 $query->execute();

@@ -956,4 +956,208 @@ class ElasticsearchQueryTest extends IndexTestCase
             'country' => 'FR'
         ], $response->get(1));
     }
+
+    public function test_update_simple()
+    {
+        $create = new ElasticsearchCreateQuery(self::getClient());
+        $create
+            ->into('test_cities', 'city')
+            ->values([
+                'name' => 'Paris',
+                'population' => 2201578,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Paris',
+                'population' => 27022,
+                'country' => 'US'
+            ])
+            ->values([
+                'name' => 'Parthenay',
+                'population' => 11599,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Cavaillon',
+                'population' => 26689,
+                'country' => 'FR'
+            ])
+            ->refresh()
+            ->execute()
+        ;
+
+        $result = $this->query->from('test_cities')
+            ->where('population', '>', 20000)
+            ->update('ctx._source.population += 10000')
+        ;
+
+        $this->assertTrue($result->hasWrite());
+        $this->assertTrue($result->isWrite());
+        $this->assertFalse($result->isRead());
+        $this->assertEquals(3, $result->total());
+        $this->assertEquals(3, $result->updated());
+        $this->assertEquals(3, count($result));
+        $this->assertEquals(0, $result->deleted());
+        $this->assertEquals(0, $result->noops());
+
+        self::getClient()->refreshIndex('test_cities');
+
+        $this->assertEquals([
+            [
+                'name' => 'Paris',
+                'population' => 2211578,
+                'country' => 'FR'
+            ],
+            [
+                'name' => 'Paris',
+                'population' => 37022,
+                'country' => 'US'
+            ],
+            [
+                'name' => 'Cavaillon',
+                'population' => 36689,
+                'country' => 'FR'
+            ],
+        ], $this->query->map(fn ($doc) => $doc['_source'])->all());
+    }
+
+    public function test_update_noop()
+    {
+        $create = new ElasticsearchCreateQuery(self::getClient());
+        $create
+            ->into('test_cities', 'city')
+            ->values([
+                'name' => 'Paris',
+                'population' => 2201578,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Paris',
+                'population' => 27022,
+                'country' => 'US'
+            ])
+            ->values([
+                'name' => 'Parthenay',
+                'population' => 11599,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Cavaillon',
+                'population' => 26689,
+                'country' => 'FR'
+            ])
+            ->refresh()
+            ->execute()
+        ;
+
+        $result = $this->query->from('test_cities')
+            ->where('population', '>', 20000)
+            ->update('ctx.op = "noop"')
+        ;
+
+        $this->assertFalse($result->hasWrite());
+        $this->assertTrue($result->isWrite());
+        $this->assertFalse($result->isRead());
+        $this->assertEquals(3, $result->total());
+        $this->assertEquals(0, $result->updated());
+        $this->assertEquals(0, count($result));
+        $this->assertEquals(0, $result->deleted());
+        $this->assertEquals(3, $result->noops());
+    }
+
+    public function test_update_delete()
+    {
+        $create = new ElasticsearchCreateQuery(self::getClient());
+        $create
+            ->into('test_cities', 'city')
+            ->values([
+                'name' => 'Paris',
+                'population' => 2201578,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Paris',
+                'population' => 27022,
+                'country' => 'US'
+            ])
+            ->values([
+                'name' => 'Parthenay',
+                'population' => 11599,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Cavaillon',
+                'population' => 26689,
+                'country' => 'FR'
+            ])
+            ->refresh()
+            ->execute()
+        ;
+
+        $result = $this->query->from('test_cities')
+            ->where('population', '>', 20000)
+            ->update('ctx.op = "delete"')
+        ;
+
+        $this->assertTrue($result->hasWrite());
+        $this->assertTrue($result->isWrite());
+        $this->assertFalse($result->isRead());
+        $this->assertEquals(3, $result->total());
+        $this->assertEquals(0, $result->updated());
+        $this->assertEquals(3, count($result));
+        $this->assertEquals(3, $result->deleted());
+        $this->assertEquals(0, $result->noops());
+
+        self::getClient()->refreshIndex('test_cities');
+
+        $this->assertEmpty($this->query->all());
+    }
+
+    public function test_delete()
+    {
+        $create = new ElasticsearchCreateQuery(self::getClient());
+        $create
+            ->into('test_cities', 'city')
+            ->values([
+                'name' => 'Paris',
+                'population' => 2201578,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Paris',
+                'population' => 27022,
+                'country' => 'US'
+            ])
+            ->values([
+                'name' => 'Parthenay',
+                'population' => 11599,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Cavaillon',
+                'population' => 26689,
+                'country' => 'FR'
+            ])
+            ->refresh()
+            ->execute()
+        ;
+
+        $result = $this->query->from('test_cities')
+            ->where('population', '>', 20000)
+            ->delete()
+        ;
+
+        $this->assertTrue($result->hasWrite());
+        $this->assertTrue($result->isWrite());
+        $this->assertFalse($result->isRead());
+        $this->assertEquals(3, $result->total());
+        $this->assertEquals(0, $result->updated());
+        $this->assertEquals(3, count($result));
+        $this->assertEquals(3, $result->deleted());
+        $this->assertEquals(0, $result->noops());
+
+        self::getClient()->refreshIndex('test_cities');
+
+        $this->assertEmpty($this->query->all());
+    }
 }

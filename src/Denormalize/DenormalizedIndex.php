@@ -77,7 +77,7 @@ final class DenormalizedIndex implements IndexInterface
     /**
      * {@inheritdoc}
      */
-    public function create(iterable $entities = [], array $options = []): void
+    public function create(iterable $entities = [], $options = []): void
     {
         $this->index->create(
             Streams::wrap($entities)->map([$this->denormalizer, 'denormalize']),

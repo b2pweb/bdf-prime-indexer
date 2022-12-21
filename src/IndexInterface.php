@@ -94,16 +94,19 @@ interface IndexInterface
      * - useAlias (boolean) default: true, write to an alias index
      * - dropPreviousIndexes (boolean) default: true, drop all previous declared indexes
      * - chunkSize (integer) default: 5000, the bulk write size for indexing entities
+     * - logger (LoggerInterface)
      *
-     * @param iterable $entities Iterable entities list. Can be a walker, or a simple array
-     * @param array $options Creation options depends of the indexer
+     * @param iterable $entities Iterable entities list. Can be a walker, or a simple array.
+     * @param array|callable(CreateIndexOptions):void $options Configure creation options.
      *
      * @return void
      *
      * @throws QueryExecutionException When query execution failed
      * @throws InvalidQueryException When the query is invalid and cannot be compiled or executed
+     *
+     * @see CreateIndexOptions
      */
-    public function create(iterable $entities = [], array $options = []): void;
+    public function create(iterable $entities = [], $options = []): void;
 
     /**
      * Remove the current index
