@@ -10,7 +10,7 @@ use Bdf\Prime\Indexer\IndexFactory;
 final class UpdateIndexedEntity
 {
     /**
-     * @var string
+     * @var class-string
      */
     private string $index;
 
@@ -23,7 +23,7 @@ final class UpdateIndexedEntity
     /**
      * UpdateIndexedEntity constructor.
      *
-     * @param string $index The index name
+     * @param class-string $index The index name
      * @param object $entity The entity to update
      */
     public function __construct(string $index, object $entity)
@@ -35,7 +35,7 @@ final class UpdateIndexedEntity
     /**
      * Get the index name
      *
-     * @return string
+     * @return class-string
      */
     public function index(): string
     {

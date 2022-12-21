@@ -5,7 +5,8 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query\Bulk;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
 use Bdf\Prime\Indexer\Exception\InvalidQueryException;
-use City;
+use ElasticsearchTestFiles\City;
+use ElasticsearchTestFiles\CityIndex;
 use PHPUnit\Framework\TestCase;
 
 class UpdateOperationTest extends TestCase
@@ -46,7 +47,7 @@ class UpdateOperationTest extends TestCase
             'country' => 'FR',
         ]));
 
-        $mapper = new ElasticsearchMapper(new \CityIndex());
+        $mapper = new ElasticsearchMapper(new CityIndex());
 
         $this->assertSame('update', $op->name());
         $this->assertSame(['_id' => '3'], $op->metadata($mapper));
@@ -84,7 +85,7 @@ class UpdateOperationTest extends TestCase
 
         $op->upsert();
 
-        $mapper = new ElasticsearchMapper(new \CityIndex());
+        $mapper = new ElasticsearchMapper(new CityIndex());
 
         $this->assertSame('update', $op->name());
         $this->assertSame(['_id' => '3'], $op->metadata($mapper));
@@ -111,7 +112,7 @@ class UpdateOperationTest extends TestCase
             'country' => 'FR',
         ]));
 
-        $mapper = new ElasticsearchMapper(new \CityIndex());
+        $mapper = new ElasticsearchMapper(new CityIndex());
 
         $this->assertSame('update', $op->name());
         $this->assertSame(['_id' => '3'], $op->metadata($mapper));
@@ -141,7 +142,7 @@ class UpdateOperationTest extends TestCase
             'country' => 'FR',
         ]));
 
-        $mapper = new ElasticsearchMapper(new \CityIndex());
+        $mapper = new ElasticsearchMapper(new CityIndex());
 
         $this->assertSame('update', $op->name());
         $this->assertSame(['_id' => '3'], $op->metadata($mapper));

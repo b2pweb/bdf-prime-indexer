@@ -3,19 +3,19 @@
 namespace Bdf\Prime\Indexer\Elasticsearch;
 
 use Bdf\Collection\Stream\Streams;
-use Bdf\Prime\Exception\PrimeException;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\ElasticsearchExceptionInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
-use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Bulk\ElasticsearchBulkQuery;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertyInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchUpdateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\WriteResultSet;
 use Bdf\Prime\Indexer\Exception\InvalidQueryException;
 use Bdf\Prime\Indexer\Exception\QueryExecutionException;
+use Bdf\Prime\Indexer\Exception\ScopeNotFoundException;
 use Bdf\Prime\Indexer\IndexInterface;
 use Bdf\Prime\Indexer\QueryInterface;
 use Psr\Log\NullLogger;
@@ -276,7 +276,7 @@ class ElasticsearchIndex implements IndexInterface
     public function __call(string $name, array $arguments): QueryInterface
     {
         if (!isset($this->mapper->scopes()[$name])) {
-            throw new InvalidQueryException('The scope '.$name.' cannot be found');
+            throw new ScopeNotFoundException($this->config()->entity(), $name);
         }
 
         $query = $this->query();
@@ -363,9 +363,7 @@ class ElasticsearchIndex implements IndexInterface
     private function compileProperties(): array
     {
         return Streams::wrap($this->mapper->properties())
-            ->map(function (Property $property) {
-                return ['type' => $property->type()] + $property->declaration();
-            })
+            ->map(fn(PropertyInterface $property) => ['type' => $property->type()] + $property->declaration())
             ->toArray()
         ;
     }

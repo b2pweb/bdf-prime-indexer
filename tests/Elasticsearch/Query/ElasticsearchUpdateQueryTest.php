@@ -7,6 +7,8 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Expression\Script;
 use Bdf\Prime\Indexer\Exception\InvalidQueryException;
 use Bdf\Prime\Indexer\IndexTestCase;
+use ElasticsearchTestFiles\City;
+use ElasticsearchTestFiles\CityIndex;
 use stdClass;
 
 class ElasticsearchUpdateQueryTest extends IndexTestCase
@@ -18,7 +20,7 @@ class ElasticsearchUpdateQueryTest extends IndexTestCase
     {
         $this->query = new ElasticsearchUpdateQuery(
             self::getClient(),
-            $this->mapper = new ElasticsearchMapper(new \CityIndex())
+            $this->mapper = new ElasticsearchMapper(new CityIndex())
         );
 
         $this->query->from('test_cities');
@@ -34,13 +36,13 @@ class ElasticsearchUpdateQueryTest extends IndexTestCase
     public function test_update_simple()
     {
         $index = new ElasticsearchIndex(self::getClient(), $this->mapper);
-        $index->add($marseille = new \City([
+        $index->add($marseille = new City([
             'name' => 'Marseille',
             'zipCode' => '13001',
             'population' => 861635,
             'country' => 'FR'
         ]));
-        $index->add($paris = new \City([
+        $index->add($paris = new City([
             'name' => 'Paris',
             'zipCode' => '75001',
             'population' => 2161000,
@@ -87,7 +89,7 @@ class ElasticsearchUpdateQueryTest extends IndexTestCase
     public function test_update_with_id_field_on_document()
     {
         $index = new ElasticsearchIndex(self::getClient(), $this->mapper);
-        $index->add($marseille = new \City([
+        $index->add($marseille = new City([
             'name' => 'Marseille',
             'zipCode' => '13001',
             'population' => 861635,
@@ -121,13 +123,13 @@ class ElasticsearchUpdateQueryTest extends IndexTestCase
     public function test_update_with_entity()
     {
         $index = new ElasticsearchIndex(self::getClient(), $this->mapper);
-        $index->add($marseille = new \City([
+        $index->add($marseille = new City([
             'name' => 'Marseille',
             'zipCode' => '13001',
             'population' => 861635,
             'country' => 'FR'
         ]));
-        $index->add($paris = new \City([
+        $index->add($paris = new City([
             'name' => 'Paris',
             'zipCode' => '75001',
             'population' => 2161000,
@@ -174,14 +176,14 @@ class ElasticsearchUpdateQueryTest extends IndexTestCase
     public function test_upsert_simple()
     {
         $index = new ElasticsearchIndex(self::getClient(), $this->mapper);
-        $index->add($paris = new \City([
+        $index->add($paris = new City([
             'name' => 'Paris',
             'zipCode' => '75001',
             'population' => 2161000,
             'country' => 'FR'
         ]));
 
-        $marseille = new \City([
+        $marseille = new City([
             'name' => 'Marseille',
             'zipCode' => '13001',
             'population' => 861635,
@@ -258,13 +260,13 @@ class ElasticsearchUpdateQueryTest extends IndexTestCase
     public function test_update_script()
     {
         $index = new ElasticsearchIndex(self::getClient(), $this->mapper);
-        $index->add($marseille = new \City([
+        $index->add($marseille = new City([
             'name' => 'Marseille',
             'zipCode' => '13001',
             'population' => 861635,
             'country' => 'FR'
         ]));
-        $index->add($paris = new \City([
+        $index->add($paris = new City([
             'name' => 'Paris',
             'zipCode' => '75001',
             'population' => 2161000,
@@ -359,7 +361,7 @@ class ElasticsearchUpdateQueryTest extends IndexTestCase
     {
         $index = new ElasticsearchIndex(self::getClient(), $this->mapper);
 
-        $marseille = new \City([
+        $marseille = new City([
             'name' => 'Marseille',
             'zipCode' => '13001',
             'population' => 861635,

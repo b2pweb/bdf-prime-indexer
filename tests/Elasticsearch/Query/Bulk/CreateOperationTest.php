@@ -4,7 +4,8 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query\Bulk;
 
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
-use City;
+use ElasticsearchTestFiles\City;
+use ElasticsearchTestFiles\CityIndex;
 use PHPUnit\Framework\TestCase;
 
 class CreateOperationTest extends TestCase
@@ -46,7 +47,7 @@ class CreateOperationTest extends TestCase
             'country' => 'FR',
         ]));
 
-        $mapper = new ElasticsearchMapper(new \CityIndex());
+        $mapper = new ElasticsearchMapper(new CityIndex());
 
         $this->assertSame('create', $op->name());
         $this->assertSame(['_id' => 3], $op->metadata($mapper));

@@ -3,12 +3,11 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Query\Bulk;
 
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
-use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Bdf\Prime\Indexer\IndexTestCase;
-use City;
-use CityIndex;
+use ElasticsearchTestFiles\City;
+use ElasticsearchTestFiles\CityIndex;
 
 class ElasticsearchBulkQueryTest extends IndexTestCase
 {
@@ -153,11 +152,11 @@ class ElasticsearchBulkQueryTest extends IndexTestCase
     {
         $this->query
             ->into('test_cities')
-            ->index(new \City([
+            ->index(new City([
                 'name' => 'Paris',
                 'zipCode' => '75001'
             ]))
-            ->index(new \City([
+            ->index(new City([
                 'name' => 'Marseille',
                 'zipCode' => '13001'
             ]))
@@ -266,11 +265,11 @@ class ElasticsearchBulkQueryTest extends IndexTestCase
     {
         $this->query
             ->into('test_cities')
-            ->create(new \City([
+            ->create(new City([
                 'name' => 'Paris',
                 'zipCode' => '75001'
             ]))
-            ->create(new \City([
+            ->create(new City([
                 'name' => 'Marseille',
                 'zipCode' => '13001'
             ]))

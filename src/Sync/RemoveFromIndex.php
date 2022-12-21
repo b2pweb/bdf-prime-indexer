@@ -10,7 +10,7 @@ use Bdf\Prime\Indexer\IndexFactory;
 final class RemoveFromIndex
 {
     /**
-     * @var string
+     * @var class-string
      */
     private string $index;
 
@@ -23,7 +23,7 @@ final class RemoveFromIndex
     /**
      * RemoveFromIndex constructor.
      *
-     * @param string $index The index name
+     * @param class-string $index The index name
      * @param object $entity The entity to remove
      */
     public function __construct(string $index, object $entity)
@@ -35,7 +35,7 @@ final class RemoveFromIndex
     /**
      * Get the index name
      *
-     * @return string
+     * @return class-string
      */
     public function index(): string
     {

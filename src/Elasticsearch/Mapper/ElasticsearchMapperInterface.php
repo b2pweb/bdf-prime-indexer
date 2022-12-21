@@ -3,7 +3,7 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Mapper;
 
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\AnalyzerInterface;
-use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertyInterface;
 
 /**
  * Mapper for Elasticsearch index
@@ -21,7 +21,7 @@ interface ElasticsearchMapperInterface
      * Get the list of indexed properties of the entity
      * The properties are indexed by the index field name
      *
-     * @return Property[]
+     * @return PropertyInterface[]
      */
     public function properties(): array;
 

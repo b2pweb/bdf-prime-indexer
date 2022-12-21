@@ -11,8 +11,10 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\EmbeddedAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\ReadOnlyAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAccessor;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\ObjectProperty;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
+use ElasticsearchTestFiles\UserIndex;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -27,7 +29,7 @@ class PropertiesBuilderTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->builder = new PropertiesBuilder(new ElasticsearchMapper(new \UserIndex()));
+        $this->builder = new PropertiesBuilder(new ElasticsearchMapper(new UserIndex()));
     }
 
     /**
@@ -38,6 +40,25 @@ class PropertiesBuilderTest extends TestCase
         $this->builder->$type('my_field');
 
         $this->assertEquals(['my_field' => $expected], $this->builder->build());
+    }
+
+    public function test_object()
+    {
+        $this->builder->object('my_field', \City::class, function (PropertiesBuilder $builder) {
+            $builder
+                ->text('name')
+                ->keyword('zipCode')
+                ->keyword('country')
+            ;
+        });
+
+        $this->assertEquals([
+            'my_field' => new ObjectProperty('my_field', \City::class, [
+                'name' => new Property('name', [], new StandardAnalyzer(), 'text', new SimplePropertyAccessor('name')),
+                'zipCode' => new Property('zipCode', [], new StandardAnalyzer(), 'keyword', new SimplePropertyAccessor('zipCode')),
+                'country' => new Property('country', [], new StandardAnalyzer(), 'keyword', new SimplePropertyAccessor('country')),
+            ], new SimplePropertyAccessor('my_field'))
+        ], $this->builder->build());
     }
 
     /**

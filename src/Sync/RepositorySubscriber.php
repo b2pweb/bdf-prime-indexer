@@ -19,7 +19,7 @@ final class RepositorySubscriber
     private $dispatcher;
 
     /**
-     * @var string
+     * @var class-string
      */
     private string $index;
 
@@ -34,7 +34,7 @@ final class RepositorySubscriber
      *
      * @param MessageDispatcherInterface|MessageBusInterface $dispatcher The message bus for perform index operations
      * @psalm-param MessageBusInterface $dispatcher
-     * @param string $index The index name
+     * @param class-string $index The index name
      * @param object $config The index configuration
      */
     public function __construct($dispatcher, string $index, object $config)

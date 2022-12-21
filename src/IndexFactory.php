@@ -2,6 +2,10 @@
 
 namespace Bdf\Prime\Indexer;
 
+use Bdf\Prime\Indexer\Exception\IndexNotFoundException;
+use Bdf\Prime\Indexer\Resolver\IndexResolverInterface;
+use Bdf\Prime\Indexer\Resolver\MappingResolver;
+use Psr\Container\ContainerInterface;
 use Bdf\Prime\Indexer\Exception\IndexConfigurationException;
 
 /**
@@ -10,37 +14,57 @@ use Bdf\Prime\Indexer\Exception\IndexConfigurationException;
 class IndexFactory
 {
     /**
-     * @var array<class-string, callable(object):IndexInterface>
+     * @var array<class-string, callable(object, IndexFactory):IndexInterface>
      */
-    private array $factories = [];
+    private $factories;
 
     /**
-     * @var array<string, object>
+     * @var IndexResolverInterface
      */
-    private array $configurations = [];
+    private $resolver;
 
     /**
      * Index instances, by entity class name
      *
-     * @var array<string, IndexInterface>
+     * @var array<class-string, IndexInterface>
      */
-    private array $indexes = [];
+    private $indexes = [];
 
 
     /**
      * IndexerFactory constructor.
      *
-     * @param callable[] $factories
-     * @param array $configurations
+     * @param array<class-string, callable(object, IndexFactory):IndexInterface> $factories
+     * @param IndexResolverInterface|array<class-string, IndexConfigurationInterface> $resolver
      */
-    public function __construct(array $factories, array $configurations)
+    public function __construct(array $factories, /*IndexResolverInterface */$resolver)
     {
+        if (is_array($resolver)) {
+            @trigger_error('Passing array of configuration at second parameter of ' . __METHOD__ . ' is deprecated since 2.0', E_USER_DEPRECATED);
+            $resolver = new MappingResolver(
+                new class implements ContainerInterface {
+                    public function get(string $id)
+                    {
+                        return null;
+                    }
+
+                    public function has(string $id): bool
+                    {
+                        return false;
+                    }
+                },
+                $resolver
+            );
+        }
+
         $this->factories = $factories;
-        $this->configurations = $configurations;
+        $this->resolver = $resolver;
     }
 
     /**
-     * @param string $entity
+     * Create the index for the given entity
+     *
+     * @param class-string $entity Entity class name
      *
      * @return IndexInterface
      * @throws IndexConfigurationException When cannot find any valid configuration for the given entity
@@ -51,15 +75,15 @@ class IndexFactory
             return $this->indexes[$entity];
         }
 
-        $configuration = $this->configurations[$entity] ?? null;
+        $configuration = $this->resolver->resolve($entity);
 
         if (!$configuration) {
-            throw new IndexConfigurationException('Cannot found a configuration for entity ' . $entity);
+            throw new IndexNotFoundException($entity);
         }
 
         foreach ($this->factories as $name => $factory) {
             if ($configuration instanceof $name) {
-                return $this->indexes[$entity] = $factory($configuration);
+                return $this->indexes[$entity] = $factory($configuration, $this);
             }
         }
 
@@ -69,11 +93,18 @@ class IndexFactory
     /**
      * Register a new entity in the indexer system
      *
-     * @param string $entity The entity class name
+     * @param class-string $entity The entity class name
      * @param object $config The index configuration
+     *
+     * @deprecated Since 2.0. Inject IndexResolverInterface at constructor instead.
      */
     public function register(string $entity, object $config): void
     {
-        $this->configurations[$entity] = $config;
+        if (!$this->resolver instanceof MappingResolver) {
+            throw new \LogicException('Cannot call register on the given IndexResolverInterface instance.');
+        }
+
+        /** @psalm-suppress ArgumentTypeCoercion */
+        $this->resolver->register($config, $entity);
     }
 }

@@ -13,8 +13,13 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\Expression\Script;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Bdf\Prime\Indexer\Exception\InvalidQueryException;
 use Bdf\Prime\Indexer\IndexTestCase;
-use City;
-use CityIndex;
+use ElasticsearchTestFiles\City;
+use ElasticsearchTestFiles\CityIndex;
+use ElasticsearchTestFiles\ContainerEntity;
+use ElasticsearchTestFiles\ContainerEntityIndex;
+use ElasticsearchTestFiles\EmbeddedEntity;
+use ElasticsearchTestFiles\UserIndex;
+use ElasticsearchTestFiles\WithAnonAnalyzerIndex;
 
 /**
  * Class ElasticsearchIndexTest
@@ -288,7 +293,7 @@ class ElasticsearchIndexTest extends IndexTestCase
     public function test_scope_not_found()
     {
         $this->expectException(InvalidQueryException::class);
-        $this->expectExceptionMessage('The scope notFound cannot be found');
+        $this->expectExceptionMessage('The scope "notFound" cannot be found for the entity "ElasticsearchTestFiles\City"');
 
         $this->index->notFound('par');
     }
@@ -376,6 +381,52 @@ class ElasticsearchIndexTest extends IndexTestCase
     /**
      *
      */
+    public function test_unit_create_schema_with_embedded()
+    {
+        $expected = [
+            'settings' => [
+                'analysis' => [
+                    'analyzer' => [
+                        'default' => [
+                            'type' => 'standard',
+                        ]
+                    ],
+                ],
+            ],
+            'mappings' => [
+                'properties' => [
+                    'name' => [
+                        'type' => 'text'
+                    ],
+                    'foo' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'key' => ['type' => 'keyword'],
+                            'value' => ['type' => 'integer'],
+                        ],
+                    ],
+                    'bar' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'key' => ['type' => 'keyword'],
+                            'value' => ['type' => 'integer'],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $client = $this->createMock(ClientInterface::class);
+        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new ContainerEntityIndex()));
+
+        $client->expects($this->once())->method('createIndex')->with('containers', $expected);
+
+        $index->create([], ['useAlias' => false]);
+    }
+
+    /**
+     *
+     */
     public function test_unit_create_schema_with_custom_analyzer()
     {
         $expected = [
@@ -423,7 +474,7 @@ class ElasticsearchIndexTest extends IndexTestCase
         ];
 
         $client = $this->createMock(ClientInterface::class);
-        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new \UserIndex()));
+        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new UserIndex()));
 
         $client->expects($this->once())->method('createIndex')->with('test_users', $expected);
 
@@ -469,7 +520,7 @@ class ElasticsearchIndexTest extends IndexTestCase
         ];
 
         $client = $this->createMock(ClientInterface::class);
-        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new \WithAnonAnalyzerIndex()));
+        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new WithAnonAnalyzerIndex()));
 
         $client->expects($this->once())->method('createIndex')->with('test_anon_analyzers', $expected);
 
@@ -704,5 +755,49 @@ class ElasticsearchIndexTest extends IndexTestCase
                 'enabled' => false,
             ]),
         ], is_array($options) ? $options + ['refresh' => true] : $options);
+    }
+
+    public function test_embedded_functional()
+    {
+        $index = new ElasticsearchIndex(self::getClient(), new ElasticsearchMapper(new ContainerEntityIndex()));
+        $index->create([
+            $entity1 = (new ContainerEntity())
+                ->setId('a')
+                ->setName('Jean Machin')
+                ->setFoo((new EmbeddedEntity())->setKey('abc')->setValue(123))
+                ->setBar((new EmbeddedEntity())->setKey('xyz')->setValue(456)),
+            $entity2 = (new ContainerEntity())
+                ->setId('b')
+                ->setName('François Bidule')
+                ->setFoo((new EmbeddedEntity())->setKey('aqw')->setValue(741))
+                ->setBar((new EmbeddedEntity())->setKey('zsx')->setValue(852)),
+        ]);
+        $index->refresh();
+
+        $this->assertEqualsCanonicalizing([
+            [
+                'name' => 'Jean Machin',
+                'foo' => [
+                    'key' => 'abc',
+                    'value' => 123,
+                ],
+                'bar' => [
+                    'key' => 'xyz',
+                    'value' => 456,
+                ],
+            ],
+            [
+                'name' => 'François Bidule',
+                'foo' => [
+                    'key' => 'aqw',
+                    'value' => 741,
+                ],
+                'bar' => [
+                    'key' => 'zsx',
+                    'value' => 852,
+                ],
+            ],
+        ], array_map(fn ($a) => $a['_source'], $index->query()->execute()->hits()));
+        $this->assertEqualsCanonicalizing([$entity1, $entity2], $index->query()->all());
     }
 }

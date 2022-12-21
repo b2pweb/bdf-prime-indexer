@@ -8,10 +8,14 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\StandardAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAccessor;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\ObjectProperty;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
 use Bdf\Prime\Indexer\IndexTestCase;
-use City;
-use WithAnonAnalyzerIndex;
+use ElasticsearchTestFiles\City;
+use ElasticsearchTestFiles\CityIndex;
+use ElasticsearchTestFiles\ContainerEntityIndex;
+use ElasticsearchTestFiles\EmbeddedEntity;
+use ElasticsearchTestFiles\WithAnonAnalyzerIndex;
 
 /**
  * Class ElasticsearchMapperTest
@@ -25,7 +29,7 @@ class ElasticsearchMapperTest extends IndexTestCase
 
     protected function setUp(): void
     {
-        $this->mapper = new ElasticsearchMapper(new \CityIndex());
+        $this->mapper = new ElasticsearchMapper(new CityIndex());
     }
 
     /**
@@ -33,7 +37,7 @@ class ElasticsearchMapperTest extends IndexTestCase
      */
     public function test_configuration()
     {
-        $this->assertInstanceOf(\CityIndex::class, $this->mapper->configuration());
+        $this->assertInstanceOf(CityIndex::class, $this->mapper->configuration());
     }
 
     /**
@@ -77,9 +81,34 @@ class ElasticsearchMapperTest extends IndexTestCase
     /**
      *
      */
+    public function test_properties_with_embedded()
+    {
+        $mapper = new ElasticsearchMapper(new ContainerEntityIndex());
+        $properties = $mapper->properties();
+
+        $expected = [
+            'name' => new Property('name', [], $mapper->analyzers()['default'], 'text', new SimplePropertyAccessor('name')),
+            'foo' => new ObjectProperty('foo', EmbeddedEntity::class, [
+                'key' => new Property('key', [], $mapper->analyzers()['default'], 'keyword', new SimplePropertyAccessor('key')),
+                'value' => new Property('value', [], $mapper->analyzers()['default'], 'integer', new SimplePropertyAccessor('value')),
+            ], new SimplePropertyAccessor('foo')),
+            'bar' => new ObjectProperty('bar', EmbeddedEntity::class, [
+                'key' => new Property('key', [], $mapper->analyzers()['default'], 'keyword', new SimplePropertyAccessor('key')),
+                'value' => new Property('value', [], $mapper->analyzers()['default'], 'integer', new SimplePropertyAccessor('value')),
+            ], new SimplePropertyAccessor('bar')),
+        ];
+
+        $this->assertEquals($expected, $properties);
+
+        $this->assertSame($properties, $mapper->properties());
+    }
+
+    /**
+     *
+     */
     public function test_scopes()
     {
-        $this->assertEquals((new \CityIndex())->scopes(), $this->mapper->scopes());
+        $this->assertEquals((new CityIndex())->scopes(), $this->mapper->scopes());
         $this->assertSame($this->mapper->scopes(), $this->mapper->scopes());
     }
 
@@ -89,7 +118,7 @@ class ElasticsearchMapperTest extends IndexTestCase
     public function test_toIndex_bad_entity()
     {
         $this->expectException(\TypeError::class);
-        $this->expectExceptionMessage('Entity must be an instance of City');
+        $this->expectExceptionMessage('Entity must be an instance of ElasticsearchTestFiles\City');
 
         $this->mapper->toIndex(new \stdClass());
     }

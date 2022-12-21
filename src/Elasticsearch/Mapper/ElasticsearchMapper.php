@@ -9,7 +9,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\ArrayAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\StandardAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
-use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertyInterface;
 use Bdf\Prime\Indexer\Exception\IndexConfigurationException;
 use TypeError;
 
@@ -29,7 +29,7 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
     private InstantiatorInterface $instantiator;
 
     /**
-     * @var array<string, Property>
+     * @var array<string, PropertyInterface>
      */
     private array $properties;
 
@@ -213,7 +213,7 @@ final class ElasticsearchMapper implements ElasticsearchMapperInterface
     }
 
     /**
-     * @return array<string, Property>
+     * @return array<string, PropertyInterface>
      * @throws IndexConfigurationException When mapper build failed
      */
     private function buildProperties(): array
