@@ -2,22 +2,20 @@
 
 namespace Bdf\Prime\Indexer\Exception;
 
-use BadMethodCallException;
-
 /**
  * Call a scope which is not declared
  */
-class ScopeNotFoundException extends BadMethodCallException implements PrimeIndexerException
+class ScopeNotFoundException extends InvalidQueryException
 {
     /**
      * @var class-string
      */
-    private $entity;
+    private string $entity;
 
     /**
      * @var string
      */
-    private $scope;
+    private string $scope;
 
     /**
      * ScopeNotFoundException constructor.

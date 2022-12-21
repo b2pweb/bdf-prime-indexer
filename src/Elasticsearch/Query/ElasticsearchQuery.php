@@ -6,6 +6,7 @@ use Bdf\Collection\Stream\ArrayStream;
 use Bdf\Collection\Stream\StreamInterface;
 use Bdf\Collection\Util\OptionalInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\ElasticsearchExceptionInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Response\SearchResults;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammar;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
@@ -15,6 +16,8 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Exists;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Missing;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\WhereFilter;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\ElasticsearchPaginator;
+use Bdf\Prime\Indexer\Exception\InvalidQueryException;
+use Bdf\Prime\Indexer\Exception\QueryExecutionException;
 use Bdf\Prime\Indexer\QueryInterface;
 use Bdf\Prime\Query\Contract\Limitable;
 use Bdf\Prime\Query\Contract\Orderable;
@@ -552,7 +555,11 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      */
     public function execute(): SearchResults
     {
-        return $this->client->search($this->index, $this->compile());
+        try {
+            return $this->client->search($this->index, $this->compile());
+        } catch (ElasticsearchExceptionInterface $e) {
+            throw new QueryExecutionException($e->getMessage(), 0, $e);
+        }
     }
 
     /**
@@ -590,7 +597,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      *
      * @return array JSONizable array
      */
-    public function compile()
+    public function compile(): array
     {
         $query = $this->query;
 
@@ -643,7 +650,9 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
      * Get "bool" filter query
      *
      * @return BooleanQuery
+     *
      * @psalm-assert BooleanQuery $this->query
+     * @throws InvalidQueryException If the query is not a boolean query
      */
     public function bool(): BooleanQuery
     {
@@ -652,7 +661,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
         }
 
         if (!$this->query instanceof BooleanQuery) {
-            throw new \LogicException('This query is not configured as boolean query.');
+            throw new InvalidQueryException('This query is not configured as boolean query.');
         }
 
         return $this->query;

@@ -2,17 +2,15 @@
 
 namespace Bdf\Prime\Indexer\Exception;
 
-use LogicException;
-
 /**
  * The index configuration is not found
  */
-class IndexNotFoundException extends LogicException implements PrimeIndexerException
+class IndexNotFoundException extends IndexConfigurationException implements PrimeIndexerException
 {
     /**
      * @var class-string
      */
-    private $entity;
+    private string $entity;
 
     /**
      * IndexNotFoundException constructor.

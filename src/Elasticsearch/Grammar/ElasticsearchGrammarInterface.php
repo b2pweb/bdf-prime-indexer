@@ -3,6 +3,7 @@
 namespace Bdf\Prime\Indexer\Elasticsearch\Grammar;
 
 use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
+use Bdf\Prime\Indexer\Exception\InvalidQueryException;
 
 /**
  * Expression grammar for elasticsearch
@@ -15,6 +16,8 @@ interface ElasticsearchGrammarInterface
      * @param string $value
      *
      * @return string
+     *
+     * @throws InvalidQueryException If invalid values are provided
      */
     public function escape($value);
 
@@ -26,6 +29,8 @@ interface ElasticsearchGrammarInterface
      * @param mixed $value
      *
      * @return array
+     *
+     * @throws InvalidQueryException If invalid values are provided
      */
     public function operator($field, $operator, $value);
 
@@ -35,6 +40,8 @@ interface ElasticsearchGrammarInterface
      * @param array|CompilableExpressionInterface $expression
      *
      * @return array
+     *
+     * @throws InvalidQueryException If invalid values are provided
      */
     public function not($expression);
 
@@ -44,6 +51,8 @@ interface ElasticsearchGrammarInterface
      * @param array|CompilableExpressionInterface[] $expressions
      *
      * @return array
+     *
+     * @throws InvalidQueryException If invalid values are provided
      */
     public function or(array $expressions);
 
@@ -57,6 +66,8 @@ interface ElasticsearchGrammarInterface
      * @param bool $escape Does the metacharacters should be escaped ?
      *
      * @return string
+     *
+     * @throws InvalidQueryException If invalid values are provided
      */
     public function likeToWildcard($query, bool $escape = true);
 }

@@ -2,6 +2,7 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Console;
 
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\ElasticsearchExceptionInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Response\Aliases;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -30,6 +31,8 @@ class ShowCommand extends AbstractCommand
 
     /**
      * {@inheritdoc}
+     *
+     * @throws ElasticsearchExceptionInterface
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {

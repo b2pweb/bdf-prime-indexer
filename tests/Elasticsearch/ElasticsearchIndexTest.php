@@ -7,6 +7,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
+use Bdf\Prime\Indexer\Exception\InvalidQueryException;
 use Bdf\Prime\Indexer\IndexTestCase;
 use ElasticsearchTestFiles\City;
 use ElasticsearchTestFiles\CityIndex;
@@ -83,7 +84,7 @@ class ElasticsearchIndexTest extends IndexTestCase
      */
     public function test_remove_without_id()
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidQueryException::class);
 
         $this->index->remove(new City());
     }
@@ -159,7 +160,7 @@ class ElasticsearchIndexTest extends IndexTestCase
      */
     public function test_update_without_id()
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidQueryException::class);
 
         $this->index->update(new City());
     }
@@ -284,8 +285,8 @@ class ElasticsearchIndexTest extends IndexTestCase
      */
     public function test_scope_not_found()
     {
-        $this->expectException(\BadMethodCallException::class);
-        $this->expectExceptionMessage('The scope notFound cannot be found');
+        $this->expectException(InvalidQueryException::class);
+        $this->expectExceptionMessage('The scope "notFound" cannot be found for the entity "ElasticsearchTestFiles\City"');
 
         $this->index->notFound('par');
     }

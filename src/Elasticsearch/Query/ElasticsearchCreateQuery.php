@@ -4,8 +4,11 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
 use Bdf\Prime\Connection\Result\ResultSetInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\ElasticsearchExceptionInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\BulkResultSet;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\WriteResultSet;
+use Bdf\Prime\Indexer\Exception\InvalidQueryException;
+use Bdf\Prime\Indexer\Exception\QueryExecutionException;
 use Bdf\Prime\Query\Contract\BulkWriteBuilderInterface;
 use Bdf\Prime\Query\Contract\SelfExecutable;
 use Countable;
@@ -197,26 +200,32 @@ class ElasticsearchCreateQuery implements BulkWriteBuilderInterface, SelfExecuta
      * {@inheritdoc}
      *
      * @return BulkResultSet|WriteResultSet
+     * @throws QueryExecutionException
+     * @throws InvalidQueryException
      */
     public function execute($columns = null): ResultSetInterface
     {
-        if ($this->bulk) {
-            $query = $this->compileBulk();
+        try {
+            if ($this->bulk) {
+                $query = $this->compileBulk();
 
-            return new BulkResultSet($this->client->bulk($query['body'], $query['refresh'] ?? false));
+                return new BulkResultSet($this->client->bulk($query['body'], $query['refresh'] ?? false));
+            }
+
+            $query = $this->compileSimple();
+
+            if (!isset($query['id'])) {
+                $result = $this->client->index($query['index'], $query['body'], $query['refresh'] ?? false);
+            } elseif ($this->mode === self::MODE_REPLACE) {
+                $result = $this->client->replace($query['index'], $query['id'], $query['body'], $query['refresh'] ?? false);
+            } else {
+                $result = $this->client->create($query['index'], $query['id'], $query['body'], $query['refresh'] ?? false);
+            }
+
+            return new WriteResultSet($result);
+        } catch (ElasticsearchExceptionInterface $e) {
+            throw new QueryExecutionException($e->getMessage(), 0, $e);
         }
-
-        $query = $this->compileSimple();
-
-        if (!isset($query['id'])) {
-            $result = $this->client->index($query['index'], $query['body'], $query['refresh'] ?? false);
-        } elseif ($this->mode === self::MODE_REPLACE) {
-            $result = $this->client->replace($query['index'], $query['id'], $query['body'], $query['refresh'] ?? false);
-        } else {
-            $result = $this->client->create($query['index'], $query['id'], $query['body'], $query['refresh'] ?? false);
-        }
-
-        return new WriteResultSet($result);
     }
 
     /**
@@ -267,8 +276,9 @@ class ElasticsearchCreateQuery implements BulkWriteBuilderInterface, SelfExecuta
      * Compile the query
      *
      * @return array
+     * @throws InvalidQueryException
      */
-    public function compile()
+    public function compile(): array
     {
         return $this->bulk ? $this->compileBulk() : $this->compileSimple();
     }
@@ -277,8 +287,9 @@ class ElasticsearchCreateQuery implements BulkWriteBuilderInterface, SelfExecuta
      * Compile for bulk create
      *
      * @return array
+     * @throws InvalidQueryException
      */
-    private function compileBulk()
+    private function compileBulk(): array
     {
         $body = [];
 
@@ -309,11 +320,12 @@ class ElasticsearchCreateQuery implements BulkWriteBuilderInterface, SelfExecuta
      * Compile for simple create
      *
      * @return array
+     * @throws InvalidQueryException
      */
-    private function compileSimple()
+    private function compileSimple(): array
     {
         if (empty($this->values)) {
-            throw new \InvalidArgumentException('No value to create');
+            throw new InvalidQueryException('No value to create');
         }
 
         $query = [

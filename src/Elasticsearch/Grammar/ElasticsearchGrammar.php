@@ -4,6 +4,7 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Grammar;
 
 use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Wildcard;
+use Bdf\Prime\Indexer\Exception\InvalidQueryException;
 use UnexpectedValueException;
 
 /**
@@ -122,7 +123,7 @@ class ElasticsearchGrammar implements ElasticsearchGrammarInterface
 
             // Unsupported operator
             default:
-                throw new UnexpectedValueException("Unsupported operator '".$operator."' in WHERE clause");
+                throw new InvalidQueryException("Unsupported operator '".$operator."' in WHERE clause");
         }
     }
 

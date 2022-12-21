@@ -3,10 +3,10 @@
 namespace Bdf\Prime\Indexer;
 
 use Bdf\Prime\Indexer\Exception\IndexNotFoundException;
-use Bdf\Prime\Indexer\Exception\InvalidIndexConfigurationException;
 use Bdf\Prime\Indexer\Resolver\IndexResolverInterface;
 use Bdf\Prime\Indexer\Resolver\MappingResolver;
 use Psr\Container\ContainerInterface;
+use Bdf\Prime\Indexer\Exception\IndexConfigurationException;
 
 /**
  * Creates indexes
@@ -67,6 +67,7 @@ class IndexFactory
      * @param class-string $entity Entity class name
      *
      * @return IndexInterface
+     * @throws IndexConfigurationException When cannot find any valid configuration for the given entity
      */
     public function for(string $entity): IndexInterface
     {
@@ -86,7 +87,7 @@ class IndexFactory
             }
         }
 
-        throw new InvalidIndexConfigurationException($entity, $configuration);
+        throw new IndexConfigurationException('Cannot found any factory for configuration '.get_class($configuration));
     }
 
     /**

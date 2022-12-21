@@ -2,6 +2,9 @@
 
 namespace Bdf\Prime\Indexer;
 
+use Bdf\Prime\Indexer\Exception\InvalidQueryException;
+use Bdf\Prime\Indexer\Exception\QueryExecutionException;
+
 /**
  * Store entities for perform complex search
  */
@@ -20,6 +23,9 @@ interface IndexInterface
      * @param object $entity
      *
      * @return void
+     *
+     * @throws QueryExecutionException When query execution failed
+     * @throws InvalidQueryException When the query is invalid and cannot be compiled or executed
      */
     public function add($entity): void;
 
@@ -29,6 +35,9 @@ interface IndexInterface
      * @param object $entity Entity to check
      *
      * @return boolean True if the entity is indexed
+     *
+     * @throws QueryExecutionException When query execution failed
+     * @throws InvalidQueryException When the query is invalid and cannot be compiled or executed
      */
     public function contains($entity): bool;
 
@@ -38,6 +47,9 @@ interface IndexInterface
      * @param object $entity
      *
      * @return void
+     *
+     * @throws QueryExecutionException When query execution failed
+     * @throws InvalidQueryException When the query is invalid and cannot be compiled or executed
      */
     public function remove($entity): void;
 
@@ -48,6 +60,9 @@ interface IndexInterface
      * @param string[]|null $attributes List of attributes to update. If null, all attributes will be updated
      *
      * @return void
+     *
+     * @throws QueryExecutionException When query execution failed
+     * @throws InvalidQueryException When the query is invalid and cannot be compiled or executed
      */
     public function update($entity, ?array $attributes = null): void;
 
@@ -66,6 +81,8 @@ interface IndexInterface
      * @param bool $withDefaultScope Enable or not the default scope
      *
      * @return QueryInterface
+     *
+     * @throws InvalidQueryException When the query is invalid
      */
     public function query(bool $withDefaultScope = true): QueryInterface;
 
@@ -82,6 +99,9 @@ interface IndexInterface
      * @param array $options Creation options depends of the indexer
      *
      * @return void
+     *
+     * @throws QueryExecutionException When query execution failed
+     * @throws InvalidQueryException When the query is invalid and cannot be compiled or executed
      */
     public function create(iterable $entities = [], array $options = []): void;
 
@@ -90,6 +110,8 @@ interface IndexInterface
      * Do not fail if the index do not exists
      *
      * @return void
+     *
+     * @throws QueryExecutionException When query execution failed
      */
     public function drop(): void;
 
@@ -100,6 +122,8 @@ interface IndexInterface
      * @param array $arguments The scope arguments
      *
      * @return QueryInterface
+     *
+     * @throws InvalidQueryException If the score does not exist, or parameters are invalid
      */
     public function __call(string $name, array $arguments): QueryInterface;
 }

@@ -4,6 +4,8 @@ namespace Bdf\Prime\Indexer;
 
 use Bdf\Collection\Stream\Streamable;
 use Bdf\Collection\Util\OptionalInterface;
+use Bdf\Prime\Indexer\Exception\InvalidQueryException;
+use Bdf\Prime\Indexer\Exception\QueryExecutionException;
 use Bdf\Prime\Query\Contract\Whereable;
 
 /**
@@ -15,6 +17,9 @@ interface QueryInterface extends Whereable, Streamable
      * Execute the query
      *
      * @return mixed
+     *
+     * @throws QueryExecutionException When query execution failed
+     * @throws InvalidQueryException When the query is invalid and cannot be compiled or executed
      */
     public function execute();
 
@@ -40,6 +45,9 @@ interface QueryInterface extends Whereable, Streamable
      * Same as : `$query->stream()->toArray()`
      *
      * @return array
+     *
+     * @throws QueryExecutionException When query execution failed
+     * @throws InvalidQueryException When the query is invalid and cannot be compiled or executed
      */
     public function all(): array;
 
@@ -48,6 +56,9 @@ interface QueryInterface extends Whereable, Streamable
      * Same as : `$query->stream()->first()`
      *
      * @return OptionalInterface
+     *
+     * @throws QueryExecutionException When query execution failed
+     * @throws InvalidQueryException When the query is invalid and cannot be compiled or executed
      */
     public function first(): OptionalInterface;
 }
