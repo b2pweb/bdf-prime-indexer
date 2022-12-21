@@ -7,6 +7,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
+use Bdf\Prime\Indexer\IndexFactory;
 use Bdf\Prime\Indexer\IndexInterface;
 use Psr\Container\ContainerInterface;
 
@@ -40,7 +41,7 @@ final class ElasticsearchIndexFactory implements IndexFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function __invoke($config): IndexInterface
+    public function __invoke($config, IndexFactory $factory = null): IndexInterface
     {
         return new ElasticsearchIndex(
             $this->container->get(ClientInterface::class),

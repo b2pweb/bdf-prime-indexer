@@ -14,6 +14,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAcces
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\ObjectProperty;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
+use ElasticsearchTestFiles\UserIndex;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,7 +29,7 @@ class PropertiesBuilderTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->builder = new PropertiesBuilder(new ElasticsearchMapper(new \UserIndex()));
+        $this->builder = new PropertiesBuilder(new ElasticsearchMapper(new UserIndex()));
     }
 
     /**

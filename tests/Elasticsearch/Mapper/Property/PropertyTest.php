@@ -6,6 +6,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\CsvAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\StandardAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
+use ElasticsearchTestFiles\User;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -32,7 +33,7 @@ class PropertyTest extends TestCase
      */
     public function test_readFromModel()
     {
-        $user = new \User();
+        $user = new User();
         $user->setRoles(['3', '7']);
 
         $property = new Property('roles', [], new CsvAnalyzer(), 'string', new SimplePropertyAccessor('roles'));
@@ -44,7 +45,7 @@ class PropertyTest extends TestCase
      */
     public function test_writeToModel()
     {
-        $user = new \User();
+        $user = new User();
 
         $property = new Property('roles', [], new CsvAnalyzer(), 'string', new SimplePropertyAccessor('roles'));
         $property->writeToModel($user, '3,7');

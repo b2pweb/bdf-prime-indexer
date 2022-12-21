@@ -6,10 +6,12 @@ use Bdf\Collection\HashSet;
 use Bdf\Collection\SetInterface;
 use Bdf\Collection\Util\Functor\Consumer\Call;
 use Bdf\Collection\Util\Functor\Predicate\IsInstanceOf;
+use Bdf\Prime\Indexer\Denormalize\DenormalizerInterface;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\IndexFactory;
 use Bdf\Prime\Indexer\IndexInterface;
+use Bdf\Prime\Indexer\Resolver\MappingResolver;
 use Psr\Container\ContainerInterface;
 use ReflectionProperty;
 
@@ -116,7 +118,7 @@ class TestingIndexer
      *
      * Creates the index, if not yet created
      *
-     * @param string|object $entity The entity class, or object
+     * @param class-string|object $entity The entity class, or object
      *
      * @return IndexInterface
      */
@@ -134,6 +136,19 @@ class TestingIndexer
         }
 
         return $index;
+    }
+
+    /**
+     * Flush writes
+     * This method will wait for all writes on indexes
+     */
+    public function flush(): void
+    {
+        foreach ($this->indexes as $index) {
+            if ($index instanceof ElasticsearchIndex) {
+                $index->refresh();
+            }
+        }
     }
 
     /**
@@ -196,7 +211,7 @@ class TestingIndexer
             return $this->configProperty;
         }
 
-        $this->configProperty = new ReflectionProperty($this->factory, 'configurations');
+        $this->configProperty = new ReflectionProperty(MappingResolver::class, 'mapping');
         $this->configProperty->setAccessible(true);
 
         return $this->configProperty;
@@ -204,14 +219,12 @@ class TestingIndexer
 
     private function getConfigurations(): array
     {
-        assert(!!$this->factory);
-        return $this->configurationsProperty()->getValue($this->factory);
+        return $this->configurationsProperty()->getValue($this->container->get(MappingResolver::class));
     }
 
     private function setConfigurations(array $configurations): void
     {
-        assert(!!$this->factory);
-        $this->configurationsProperty()->setValue($this->factory, $configurations);
+        $this->configurationsProperty()->setValue($this->container->get(MappingResolver::class), $configurations);
     }
 
     private function resetIndexesProperty(): void
@@ -224,12 +237,25 @@ class TestingIndexer
         $this->indexesProperty->setValue($this->factory, []);
     }
 
-    private static function toTestingConfiguration(object $config): object
+    /**
+     * @param object|string $config
+     *
+     * @return object
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
+     */
+    private function toTestingConfiguration($config): object
     {
-        if ($config instanceof ElasticsearchIndexConfigurationInterface) {
-            return new ElasticsearchTestingIndexConfig($config);
+        if (is_string($config)) {
+            $config = $this->container->get($config);
         }
 
-        throw new \LogicException('Unsupported config ' . get_class($config));
+        if ($config instanceof ElasticsearchIndexConfigurationInterface) {
+            return new ElasticsearchTestingIndexConfig($config);
+        } elseif ($config instanceof DenormalizerInterface) {
+            return $config;
+        }
+
+        throw new \LogicException('Unsupported config '.get_class($config));
     }
 }

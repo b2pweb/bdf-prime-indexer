@@ -5,9 +5,9 @@ namespace Bdf\Prime\Indexer\Test;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\TestKernel;
-use City;
+use ElasticsearchTestFiles\City;
+use ElasticsearchTestFiles\User;
 use PHPUnit\Framework\TestCase;
-use User;
 
 /**
  * Class TestingIndexerTest

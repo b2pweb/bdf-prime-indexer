@@ -9,9 +9,13 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Bdf\Prime\Indexer\Exception\InvalidQueryException;
 use Bdf\Prime\Indexer\IndexTestCase;
-use City;
-use CityIndex;
-use ContainerEntityIndex;
+use ElasticsearchTestFiles\City;
+use ElasticsearchTestFiles\CityIndex;
+use ElasticsearchTestFiles\ContainerEntity;
+use ElasticsearchTestFiles\ContainerEntityIndex;
+use ElasticsearchTestFiles\EmbeddedEntity;
+use ElasticsearchTestFiles\UserIndex;
+use ElasticsearchTestFiles\WithAnonAnalyzerIndex;
 
 /**
  * Class ElasticsearchIndexTest
@@ -285,7 +289,7 @@ class ElasticsearchIndexTest extends IndexTestCase
     public function test_scope_not_found()
     {
         $this->expectException(InvalidQueryException::class);
-        $this->expectExceptionMessage('The scope notFound cannot be found');
+        $this->expectExceptionMessage('The scope "notFound" cannot be found for the entity "ElasticsearchTestFiles\City"');
 
         $this->index->notFound('par');
     }
@@ -466,7 +470,7 @@ class ElasticsearchIndexTest extends IndexTestCase
         ];
 
         $client = $this->createMock(ClientInterface::class);
-        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new \UserIndex()));
+        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new UserIndex()));
 
         $client->expects($this->once())->method('createIndex')->with('test_users', $expected);
 
@@ -512,7 +516,7 @@ class ElasticsearchIndexTest extends IndexTestCase
         ];
 
         $client = $this->createMock(ClientInterface::class);
-        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new \WithAnonAnalyzerIndex()));
+        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new WithAnonAnalyzerIndex()));
 
         $client->expects($this->once())->method('createIndex')->with('test_anon_analyzers', $expected);
 
@@ -576,16 +580,16 @@ class ElasticsearchIndexTest extends IndexTestCase
     {
         $index = new ElasticsearchIndex(self::getClient(), new ElasticsearchMapper(new ContainerEntityIndex()));
         $index->create([
-            $entity1 = (new \ContainerEntity())
+            $entity1 = (new ContainerEntity())
                 ->setId('a')
                 ->setName('Jean Machin')
-                ->setFoo((new \EmbeddedEntity())->setKey('abc')->setValue(123))
-                ->setBar((new \EmbeddedEntity())->setKey('xyz')->setValue(456)),
-            $entity2 = (new \ContainerEntity())
+                ->setFoo((new EmbeddedEntity())->setKey('abc')->setValue(123))
+                ->setBar((new EmbeddedEntity())->setKey('xyz')->setValue(456)),
+            $entity2 = (new ContainerEntity())
                 ->setId('b')
                 ->setName('François Bidule')
-                ->setFoo((new \EmbeddedEntity())->setKey('aqw')->setValue(741))
-                ->setBar((new \EmbeddedEntity())->setKey('zsx')->setValue(852)),
+                ->setFoo((new EmbeddedEntity())->setKey('aqw')->setValue(741))
+                ->setBar((new EmbeddedEntity())->setKey('zsx')->setValue(852)),
         ]);
         $index->refresh();
 
