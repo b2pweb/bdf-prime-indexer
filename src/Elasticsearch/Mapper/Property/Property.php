@@ -10,7 +10,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInt
  *
  * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/mapping-types.html
  */
-final class Property implements PropertyAccessorInterface
+final class Property implements PropertyInterface
 {
     /**
      * @var string

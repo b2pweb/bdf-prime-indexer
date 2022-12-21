@@ -8,10 +8,13 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\StandardAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAccessor;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\ObjectProperty;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
 use Bdf\Prime\Indexer\IndexTestCase;
 use ElasticsearchTestFiles\City;
 use ElasticsearchTestFiles\CityIndex;
+use ElasticsearchTestFiles\ContainerEntityIndex;
+use ElasticsearchTestFiles\EmbeddedEntity;
 use ElasticsearchTestFiles\WithAnonAnalyzerIndex;
 
 /**
@@ -73,6 +76,31 @@ class ElasticsearchMapperTest extends IndexTestCase
         $this->assertEquals($expected, $properties);
 
         $this->assertSame($properties, $this->mapper->properties());
+    }
+
+    /**
+     *
+     */
+    public function test_properties_with_embedded()
+    {
+        $mapper = new ElasticsearchMapper(new ContainerEntityIndex());
+        $properties = $mapper->properties();
+
+        $expected = [
+            'name' => new Property('name', [], $mapper->analyzers()['default'], 'text', new SimplePropertyAccessor('name')),
+            'foo' => new ObjectProperty('foo', EmbeddedEntity::class, [
+                'key' => new Property('key', [], $mapper->analyzers()['default'], 'keyword', new SimplePropertyAccessor('key')),
+                'value' => new Property('value', [], $mapper->analyzers()['default'], 'integer', new SimplePropertyAccessor('value')),
+            ], new SimplePropertyAccessor('foo')),
+            'bar' => new ObjectProperty('bar', EmbeddedEntity::class, [
+                'key' => new Property('key', [], $mapper->analyzers()['default'], 'keyword', new SimplePropertyAccessor('key')),
+                'value' => new Property('value', [], $mapper->analyzers()['default'], 'integer', new SimplePropertyAccessor('value')),
+            ], new SimplePropertyAccessor('bar')),
+        ];
+
+        $this->assertEquals($expected, $properties);
+
+        $this->assertSame($properties, $mapper->properties());
     }
 
     /**

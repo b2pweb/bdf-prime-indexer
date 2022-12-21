@@ -7,7 +7,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\ElasticsearchExceptionInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
-use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertyInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\WriteResultSet;
@@ -341,9 +341,7 @@ class ElasticsearchIndex implements IndexInterface
     private function compileProperties(): array
     {
         return Streams::wrap($this->mapper->properties())
-            ->map(function (Property $property) {
-                return ['type' => $property->type()] + $property->declaration();
-            })
+            ->map(fn(PropertyInterface $property) => ['type' => $property->type()] + $property->declaration())
             ->toArray()
         ;
     }
