@@ -2,6 +2,7 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Mapper\Property;
 
+use Bdf\Prime\Indexer\Elasticsearch\Grammar\Types;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\AnalyzerInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\ArrayAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\CsvAnalyzer;
@@ -86,7 +87,7 @@ class PropertiesBuilder
      */
     public function text(string $name): PropertiesBuilder
     {
-        return $this->add($name, 'text');
+        return $this->add($name, Types::TEXT);
     }
 
     /**
@@ -100,12 +101,12 @@ class PropertiesBuilder
      */
     public function keyword(string $name): PropertiesBuilder
     {
-        return $this->add($name, 'keyword');
+        return $this->add($name, Types::KEYWORD);
     }
 
     /**
      * Add a long property
-     * A signed 64-bit integer with a minimum value of -263 and a maximum value of 263-1.
+     * A signed 64-bit integer with a minimum value of -2^63 and a maximum value of 2^63-1.
      *
      * @param string $name The index property name
      *
@@ -115,7 +116,7 @@ class PropertiesBuilder
      */
     public function long(string $name): PropertiesBuilder
     {
-        return $this->add($name, 'long');
+        return $this->add($name, Types::LONG);
     }
 
     /**
@@ -130,7 +131,7 @@ class PropertiesBuilder
      */
     public function integer(string $name): PropertiesBuilder
     {
-        return $this->add($name, 'integer');
+        return $this->add($name, Types::INTEGER);
     }
 
     /**
@@ -145,7 +146,7 @@ class PropertiesBuilder
      */
     public function short(string $name): PropertiesBuilder
     {
-        return $this->add($name, 'short');
+        return $this->add($name, Types::SHORT);
     }
 
     /**
@@ -160,7 +161,7 @@ class PropertiesBuilder
      */
     public function byte(string $name): PropertiesBuilder
     {
-        return $this->add($name, 'byte');
+        return $this->add($name, Types::BYTE);
     }
 
     /**
@@ -175,7 +176,7 @@ class PropertiesBuilder
      */
     public function double(string $name): PropertiesBuilder
     {
-        return $this->add($name, 'double');
+        return $this->add($name, Types::DOUBLE);
     }
 
     /**
@@ -190,7 +191,7 @@ class PropertiesBuilder
      */
     public function float(string $name): PropertiesBuilder
     {
-        return $this->add($name, 'float');
+        return $this->add($name, Types::FLOAT);
     }
 
     /**
@@ -209,7 +210,7 @@ class PropertiesBuilder
      */
     public function date(string $name): PropertiesBuilder
     {
-        return $this->add($name, 'date');
+        return $this->add($name, Types::DATE);
     }
 
     /**
@@ -223,7 +224,7 @@ class PropertiesBuilder
      */
     public function boolean(string $name): PropertiesBuilder
     {
-        return $this->add($name, 'boolean');
+        return $this->add($name, Types::BOOLEAN);
     }
 
     /**
@@ -239,7 +240,7 @@ class PropertiesBuilder
      */
     public function binary(string $name): PropertiesBuilder
     {
-        return $this->add($name, 'binary');
+        return $this->add($name, Types::BINARY);
     }
 
     /**
@@ -275,7 +276,7 @@ class PropertiesBuilder
         $configurator($properties);
 
         $this->properties[$name] = [
-            'type' => 'object',
+            'type' => Types::OBJECT,
             'properties' => $properties->build(),
             'className' => $className,
         ];
@@ -297,7 +298,7 @@ class PropertiesBuilder
      *
      * @see CsvAnalyzer The internally used analyzer
      */
-    public function csv(string $name, string $separator = ',', string $type = 'text'): PropertiesBuilder
+    public function csv(string $name, string $separator = ',', string $type = Types::TEXT): PropertiesBuilder
     {
         $this->add($name, $type);
 
@@ -507,7 +508,7 @@ class PropertiesBuilder
             $accessor = $property['accessor'] ?? new SimplePropertyAccessor($name);
             unset($property['accessor']);
 
-            if ($type === 'object') {
+            if ($type === Types::OBJECT) {
                 $properties[$name] = new ObjectProperty($name, $property['className'] ?? \stdClass::class, $property['properties'] ?? [], $accessor);
             } else {
                 if (isset($property['analyzer'], $this->analyzers[$property['analyzer']])) {

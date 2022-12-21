@@ -2,6 +2,7 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Mapper\Property;
 
+use Bdf\Prime\Indexer\Elasticsearch\Grammar\Types;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
 
 /**
@@ -69,7 +70,7 @@ final class ObjectProperty implements PropertyInterface
      */
     public function type(): string
     {
-        return 'object';
+        return Types::OBJECT;
     }
 
     /**
