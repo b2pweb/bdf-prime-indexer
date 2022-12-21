@@ -9,8 +9,10 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Bdf\Prime\Indexer\Exception\InvalidQueryException;
 use Bdf\Prime\Indexer\IndexTestCase;
-use City;
-use CityIndex;
+use ElasticsearchTestFiles\City;
+use ElasticsearchTestFiles\CityIndex;
+use ElasticsearchTestFiles\UserIndex;
+use ElasticsearchTestFiles\WithAnonAnalyzerIndex;
 
 /**
  * Class ElasticsearchIndexTest
@@ -284,7 +286,7 @@ class ElasticsearchIndexTest extends IndexTestCase
     public function test_scope_not_found()
     {
         $this->expectException(InvalidQueryException::class);
-        $this->expectExceptionMessage('The scope notFound cannot be found');
+        $this->expectExceptionMessage('The scope "notFound" cannot be found for the entity "ElasticsearchTestFiles\City"');
 
         $this->index->notFound('par');
     }
@@ -419,7 +421,7 @@ class ElasticsearchIndexTest extends IndexTestCase
         ];
 
         $client = $this->createMock(ClientInterface::class);
-        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new \UserIndex()));
+        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new UserIndex()));
 
         $client->expects($this->once())->method('createIndex')->with('test_users', $expected);
 
@@ -465,7 +467,7 @@ class ElasticsearchIndexTest extends IndexTestCase
         ];
 
         $client = $this->createMock(ClientInterface::class);
-        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new \WithAnonAnalyzerIndex()));
+        $index = new ElasticsearchIndex($client, new ElasticsearchMapper(new WithAnonAnalyzerIndex()));
 
         $client->expects($this->once())->method('createIndex')->with('test_anon_analyzers', $expected);
 

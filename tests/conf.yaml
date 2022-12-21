@@ -15,9 +15,19 @@ prime_indexer:
     basicAuthentication: ['%env(ELASTICSEARCH_USER)%', '%env(ELASTICSEARCH_PASSWORD)%']
 
   indexes:
-    City: CityIndex
-    User: UserIndex
+    'ElasticsearchTestFiles\City': 'ElasticsearchTestFiles\CityIndex'
+    'ElasticsearchTestFiles\User': 'ElasticsearchTestFiles\UserIndex'
 
 services:
+  _defaults:
+    autoconfigure: true
+    autowire: true
+
+  DenormalizeTestFiles\:
+    resource: 'Denormalize/_files/*'
+
+  ElasticsearchTestFiles\:
+    resource: 'Elasticsearch/_files/*'
+
   logger:
     class: \Psr\Log\NullLogger
