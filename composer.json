@@ -23,7 +23,7 @@
   },
   "minimum-stability": "dev",
   "require": {
-    "php": "~7.4 | ~8.0.0 | ~8.1.0",
+    "php": "~7.4 | ~8.0.0 | ~8.1.0 | ~8.2.0",
     "b2pweb/bdf-prime": "~2.0",
     "elasticsearch/elasticsearch": "~7.0|~8.0",
     "b2pweb/bdf-collections": "~1.0"
