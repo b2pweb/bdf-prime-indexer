@@ -22,6 +22,12 @@ use Symfony\Component\Console\Style\OutputStyle;
 use Symfony\Component\Console\Style\StyleInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function count;
+use function is_array;
+use function json_decode;
+use function method_exists;
+use function sprintf;
+
 /**
  * Create the index for the given entity
  */
@@ -117,18 +123,18 @@ class CreateIndexCommand extends Command
         $repository = $this->prime->repository($input->getArgument('entity'));
 
         if ($repository === null) {
-            $io->error('Cannot load entities');
+            $io->warning(sprintf(
+                'Index has been created, but without entities : "%s" is not a valid prime entity, and the index configuration does not implements "%s" to provide entities.',
+                $input->getArgument('entity'),
+                CustomEntitiesConfigurationInterface::class
+            ));
 
             return [];
         }
 
-        $query = $repository->queries()->keyValue();
+        $query = $repository->queries()->builder();
 
-        if (!$query instanceof Paginable) {
-            $query = $repository->queries()->builder();
-        }
-
-        return $query->walk();
+        return $query instanceof Paginable ? $query->walk() : $query->all();
     }
 
     /**
@@ -150,12 +156,11 @@ class CreateIndexCommand extends Command
         }
 
         $this->progressBar = $io->createProgressBar($size);
-        return Streams::wrap($entities)->map(function (object $entity) {
-            /** @psalm-suppress PossiblyNullReference */
-            $this->progressBar->advance();
 
-            return $entity;
-        });
+        foreach ($entities as $entity) {
+            $this->progressBar->advance();
+            yield $entity;
+        }
     }
 
     /**

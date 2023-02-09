@@ -1,7 +1,7 @@
 # Prime Indexer
 [![build](https://github.com/b2pweb/bdf-prime-indexer/actions/workflows/php.yml/badge.svg)](https://github.com/b2pweb/bdf-prime-indexer/actions/workflows/php.yml)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/b2pweb/bdf-prime-indexer/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/b2pweb/bdf-prime-indexer/?branch=master)
-[![Code Coverage](https://scrutinizer-ci.com/g/b2pweb/bdf-prime-indexer/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/b2pweb/bdf-prime-indexer/?branch=master)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/b2pweb/bdf-prime-indexer/badges/quality-score.png?b=2.0)](https://scrutinizer-ci.com/g/b2pweb/bdf-prime-indexer/?branch=2.0)
+[![Code Coverage](https://scrutinizer-ci.com/g/b2pweb/bdf-prime-indexer/badges/coverage.png?b=2.0)](https://scrutinizer-ci.com/g/b2pweb/bdf-prime-indexer/?branch=2.0)
 [![Packagist Version](https://img.shields.io/packagist/v/b2pweb/bdf-prime-indexer.svg)](https://packagist.org/packages/b2pweb/bdf-prime-indexer)
 [![Total Downloads](https://img.shields.io/packagist/dt/b2pweb/bdf-prime-indexer.svg)](https://packagist.org/packages/b2pweb/bdf-prime-indexer)
 [![Type Coverage](https://shepherd.dev/github/b2pweb/bdf-prime-indexer/coverage.svg)](https://shepherd.dev/github/b2pweb/bdf-prime-indexer)
@@ -37,9 +37,10 @@ prime_indexer:
     hosts: ['127.0.0.1:9222']
 
   # Define indexes in form [Entity class]: [Index configuration class]
+  # This is not mandatory if autoconfiguration is enabled
   indexes:
-    City: CityIndex
-    User: UserIndex
+    App\Entities\City: App\Entities\CityIndex
+    App\Entities\User: App\Entities\UserIndex
 ```
 
 ## Usage
@@ -56,12 +57,6 @@ class CityIndex implements ElasticsearchIndexConfigurationInterface
     public function index(): string
     {
         return 'test_cities';
-    }
-
-    // Declare the elasticsearch index type
-    public function type(): string
-    {
-        return 'city';
     }
 
     // Get the mapped entity type
@@ -144,20 +139,7 @@ Some extra configuration can be added by implementing interfaces :
 - `CustomEntitiesConfigurationInterface` : For define the entities loading method
 - `ShouldBeIndexedConfigurationInterface` : For define predicate which check if an entity should be indexed or not
 
-After that, the index should be added to the "prime.indexes" container's item :
-
-```php
-<?php
-$application = new \Bdf\Web\Application([
-    // ...
-    'prime.indexes' => [
-        City::class => new CityIndex(),
-    ],
-    // ...
-]);
-```
-
-There is no "magic" resolver for index, so no naming convention for declare the index.
+After that, the index can be added to the "prime_indexer.indexes" configuration, or let the autoconfiguration do the job.
 
 ### Querying the index
 
@@ -241,10 +223,12 @@ $index->drop();
 Create index, and indexing entities :
 
 ```
-bin/console.php prime:indexer:create City
-``` 
+bin/console.php prime:indexer:create App\Entities\City
+```
 
 A progress bar will be displayed for follow the indexing progress.
+
+> Note: The full qualified class name of the entity must be used as argument.
 
 For manage Elasticsearch index :
 
