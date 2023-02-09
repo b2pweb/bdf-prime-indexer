@@ -6,6 +6,7 @@ use Bdf\Collection\Stream\Streams;
 use Bdf\Prime\Indexer\CustomEntitiesConfigurationInterface;
 use Bdf\Prime\Indexer\IndexFactory;
 use Bdf\Prime\Indexer\ShouldBeIndexedConfigurationInterface;
+use Bdf\Prime\Query\Contract\Paginable;
 use Bdf\Prime\Repository\EntityRepository;
 use Bdf\Prime\ServiceLocator;
 use Psr\Log\LoggerInterface;
@@ -131,7 +132,9 @@ class CreateIndexCommand extends Command
             return [];
         }
 
-        return $repository->queries()->builder()->walk();
+        $query = $repository->queries()->builder();
+
+        return $query instanceof Paginable ? $query->walk() : $query->all();
     }
 
     /**
