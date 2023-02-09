@@ -12,6 +12,7 @@ build:
 
       tests:
         override:
+          - command: composer require --dev 'elasticsearch/elasticsearch:~7.0' --with-all-dependencies
           - command: composer run tests-with-coverage
             coverage:
               file: coverage.xml
