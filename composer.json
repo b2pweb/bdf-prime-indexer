@@ -43,6 +43,11 @@
       "dev-master": "2.0.x-dev"
     }
   },
+  "config": {
+    "allow-plugins": {
+      "php-http/discovery": true
+    }
+  },
   "scripts": {
     "tests": "phpunit",
     "tests-with-coverage": "phpunit --coverage-clover coverage.xml",
