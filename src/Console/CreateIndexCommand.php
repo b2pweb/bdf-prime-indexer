@@ -6,7 +6,6 @@ use Bdf\Collection\Stream\Streams;
 use Bdf\Prime\Indexer\CustomEntitiesConfigurationInterface;
 use Bdf\Prime\Indexer\IndexFactory;
 use Bdf\Prime\Indexer\ShouldBeIndexedConfigurationInterface;
-use Bdf\Prime\Query\Contract\Paginable;
 use Bdf\Prime\Repository\EntityRepository;
 use Bdf\Prime\ServiceLocator;
 use Psr\Log\LoggerInterface;
@@ -21,6 +20,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\OutputStyle;
 use Symfony\Component\Console\Style\StyleInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+
+use function count;
+use function is_array;
+use function json_decode;
+use function method_exists;
+use function sprintf;
 
 /**
  * Create the index for the given entity
@@ -117,18 +122,16 @@ class CreateIndexCommand extends Command
         $repository = $this->prime->repository($input->getArgument('entity'));
 
         if ($repository === null) {
-            $io->error('Cannot load entities');
+            $io->warning(sprintf(
+                'Index has been created, but without entities : "%s" is not a valid prime entity, and the index configuration does not implements "%s" to provide entities.',
+                $input->getArgument('entity'),
+                CustomEntitiesConfigurationInterface::class
+            ));
 
             return [];
         }
 
-        $query = $repository->queries()->keyValue();
-
-        if (!$query instanceof Paginable) {
-            $query = $repository->queries()->builder();
-        }
-
-        return $query->walk();
+        return $repository->queries()->builder()->walk();
     }
 
     /**
@@ -150,12 +153,11 @@ class CreateIndexCommand extends Command
         }
 
         $this->progressBar = $io->createProgressBar($size);
-        return Streams::wrap($entities)->map(function (object $entity) {
-            /** @psalm-suppress PossiblyNullReference */
-            $this->progressBar->advance();
 
-            return $entity;
-        });
+        foreach ($entities as $entity) {
+            $this->progressBar->advance();
+            yield $entity;
+        }
     }
 
     /**
