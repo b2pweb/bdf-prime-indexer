@@ -221,7 +221,7 @@ final class BulkResultSet implements ResultSetInterface, ArrayAccess
     /**
      * Check if the bulk write has failed, and throw an exception if so
      *
-     * @return void|never
+     * @return void
      * @throws BulkWriteException If the bulk write has failed
      */
     public function checkErrors(): void
