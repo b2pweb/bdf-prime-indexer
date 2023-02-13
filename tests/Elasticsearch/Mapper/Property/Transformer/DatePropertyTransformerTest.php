@@ -29,10 +29,10 @@ class DatePropertyTransformerTest extends TestCase
 
         $this->assertSame(null, $transformer->toIndex($property, null));
         $this->assertSame(78541257, $transformer->toIndex($property, 78541257));
-        $this->assertEquals(1665532800, $transformer->toIndex($property, new \DateTime('2022-10-12')));
+        $this->assertEquals(1665525600, $transformer->toIndex($property, new \DateTime('2022-10-12')));
 
         $this->assertSame(null, $transformer->fromIndex($property, null));
-        $this->assertEquals(new \DateTime('2022-10-12'), $transformer->fromIndex($property, 1665532800));
+        $this->assertEquals(new \DateTime('2022-10-12'), $transformer->fromIndex($property, 1665525600));
     }
 
     public function test_without_format()
@@ -42,11 +42,11 @@ class DatePropertyTransformerTest extends TestCase
 
         $this->assertSame(null, $transformer->toIndex($property, null));
         $this->assertSame('2022-10-12', $transformer->toIndex($property, '2022-10-12'));
-        $this->assertSame('2022-10-12T00:00:00+00:00', $transformer->toIndex($property, new \DateTime('2022-10-12')));
+        $this->assertSame('2022-10-12T00:00:00+02:00', $transformer->toIndex($property, new \DateTime('2022-10-12')));
 
         $this->assertSame(null, $transformer->fromIndex($property, null));
         $this->assertEquals(new \DateTime('2022-10-12'), $transformer->fromIndex($property, '2022-10-12'));
-        $this->assertEquals(new \DateTime('2022-10-12 15:35'), $transformer->fromIndex($property, '2022-10-12T15:35:00+00:00'));
+        $this->assertEquals(new \DateTime('2022-10-12T15:35:00+00:00'), $transformer->fromIndex($property, '2022-10-12T15:35:00+00:00'));
     }
 
     public function test_with_property_declaration_format()

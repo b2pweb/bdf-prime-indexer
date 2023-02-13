@@ -52,7 +52,11 @@ final class DatePropertyTransformer implements PropertyTransformerInterface
             return $value->format(DateTimeInterface::ATOM);
         }
 
-        $formatter = new IntlDateFormatter(null);
+        $formatter = new IntlDateFormatter(
+            null,
+            IntlDateFormatter::FULL,
+            IntlDateFormatter::FULL,
+        );
         $formatter->setPattern($icuFormat);
 
         return $formatter->format($value);
@@ -77,7 +81,11 @@ final class DatePropertyTransformer implements PropertyTransformerInterface
             return new DateTime($value);
         }
 
-        $formatter = new IntlDateFormatter(null);
+        $formatter = new IntlDateFormatter(
+            null,
+            IntlDateFormatter::FULL,
+            IntlDateFormatter::FULL,
+        );
         $formatter->setPattern($icuFormat);
 
         return new DateTime('@' . $formatter->parse($value));
