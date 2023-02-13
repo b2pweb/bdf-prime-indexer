@@ -207,4 +207,29 @@ final class BulkResultSet implements ResultSetInterface, ArrayAccess
     {
         throw new BadMethodCallException();
     }
+
+    /**
+     * Does the bulk write has failed ?
+     *
+     * @return bool
+     */
+    public function hasErrors(): bool
+    {
+        return $this->data['errors'];
+    }
+
+    /**
+     * Check if the bulk write has failed, and throw an exception if so
+     *
+     * @return void|never
+     * @throws BulkWriteException If the bulk write has failed
+     */
+    public function checkErrors(): void
+    {
+        if (!$this->hasErrors()) {
+            return;
+        }
+
+        throw new BulkWriteException(array_map(fn (array $item) => reset($item), $this->data['items']));
+    }
 }
