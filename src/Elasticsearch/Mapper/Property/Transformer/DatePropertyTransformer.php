@@ -7,6 +7,7 @@ use DateTime;
 use DateTimeInterface;
 use IntlDateFormatter;
 
+use function is_numeric;
 use function is_scalar;
 
 /**
@@ -72,13 +73,13 @@ final class DatePropertyTransformer implements PropertyTransformerInterface
         }
 
         if ($this->format) {
-            return DateTime::createFromFormat('!' . $this->format, $value);
+            return DateTime::createFromFormat('!' . $this->format, (string) $value);
         }
 
         $icuFormat = $property->declaration()['format'] ?? null;
 
         if (!$icuFormat) {
-            return new DateTime($value);
+            return new DateTime(is_numeric($value) ? '@' . $value : (string) $value);
         }
 
         $formatter = new IntlDateFormatter(
@@ -88,6 +89,6 @@ final class DatePropertyTransformer implements PropertyTransformerInterface
         );
         $formatter->setPattern($icuFormat);
 
-        return new DateTime('@' . $formatter->parse($value));
+        return new DateTime('@' . $formatter->parse((string) $value));
     }
 }
