@@ -14,6 +14,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAcces
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\ObjectProperty;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Property;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Transformer\DatePropertyTransformer;
 use ElasticsearchTestFiles\UserIndex;
 use PHPUnit\Framework\TestCase;
 
@@ -40,6 +41,18 @@ class PropertiesBuilderTest extends TestCase
         $this->builder->$type('my_field');
 
         $this->assertEquals(['my_field' => $expected], $this->builder->build());
+    }
+
+    public function test_date()
+    {
+        $this->builder->date('my_field');
+        $this->assertEquals(new Property('my_field', [], new StandardAnalyzer(), 'date', new SimplePropertyAccessor('my_field'), new DatePropertyTransformer()), $this->builder->build()['my_field']);
+
+        $this->builder->date('my_field', 'yyyy-MM-dd');
+        $this->assertEquals(new Property('my_field', ['format' => 'yyyy-MM-dd'], new StandardAnalyzer(), 'date', new SimplePropertyAccessor('my_field'), new DatePropertyTransformer()), $this->builder->build()['my_field']);
+
+        $this->builder->date('my_field', 'yyyy-MM-dd', 'y-m-d');
+        $this->assertEquals(new Property('my_field', ['format' => 'yyyy-MM-dd'], new StandardAnalyzer(), 'date', new SimplePropertyAccessor('my_field'), new DatePropertyTransformer('y-m-d')), $this->builder->build()['my_field']);
     }
 
     public function test_object()
@@ -268,7 +281,6 @@ class PropertiesBuilderTest extends TestCase
             ['byte', new Property('my_field', [], new StandardAnalyzer(), 'byte', new SimplePropertyAccessor('my_field'))],
             ['double', new Property('my_field', [], new StandardAnalyzer(), 'double', new SimplePropertyAccessor('my_field'))],
             ['float', new Property('my_field', [], new StandardAnalyzer(), 'float', new SimplePropertyAccessor('my_field'))],
-            ['date', new Property('my_field', [], new StandardAnalyzer(), 'date', new SimplePropertyAccessor('my_field'))],
             ['boolean', new Property('my_field', [], new StandardAnalyzer(), 'boolean', new SimplePropertyAccessor('my_field'))],
             ['binary', new Property('my_field', [], new StandardAnalyzer(), 'binary', new SimplePropertyAccessor('my_field'))],
         ];

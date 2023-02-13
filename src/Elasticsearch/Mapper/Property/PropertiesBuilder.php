@@ -12,8 +12,9 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\EmbeddedAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\ReadOnlyAccessor;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAccessor;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Transformer\DatePropertyTransformer;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Transformer\PropertyTransformerInterface;
 use Bdf\Prime\Indexer\Exception\IndexConfigurationException;
-use InvalidArgumentException;
 
 /**
  * Build index properties
@@ -31,6 +32,7 @@ class PropertiesBuilder
      *     analyzer?: string,
      *     index?: bool,
      *     accessor?: PropertyAccessorInterface,
+     *     transformer?: PropertyTransformerInterface,
      *     fields?: array,
      *     properties?: array,
      *     className?: class-string,
@@ -79,10 +81,16 @@ class PropertiesBuilder
     /**
      * Add a text property
      *
+     * A field to index full-text values, such as the body of an email or the description of a product.
+     * These fields are analyzed, that is they are passed through an analyzer to convert the string into a list of individual terms before being indexed.
+     * The analysis process allows Elasticsearch to search for individual words within each full text field.
+     * Text fields are not used for sorting and seldom used for aggregations (although the significant terms aggregation is a notable exception).
+     *
      * @param string $name The index property name
      *
      * @return $this
      *
+     * @see PropertiesBuilder::keyword() If you need to index not analyzed values
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/5.0/text.html
      */
     public function text(string $name): PropertiesBuilder
@@ -93,10 +101,15 @@ class PropertiesBuilder
     /**
      * Add a keyword property
      *
+     * A field to index structured content such as email addresses, hostnames, status codes, zip codes or tags.
+     * They are typically used for filtering (Find me all blog posts where status is published), for sorting, and for aggregations.
+     * Keyword fields are only searchable by their exact value, and are not analyzed.
+     *
      * @param string $name The index property name
      *
      * @return $this
      *
+     * @see PropertiesBuilder::text() If you need to index analyzed values
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/5.0/keyword.html
      */
     public function keyword(string $name): PropertiesBuilder
@@ -202,15 +215,27 @@ class PropertiesBuilder
      * - a long number representing milliseconds-since-the-epoch.
      * - an integer representing seconds-since-the-epoch.
      *
+     * A transform will be added to the property to convert the date to a string.
+     *
      * @param string $name The index property name
+     * @param string|null $format The date format, following the java date format, as elasticsearch. If null, the default format will be used.
+     * @param string|null $phpFormat The date format in PHP, used by {@see \DateTimeInterface::format()}. if null, the elastic format will be used.
      *
      * @return $this
      *
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/date.html
      */
-    public function date(string $name): PropertiesBuilder
+    public function date(string $name, ?string $format = null, ?string $phpFormat = null): PropertiesBuilder
     {
-        return $this->add($name, Types::DATE);
+        $this->add($name, Types::DATE);
+
+        if ($format) {
+            $this->properties[$name]['format'] = $format;
+        }
+
+        $this->transformer(new DatePropertyTransformer($phpFormat));
+
+        return $this;
     }
 
     /**
@@ -350,6 +375,22 @@ class PropertiesBuilder
         }
 
         return $this->option('analyzer', $analyzer);
+    }
+
+    /**
+     * Define a transformer for the property
+     * The transformer will be used to transform the value before indexing and analyzer transformation
+     *
+     * @param PropertyTransformerInterface $transformer
+     *
+     * @return $this
+     */
+    public function transformer(PropertyTransformerInterface $transformer): PropertiesBuilder
+    {
+        assert($this->current !== null);
+        $this->properties[$this->current]['transformer'] = $transformer;
+
+        return $this;
     }
 
     /**
@@ -508,6 +549,9 @@ class PropertiesBuilder
             $accessor = $property['accessor'] ?? new SimplePropertyAccessor($name);
             unset($property['accessor']);
 
+            $transformer = $property['transformer'] ?? null;
+            unset($property['transformer']);
+
             if ($type === Types::OBJECT) {
                 $properties[$name] = new ObjectProperty($name, $property['className'] ?? \stdClass::class, $property['properties'] ?? [], $accessor);
             } else {
@@ -517,7 +561,7 @@ class PropertiesBuilder
                     $analyzer = $this->mapper->analyzers()[$property['analyzer'] ?? 'default'];
                 }
 
-                $properties[$name] = new Property($name, $property, $analyzer, $type, $accessor);
+                $properties[$name] = new Property($name, $property, $analyzer, $type, $accessor, $transformer);
             }
         }
 

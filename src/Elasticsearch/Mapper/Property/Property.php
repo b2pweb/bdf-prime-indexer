@@ -4,6 +4,8 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Mapper\Property;
 
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\AnalyzerInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Transformer\NullPropertyTransformer;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Transformer\PropertyTransformerInterface;
 
 /**
  * Store property and index field properties
@@ -41,6 +43,11 @@ final class Property implements PropertyInterface
      */
     private PropertyAccessorInterface $accessor;
 
+    /**
+     * @var PropertyTransformerInterface
+     */
+    private PropertyTransformerInterface $transformer;
+
 
     /**
      * Property constructor.
@@ -50,14 +57,16 @@ final class Property implements PropertyInterface
      * @param AnalyzerInterface $analyzer
      * @param string $type
      * @param PropertyAccessorInterface $accessor
+     * @param PropertyTransformerInterface|null $transformer
      */
-    public function __construct(string $name, array $declaration, AnalyzerInterface $analyzer, string $type, PropertyAccessorInterface $accessor)
+    public function __construct(string $name, array $declaration, AnalyzerInterface $analyzer, string $type, PropertyAccessorInterface $accessor, ?PropertyTransformerInterface $transformer = null)
     {
         $this->name = $name;
         $this->declaration = $declaration;
         $this->analyzer = $analyzer;
         $this->type = $type;
         $this->accessor = $accessor;
+        $this->transformer = $transformer ?? NullPropertyTransformer::instance();
     }
 
     /**
@@ -115,7 +124,12 @@ final class Property implements PropertyInterface
      */
     public function readFromModel($entity)
     {
-        return $this->analyzer->toIndex($this->accessor->readFromModel($entity));
+        return $this->analyzer->toIndex(
+            $this->transformer->toIndex(
+                $this,
+                $this->accessor->readFromModel($entity)
+            )
+        );
     }
 
     /**
@@ -123,6 +137,12 @@ final class Property implements PropertyInterface
      */
     public function writeToModel($entity, $indexedValue)
     {
-        $this->accessor->writeToModel($entity, $this->analyzer->fromIndex($indexedValue));
+        $this->accessor->writeToModel(
+            $entity,
+            $this->transformer->fromIndex(
+                $this,
+                $this->analyzer->fromIndex($indexedValue)
+            )
+        );
     }
 }
