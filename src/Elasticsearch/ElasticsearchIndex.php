@@ -12,6 +12,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertyInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchUpdateQuery;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Result\BulkResultSet;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\WriteResultSet;
 use Bdf\Prime\Indexer\Exception\InvalidQueryException;
 use Bdf\Prime\Indexer\Exception\QueryExecutionException;
@@ -397,13 +398,22 @@ class ElasticsearchIndex implements IndexInterface
             }
 
             if (count($query) >= $chunkSize) {
-                $query->execute();
+                $result = $query->execute();
+
+                if ($result instanceof BulkResultSet) {
+                    $result->checkErrors();
+                }
+
                 $query->clear();
             }
         }
 
         if (count($query)) {
-            $query->execute();
+            $result = $query->execute();
+
+            if ($result instanceof BulkResultSet) {
+                $result->checkErrors();
+            }
         }
     }
 }

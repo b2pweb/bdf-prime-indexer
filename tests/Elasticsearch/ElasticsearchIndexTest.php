@@ -717,6 +717,21 @@ class ElasticsearchIndexTest extends IndexTestCase
         $this->assertEquals(21599, $this->index->query()->where('name', 'parthenay')->first()->population()->get());
     }
 
+    public function test_create_error()
+    {
+        $this->expectExceptionMessage('failed to parse field [population] of type [integer] in document');
+
+        $this->index->create(
+            [
+                new City([
+                    'population' => 'invalid',
+                    'enabled' => 'invalid'
+                ]),
+            ],
+            ['refresh' => true]
+        );
+    }
+
     /**
      * @param array|callable $options
      */

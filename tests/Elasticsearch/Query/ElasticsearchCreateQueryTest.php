@@ -4,12 +4,18 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 
 use Bdf\Prime\Connection\Result\ResultSetInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\InvalidRequestException;
+use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
+use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Result\BulkWriteException;
 use Bdf\Prime\Indexer\Exception\InvalidQueryException;
 use Bdf\Prime\Indexer\Exception\QueryExecutionException;
 use Bdf\Prime\Indexer\IndexTestCase;
 use Elasticsearch\ClientBuilder;
 use Elasticsearch\Common\Exceptions\Conflict409Exception;
+use ElasticsearchTestFiles\CityIndex;
 
 /**
  * Class ElasticsearchCreateQueryTest
@@ -30,6 +36,9 @@ class ElasticsearchCreateQueryTest extends IndexTestCase
     {
         if (self::getClient()->hasIndex('test_persons')) {
             self::getClient()->deleteIndex('test_persons');
+        }
+        if (self::getClient()->hasIndex('test_cities')) {
+            self::getClient()->deleteIndex('test_cities');
         }
     }
 
@@ -552,6 +561,47 @@ class ElasticsearchCreateQueryTest extends IndexTestCase
                 ]
             ]
         ], $compiled);
+    }
+
+    public function test_invalid_query()
+    {
+        $this->expectExceptionMessage('Failed to parse value [invalid] as only [true] or [false] are allowed.');
+
+        $index = new ElasticsearchIndex(self::getClient(), new ElasticsearchMapper(new CityIndex()));
+        $index->create([], ['useAlias' => false]);
+
+        $result = $index->creationQuery()
+            ->bulk(false)
+            ->values(['enabled' => 'invalid'])
+            ->execute()
+        ;
+    }
+
+    public function test_invalid_query_bulk()
+    {
+        $index = new ElasticsearchIndex(self::getClient(), new ElasticsearchMapper(new CityIndex()));
+        $index->create([], ['useAlias' => false]);
+
+        $result = $index->creationQuery()
+            ->bulk(true)
+            ->values(['enabled' => 'invalid'])
+            ->execute()
+        ;
+
+        $this->assertTrue($result->hasErrors());
+
+        try {
+            $result->checkErrors();
+            $this->fail('Expected exception to be thrown');
+        } catch (BulkWriteException $e) {
+            $id = $e->errors()[0]['_id'];
+            $this->assertEquals(<<<MSG
+Error during execution of bulk write query : 
+- failed to parse field [enabled] of type [boolean] in document with id '{$id}'. Preview of field's value: 'invalid' Caused by: Failed to parse value [invalid] as only [true] or [false] are allowed.
+
+MSG
+, $e->getMessage());
+        }
     }
 
     public function search(): ElasticsearchQuery
