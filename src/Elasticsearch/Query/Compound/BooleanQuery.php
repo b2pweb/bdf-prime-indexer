@@ -251,6 +251,10 @@ final class BooleanQuery implements CompilableExpressionInterface
         $compiled = $this->optimizeNot($compiled);
         $compiled = $this->optimizeSingleNestedFilter($compiled);
 
+        if (empty($compiled)) {
+            return [];
+        }
+
         return ['bool' => $compiled];
     }
 

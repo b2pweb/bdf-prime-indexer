@@ -25,6 +25,7 @@ use Bdf\Prime\Indexer\QueryInterface;
 use Bdf\Prime\Query\Contract\Limitable;
 use Bdf\Prime\Query\Contract\Orderable;
 use Closure;
+use stdClass;
 
 /**
  * Query for perform index search
@@ -664,8 +665,8 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
 
         $body = [];
 
-        if ($query) {
-            $body['query'] = $query->compile($this->grammar);
+        if ($query && $compiled = $query->compile($this->grammar)) {
+            $body['query'] = $compiled;
         }
 
         if ($this->order) {

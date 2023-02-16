@@ -14,6 +14,13 @@ use PHPUnit\Framework\TestCase;
  */
 class BooleanQueryTest extends TestCase
 {
+    public function test_empty()
+    {
+        $bool = new BooleanQuery();
+
+        $this->assertEquals([], $bool->compile(new ElasticsearchGrammar()));
+    }
+
     /**
      *
      */

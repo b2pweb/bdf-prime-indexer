@@ -1160,4 +1160,26 @@ class ElasticsearchQueryTest extends IndexTestCase
 
         $this->assertEmpty($this->query->all());
     }
+
+    public function test_empty_boolean_query()
+    {
+        $create = new ElasticsearchCreateQuery(self::getClient());
+        $create
+            ->into('test_cities', 'city')
+            ->values([
+                'name' => 'Paris',
+                'population' => 2201578,
+                'country' => 'FR'
+            ])
+            ->refresh()
+            ->execute()
+        ;
+
+        $query = $this->query->from('test_cities');
+        $query->bool();
+
+        $this->assertEquals([], $query->compile());
+
+        $query->execute();
+    }
 }
