@@ -7,13 +7,17 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 final class PrimeIndexerTestBundle extends Bundle
 {
-    public function boot()
+    public function boot(): void
     {
-        $this->container->get(TestingIndexer::class)->init();
+        /** @var TestingIndexer $testingIndexer */
+        $testingIndexer = $this->container->get(TestingIndexer::class);
+        $testingIndexer->init();
     }
 
-    public function shutdown()
+    public function shutdown(): void
     {
-        $this->container->get(TestingIndexer::class)->destroy();
+        /** @var TestingIndexer $testingIndexer */
+        $testingIndexer = $this->container->get(TestingIndexer::class);
+        $testingIndexer->destroy();
     }
 }
