@@ -711,6 +711,52 @@ class ElasticsearchQueryTest extends IndexTestCase
     /**
      *
      */
+    public function test_order_functional()
+    {
+        $create = new ElasticsearchCreateQuery(self::getClient());
+        $create
+            ->into('test_cities', 'city')
+            ->values([
+                'name' => 'Paris',
+                'population' => 2201578,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Paris',
+                'population' => 27022,
+                'country' => 'US'
+            ])
+            ->values([
+                'name' => 'Parthenay',
+                'population' => 11599,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Cavaillon',
+                'population' => 26689,
+                'country' => 'FR'
+            ])
+            ->refresh()
+            ->execute()
+        ;
+
+        $query = $this->query
+            ->from('test_cities')
+            ->order('population', 'asc')
+            ->map(function ($doc) { return $doc['_source']['name'] . '-' . $doc['_source']['country']; })
+        ;
+
+        $this->assertEquals([
+            'Parthenay-FR',
+            'Cavaillon-FR',
+            'Paris-US',
+            'Paris-FR',
+        ], $query->all());
+    }
+
+    /**
+     *
+     */
     public function test_execute_functional()
     {
         $create = new ElasticsearchCreateQuery(self::getClient());
