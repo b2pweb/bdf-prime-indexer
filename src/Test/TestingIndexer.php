@@ -6,6 +6,7 @@ use Bdf\Collection\HashSet;
 use Bdf\Collection\SetInterface;
 use Bdf\Collection\Util\Functor\Consumer\Call;
 use Bdf\Collection\Util\Functor\Predicate\IsInstanceOf;
+use Bdf\Prime\Indexer\Denormalize\DenormalizedIndex;
 use Bdf\Prime\Indexer\Denormalize\DenormalizerInterface;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchIndexConfigurationInterface;
@@ -24,6 +25,11 @@ class TestingIndexer
      * @var ContainerInterface
      */
     private ContainerInterface $container;
+
+    /**
+     * Use an alias instead of the real index name
+     */
+    private bool $useAlias;
 
     /**
      * @var IndexFactory|null
@@ -58,11 +64,21 @@ class TestingIndexer
      * TestingIndexer constructor.
      *
      * @param ContainerInterface $app
+     * @param bool $useAlias Use an alias instead of the real index name on index creation
      */
-    public function __construct(ContainerInterface $app)
+    public function __construct(ContainerInterface $app, bool $useAlias = true)
     {
         $this->container = $app;
+        $this->useAlias = $useAlias;
         $this->indexes = HashSet::spl();
+    }
+
+    /**
+     * Initialize testing indexes
+     */
+    public function init(): void
+    {
+        $this->factory();
     }
 
     /**
@@ -131,8 +147,14 @@ class TestingIndexer
         $index = $this->factory()->for($entity);
 
         if (!$this->indexes->contains($index)) {
-            $index->create([]);
             $this->indexes->add($index);
+
+            if ($index instanceof DenormalizedIndex) {
+                $this->index($index->config()->denormalizedClass()); // Trigger creation of the actual index
+            } else {
+                $index->drop(); // Always drop the index, to ensure a clean state
+                $index->create([], ['useAlias' => $this->useAlias]);
+            }
         }
 
         return $index;
@@ -145,6 +167,10 @@ class TestingIndexer
     public function flush(): void
     {
         foreach ($this->indexes as $index) {
+            if ($index instanceof DenormalizedIndex) {
+                $index = $this->index($index->config()->denormalizedClass());
+            }
+
             if ($index instanceof ElasticsearchIndex) {
                 $index->refresh();
             }

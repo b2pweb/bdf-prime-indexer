@@ -5,6 +5,8 @@ namespace Bdf\Prime\Indexer\Test;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\TestKernel;
+use DenormalizeTestFiles\IndexedUserAttributes;
+use DenormalizeTestFiles\UserAttributes;
 use ElasticsearchTestFiles\City;
 use ElasticsearchTestFiles\User;
 use PHPUnit\Framework\TestCase;
@@ -149,5 +151,52 @@ class TestingIndexerTest extends TestCase
         $this->indexer->remove($city);
 
         $this->assertFalse($this->indexer->index($city)->contains($city));
+    }
+
+    public function test_with_denormalized_index()
+    {
+        $this->indexer = new TestingIndexer($this->app->getContainer(), false);
+        $this->indexer->push([
+            new UserAttributes([
+                'userId' => 5,
+                'attributes' => [
+                    'foo' => 'bar',
+                    'tags' => ['aaa', 'bbb'],
+                ]
+            ]),
+            new UserAttributes([
+                'userId' => 42,
+                'attributes' => [
+                    'foo' => 'rab',
+                    'tags' => ['ccc'],
+                ]
+            ]),
+        ]);
+
+        $this->indexer->flush();
+
+        $this->assertCount(2, $this->indexer->index(UserAttributes::class)->query()->all());
+        $this->assertEquals([
+            new IndexedUserAttributes([
+                'userId' => 5,
+                'attributes' => [
+                    'foo' => 'bar',
+                    'tags' => ['aaa', 'bbb'],
+                ],
+                'keys' => ['foo', 'tags'],
+                'values' => ['bar', 'aaa', 'bbb'],
+                'tags' => ['aaa', 'bbb'],
+            ]),
+            new IndexedUserAttributes([
+                'userId' => 42,
+                'attributes' => [
+                    'foo' => 'rab',
+                    'tags' => ['ccc'],
+                ],
+                'keys' => ['foo', 'tags'],
+                'values' => ['rab', 'ccc'],
+                'tags' => ['ccc'],
+            ]),
+        ], $this->indexer->index(UserAttributes::class)->query()->all());
     }
 }
