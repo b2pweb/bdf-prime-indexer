@@ -8,5 +8,7 @@ $_ENV['ELASTICSEARCH_HOST'] = ELASTICSEARCH_HOST;
 $_ENV['ELASTICSEARCH_USER'] = ELASTICSEARCH_USER;
 $_ENV['ELASTICSEARCH_PASSWORD'] = ELASTICSEARCH_PASSWORD;
 
+date_default_timezone_set('Europe/Paris');
+
 require __DIR__.'/../vendor/autoload.php';
 require __DIR__.'/TestKernel.php';

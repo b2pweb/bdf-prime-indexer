@@ -20,6 +20,8 @@ use ElasticsearchTestFiles\ContainerEntityIndex;
 use ElasticsearchTestFiles\EmbeddedEntity;
 use ElasticsearchTestFiles\UserIndex;
 use ElasticsearchTestFiles\WithAnonAnalyzerIndex;
+use ElasticsearchTestFiles\WithDate;
+use ElasticsearchTestFiles\WithDateIndex;
 
 /**
  * Class ElasticsearchIndexTest
@@ -815,4 +817,31 @@ class ElasticsearchIndexTest extends IndexTestCase
         ], array_map(fn ($a) => $a['_source'], $index->query()->execute()->hits()));
         $this->assertEqualsCanonicalizing([$entity1, $entity2], $index->query()->all());
     }
+
+    public function test_date_functional()
+    {
+        $index = new ElasticsearchIndex(self::getClient(), new ElasticsearchMapper(new WithDateIndex()));
+        $index->create([
+            $entity1 = (new WithDate())
+                ->setId('a')
+                ->setvalue('Jean Machin')
+                ->setDate(new \DateTimeImmutable('2020-01-01')),
+            $entity2 = (new WithDate())
+                ->setId('b')
+                ->setvalue('François Bidule')
+                ->setDate(new \DateTimeImmutable('2020-01-01')),
+        ]);
+        $index->refresh();
+
+        $this->assertEqualsCanonicalizing([
+            [
+                'value' => 'Jean Machin',
+                'date' => '2020-01-01',
+            ],
+            [
+                'value' => 'François Bidule',
+                'date' => '2020-01-01',
+            ],
+        ], array_map(fn ($a) => $a['_source'], $index->query()->execute()->hits()));
+        $this->assertEqualsCanonicalizing([$entity1, $entity2], $index->query()->all()); }
 }
