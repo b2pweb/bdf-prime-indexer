@@ -2,9 +2,11 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Query\Bulk;
 
+use Bdf\Prime\Indexer\Elasticsearch\ElasticsearchIndex;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Result\BulkWriteException;
 use Bdf\Prime\Indexer\IndexTestCase;
 use ElasticsearchTestFiles\City;
 use ElasticsearchTestFiles\CityIndex;
@@ -701,6 +703,33 @@ class ElasticsearchBulkQueryTest extends IndexTestCase
 
         $this->assertCount(3, $this->query);
         $this->assertCount(0, $this->query->clear());
+    }
+
+    public function test_invalid_query_bulk()
+    {
+        $index = new ElasticsearchIndex(self::getClient(), new ElasticsearchMapper(new CityIndex()));
+        $index->create([], ['useAlias' => false]);
+
+        $result = $this->query
+            ->into('test_cities')
+            ->index(['enabled' => 'invalid'])
+            ->execute()
+        ;
+
+        $this->assertTrue($result->hasErrors());
+
+        try {
+            $result->checkErrors();
+            $this->fail('Expected exception to be thrown');
+        } catch (BulkWriteException $e) {
+            $id = $e->errors()[0]['_id'];
+            $this->assertEquals(<<<MSG
+Error during execution of bulk write query : 
+- failed to parse field [enabled] of type [boolean] in document with id '{$id}'. Preview of field's value: 'invalid' Caused by: Failed to parse value [invalid] as only [true] or [false] are allowed.
+
+MSG
+                , $e->getMessage());
+        }
     }
 
     public function search(): ElasticsearchQuery
