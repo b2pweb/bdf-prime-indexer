@@ -203,3 +203,49 @@ jobs:
 #      run: |
 #        git fetch --depth=1 origin $GITHUB_BASE_REF
 #        ~/.composer/vendor/bin/infection --logger-github --git-diff-filter=AM
+
+  coverage:
+    name: Test coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set Timezone
+        uses: szenius/set-timezone@v1.0
+        with:
+          timezoneLinux: "Europe/Paris"
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.1
+          extensions: json
+          ini-values: date.timezone=Europe/Paris
+
+      - name: Configure sysctl limits
+        run: |
+          sudo swapoff -a
+          sudo sysctl -w vm.swappiness=1
+          sudo sysctl -w fs.file-max=262144
+          sudo sysctl -w vm.max_map_count=262144
+
+      - name: Runs Elasticsearch 8.1.0
+        uses: elastic/elastic-github-actions/elasticsearch@master
+        with:
+          stack-version: 8.1.0
+          security-enabled: false
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Install ES Lib ${{ matrix.versions.lib }}
+        run: composer require --dev 'elasticsearch/elasticsearch:~8.0' --with-all-dependencies
+
+      - name: Run test coverage
+        run: ./vendor/bin/phpunit --coverage-clover=coverage.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: coverage.xml
