@@ -1,6 +1,6 @@
 # Prime Indexer
 [![build](https://github.com/b2pweb/bdf-prime-indexer/actions/workflows/php.yml/badge.svg)](https://github.com/b2pweb/bdf-prime-indexer/actions/workflows/php.yml)
-[![codecov](https://codecov.io/github/b2pweb/bdf-prime-indexer/branch/2.0/graph/badge.svg?token=VOFSPEWYKX)](https://codecov.io/github/b2pweb/bdf-prime-indexer)
+[![codecov](https://codecov.io/github/b2pweb/bdf-prime-indexer/branch/2.0/graph/badge.svg?token=VOFSPEWYKX)](https://app.codecov.io/github/b2pweb/bdf-prime-indexer)
 [![Packagist Version](https://img.shields.io/packagist/v/b2pweb/bdf-prime-indexer.svg)](https://packagist.org/packages/b2pweb/bdf-prime-indexer)
 [![Total Downloads](https://img.shields.io/packagist/dt/b2pweb/bdf-prime-indexer.svg)](https://packagist.org/packages/b2pweb/bdf-prime-indexer)
 [![Type Coverage](https://shepherd.dev/github/b2pweb/bdf-prime-indexer/coverage.svg)](https://shepherd.dev/github/b2pweb/bdf-prime-indexer)
