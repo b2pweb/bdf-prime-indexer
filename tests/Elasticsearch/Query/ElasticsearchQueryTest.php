@@ -11,6 +11,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\QueryString;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Range;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Wildcard;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\ElasticsearchPaginator;
+use Bdf\Prime\Indexer\Exception\QueryExecutionException;
 use Bdf\Prime\Indexer\IndexTestCase;
 use Elastic\Elasticsearch\Client;
 
@@ -964,6 +965,17 @@ class ElasticsearchQueryTest extends IndexTestCase
         $this->assertCount(2, $this->query->from('test_cities', 'city'));
         $this->assertCount(1, $this->query->from('test_cities', 'city')->where('population', '>', 1000000));
         $this->assertCount(0, $this->query->from('test_cities', 'city')->where('population', '>', 1000000000));
+    }
+
+    /**
+     *
+     */
+    public function test_count_functional_error()
+    {
+        $this->expectException(QueryExecutionException::class);
+        $this->expectExceptionMessage('no such index [not_found]');
+
+        $this->query->from('not_found')->count();
     }
 
     /**
