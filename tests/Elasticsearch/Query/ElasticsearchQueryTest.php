@@ -941,6 +941,34 @@ class ElasticsearchQueryTest extends IndexTestCase
     /**
      *
      */
+    public function test_count_functional()
+    {
+        $create = new ElasticsearchCreateQuery(self::getClient());
+        $create
+            ->into('test_cities', 'city')
+            ->values([
+                'name' => 'Paris',
+                'population' => 2201578,
+                'country' => 'FR'
+            ])
+            ->values([
+                'name' => 'Cavaillon',
+                'population' => 26689,
+                'country' => 'FR'
+            ])
+            ->refresh()
+            ->execute()
+        ;
+
+        $this->assertSame(2, $this->query->from('test_cities', 'city')->count());
+        $this->assertCount(2, $this->query->from('test_cities', 'city'));
+        $this->assertCount(1, $this->query->from('test_cities', 'city')->where('population', '>', 1000000));
+        $this->assertCount(0, $this->query->from('test_cities', 'city')->where('population', '>', 1000000000));
+    }
+
+    /**
+     *
+     */
     public function test_paginate_functional()
     {
         $create = new ElasticsearchCreateQuery(self::getClient());
