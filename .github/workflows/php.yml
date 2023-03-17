@@ -219,7 +219,7 @@ jobs:
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.1
+          php-version: 8.0
           extensions: json
           ini-values: date.timezone=Europe/Paris
 
@@ -239,14 +239,20 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
-      - name: Install ES Lib ${{ matrix.versions.lib }}
+      - name: Install ES Lib 8.0
         run: composer require --dev 'elasticsearch/elasticsearch:~8.0' --with-all-dependencies
 
-      - name: Run test coverage
-        run: ./vendor/bin/phpunit --coverage-clover=coverage.xml
+      - name: Run test coverage for ES 8.0
+        run: ./vendor/bin/phpunit --coverage-clover=coverage-es8.xml
+
+      - name: Install ES Lib 7.0
+        run: composer require --dev 'elasticsearch/elasticsearch:~7.0' --with-all-dependencies
+
+      - name: Run test coverage for ES 7.0
+        run: ./vendor/bin/phpunit --coverage-clover=coverage-es7.xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage.xml
+          files: coverage-es8.xml,coverage-es7.xml
