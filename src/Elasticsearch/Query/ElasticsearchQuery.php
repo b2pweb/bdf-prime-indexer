@@ -25,6 +25,7 @@ use Bdf\Prime\Indexer\QueryInterface;
 use Bdf\Prime\Query\Contract\Limitable;
 use Bdf\Prime\Query\Contract\Orderable;
 use Closure;
+use Countable;
 
 /**
  * Query for perform index search
@@ -39,7 +40,7 @@ use Closure;
  * ;
  * </code>
  */
-class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
+class ElasticsearchQuery implements QueryInterface, Orderable, Limitable, Countable
 {
     /**
      * The Elastichsearch client
@@ -560,6 +561,18 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable
     {
         try {
             return $this->client->search($this->index, $this->compile());
+        } catch (ElasticsearchExceptionInterface $e) {
+            throw new QueryExecutionException($e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function count(): int
+    {
+        try {
+            return $this->client->count($this->index, $this->compile());
         } catch (ElasticsearchExceptionInterface $e) {
             throw new QueryExecutionException($e->getMessage(), 0, $e);
         }

@@ -188,6 +188,24 @@ interface ClientInterface
     public function search(string $index, array $query): SearchResults;
 
     /**
+     * Perform a search query on an index and return the matching documents count
+     *
+     * The result is the same as `$client->search($index, $query)->total()` but does not fetch all documents.
+     *
+     * @param string $index Index to search on
+     * @param array $query Elastisearch query. Same as {@see ClientInterface::search()}
+     *
+     * @return int Number of documents matching the query
+     *
+     * @throws NotFoundException When the index does not exist
+     * @throws InternalServerException When http 500 error occurs
+     * @throws InvalidRequestException When request is malformed
+     * @throws NoNodeAvailableException If elasticsearch server is down
+     * @throws ElasticsearchExceptionInterface When requested cannot be performed
+     */
+    public function count(string $index, array $query): int;
+
+    /**
      * Index a new document, and let elasticsearch to generate its id
      *
      * @param string $index Index to write on

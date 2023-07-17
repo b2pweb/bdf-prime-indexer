@@ -342,6 +342,35 @@ class ES7ClientTest extends TestCase
         $this->assertEqualsWithDelta(0.69, $results->maxScore(), 0.01);
     }
 
+    public function test_count_invalid_index()
+    {
+        $this->expectException(NotFoundException::class);
+        $this->expectExceptionMessage('no such index [invalid]');
+
+        $this->client->count('invalid', []);
+    }
+
+    public function test_count_invalid_query()
+    {
+        $this->expectException(InvalidRequestException::class);
+        $this->expectExceptionMessage('parsing_exception');
+
+        $this->client->createIndex('test_index', ['mappings' => ['properties' => ['foo' => ['type' => 'text']]]]);
+
+        $this->client->count('test_index', ['$invalid']);
+    }
+
+    public function test_count_success()
+    {
+        $this->client->createIndex('test_index', ['mappings' => ['properties' => ['foo' => ['type' => 'text']]]]);
+        $this->client->index('test_index', ['foo' => 'rab'], true);
+        $this->client->index('test_index', ['foo' => 'bar'], true);
+
+        $results = $this->client->count('test_index', ['query' => ['match' => ['foo' => 'bar']]]);
+
+        $this->assertSame(1, $results);
+    }
+
     public function test_bulk()
     {
         $this->client->createIndex('test_index', ['mappings' => ['properties' => ['foo' => ['type' => 'text']]]]);

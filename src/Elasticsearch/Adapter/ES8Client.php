@@ -244,6 +244,20 @@ final class ES8Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
+    public function count(string $index, array $query): int
+    {
+        try {
+            $results = $this->client->count(['index' => $index, 'body' => $query])->asArray();
+        } catch (ElasticsearchException $e) {
+            $this->handleException($e);
+        }
+
+        return $results['count'];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function bulk(array $operations, $refresh = false): array
     {
         try {
