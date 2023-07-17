@@ -52,6 +52,12 @@ class ContainerEntityIndex implements ElasticsearchIndexConfigurationInterface
                     ->integer('value')
                 ;
             })
+            ->object('baz', EmbeddedEntity::class, function (PropertiesBuilder $builder) {
+                $builder
+                    ->keyword('key')
+                    ->integer('value')
+                ;
+            })
         ;
     }
 

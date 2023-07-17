@@ -55,6 +55,34 @@ class ObjectPropertyTest extends TestCase
     /**
      *
      */
+    public function test_readFromModel_array()
+    {
+        $object = new ContainerEntity();
+
+        $property = new ObjectProperty('baz', EmbeddedEntity::class, [
+            'key' => new Property('key', [], new StandardAnalyzer(), 'keyword', new SimplePropertyAccessor('key')),
+            'value' => new Property('value', [], new StandardAnalyzer(), 'integer', new SimplePropertyAccessor('value')),
+        ], new SimplePropertyAccessor('baz'));
+
+        $this->assertSame([], $property->readFromModel($object));
+
+        $object->setBaz([
+            (new EmbeddedEntity())->setKey('a')->setValue(4),
+            (new EmbeddedEntity())->setKey('b')->setValue(5),
+        ]);
+
+        $this->assertSame(
+            [
+                ['key' => 'a', 'value' => 4],
+                ['key' => 'b', 'value' => 5],
+            ],
+            $property->readFromModel($object->setFoo((new EmbeddedEntity())->setKey('a')->setValue(4)))
+        );
+    }
+
+    /**
+     *
+     */
     public function test_writeToModel()
     {
         $object = new ContainerEntity();
@@ -76,5 +104,37 @@ class ObjectPropertyTest extends TestCase
 
         $property->writeToModel($object, ['key' => 'aqw', 'value' => 412, 'ignored' => 'eeeee']);
         $this->assertEquals((new EmbeddedEntity())->setKey('aqw')->setValue(412), $object->foo());
+    }
+
+    /**
+     *
+     */
+    public function test_writeToModel_array()
+    {
+        $object = new ContainerEntity();
+
+        $property = new ObjectProperty('baz', EmbeddedEntity::class, [
+            'key' => new Property('key', [], new StandardAnalyzer(), 'keyword', new SimplePropertyAccessor('key')),
+            'value' => new Property('value', [], new StandardAnalyzer(), 'integer', new SimplePropertyAccessor('value')),
+        ], new SimplePropertyAccessor('baz'));
+
+        $property->writeToModel($object, []);
+        $this->assertSame([], $object->baz());
+
+        $property->writeToModel($object, ['key' => 'aqw']);
+
+        $this->assertEquals([(new EmbeddedEntity())->setKey('aqw')], $object->baz());
+
+        $property->writeToModel($object, ['key' => 'aqw', 'value' => 412, 'ignored' => 'eeeee']);
+        $this->assertEquals([(new EmbeddedEntity())->setKey('aqw')->setValue(412)], $object->baz());
+
+        $property->writeToModel($object, [
+            ['key' => 'aqw', 'value' => 412],
+            ['key' => 'aqw2', 'value' => 4122],
+        ]);
+        $this->assertEquals([
+            (new EmbeddedEntity())->setKey('aqw')->setValue(412),
+            (new EmbeddedEntity())->setKey('aqw2')->setValue(4122),
+        ], $object->baz());
     }
 }
