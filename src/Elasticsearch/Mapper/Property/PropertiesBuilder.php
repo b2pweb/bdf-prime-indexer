@@ -16,6 +16,10 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Transformer\DatePropertyTran
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Transformer\PropertyTransformerInterface;
 use Bdf\Prime\Indexer\Exception\IndexConfigurationException;
 
+use stdClass;
+
+use function array_key_exists;
+
 /**
  * Build index properties
  */
@@ -310,6 +314,48 @@ class PropertiesBuilder
     }
 
     /**
+     * Declare an `nested` property
+     *
+     * The nested property allow to declare an embedded object on the indexed document.
+     * This nested is handled as sub-document, with a class and declared properties.
+     * Unlike the object property, the nested property is stored in a dedicated index, and not flattened.
+     *
+     * <code>
+     * $builder->nested('address', Address::class, function (PropertiesBuilder $builder) {
+     *     $builder
+     *         ->text('name')
+     *         ->text('address')
+     *         ->keyword('zipCode')
+     *         ->keyword('country')
+     *     ;
+     * });
+     * </code>
+     *
+     * @param string $name The indexed property name
+     * @param class-string $className Class name of the embedded object
+     * @param callable(PropertiesBuilder):void $configurator Configurator callback for embedded object properties
+     *
+     * @return $this
+     *
+     * @see https://www.elastic.co/guide/en/elasticsearch/reference/7.17/nested.html
+     */
+    public function nested(string $name, string $className, callable $configurator): PropertiesBuilder
+    {
+        $properties = clone $this;
+        $properties->properties = [];
+
+        $configurator($properties);
+
+        $this->properties[$name] = [
+            'type' => Types::NESTED,
+            'properties' => $properties->build(),
+            'className' => $className,
+        ];
+
+        return $this;
+    }
+
+    /**
      * Helper for handle an array property indexed as CSV
      * The value will be transformed, using CsvAnalyzer to CSV
      *
@@ -552,8 +598,14 @@ class PropertiesBuilder
             $transformer = $property['transformer'] ?? null;
             unset($property['transformer']);
 
-            if ($type === Types::OBJECT) {
-                $properties[$name] = new ObjectProperty($name, $property['className'] ?? \stdClass::class, $property['properties'] ?? [], $accessor);
+            if ($type === Types::OBJECT || array_key_exists('properties', $property)) {
+                $properties[$name] = new ObjectProperty(
+                    $name,
+                    $property['className'] ?? stdClass::class,
+                    $property['properties'] ?? [],
+                    $accessor,
+                    $type
+                );
             } else {
                 if (isset($property['analyzer'], $this->analyzers[$property['analyzer']])) {
                     $analyzer = $this->analyzers[$property['analyzer']];

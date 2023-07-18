@@ -110,4 +110,12 @@ interface Types
      * @see PropertiesBuilder::object()
      */
     public const OBJECT = 'object';
+
+    /**
+     * JSON object field, but not flattened on index
+     *
+     * https://www.elastic.co/guide/en/elasticsearch/reference/7.17/nested.html
+     * @see PropertiesBuilder::nested()
+     */
+    public const NESTED = 'nested';
 }

@@ -2,6 +2,7 @@
 
 namespace Elasticsearch\Mapper\Property;
 
+use Bdf\Prime\Indexer\Elasticsearch\Grammar\Types;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\CsvAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\StandardAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\SimplePropertyAccessor;
@@ -34,6 +35,13 @@ class ObjectPropertyTest extends TestCase
         ], $property->declaration());
         $this->assertEquals('object', $property->type());
         $this->assertEquals(new SimplePropertyAccessor('city'), $property->accessor());
+
+        $property = new ObjectProperty('city', \City::class, [
+            'name' => new Property('name', [], new StandardAnalyzer(), 'text', new SimplePropertyAccessor('name')),
+            'zipCode' => new Property('zipCode', [], new StandardAnalyzer(), 'keyword', new SimplePropertyAccessor('zipCode')),
+            'country' => new Property('country', [], new StandardAnalyzer(), 'keyword', new SimplePropertyAccessor('country')),
+        ], new SimplePropertyAccessor('city'), Types::NESTED);
+        $this->assertEquals('nested', $property->type());
     }
 
     /**
