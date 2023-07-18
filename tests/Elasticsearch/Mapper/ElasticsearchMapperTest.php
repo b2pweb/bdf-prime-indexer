@@ -2,6 +2,7 @@
 
 namespace Elasticsearch\Mapper;
 
+use Bdf\Prime\Indexer\Elasticsearch\Grammar\Types;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\ArrayAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\CsvAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\StandardAnalyzer;
@@ -14,6 +15,7 @@ use Bdf\Prime\Indexer\IndexTestCase;
 use ElasticsearchTestFiles\City;
 use ElasticsearchTestFiles\CityIndex;
 use ElasticsearchTestFiles\ContainerEntityIndex;
+use ElasticsearchTestFiles\ContainerEntityWithNestedIndex;
 use ElasticsearchTestFiles\EmbeddedEntity;
 use ElasticsearchTestFiles\WithAnonAnalyzerIndex;
 
@@ -100,6 +102,35 @@ class ElasticsearchMapperTest extends IndexTestCase
                 'key' => new Property('key', [], $mapper->analyzers()['default'], 'keyword', new SimplePropertyAccessor('key')),
                 'value' => new Property('value', [], $mapper->analyzers()['default'], 'integer', new SimplePropertyAccessor('value')),
             ], new SimplePropertyAccessor('baz')),
+        ];
+
+        $this->assertEquals($expected, $properties);
+
+        $this->assertSame($properties, $mapper->properties());
+    }
+
+    /**
+     *
+     */
+    public function test_properties_with_nested()
+    {
+        $mapper = new ElasticsearchMapper(new ContainerEntityWithNestedIndex());
+        $properties = $mapper->properties();
+
+        $expected = [
+            'name' => new Property('name', [], $mapper->analyzers()['default'], 'text', new SimplePropertyAccessor('name')),
+            'foo' => new ObjectProperty('foo', EmbeddedEntity::class, [
+                'key' => new Property('key', [], $mapper->analyzers()['default'], 'keyword', new SimplePropertyAccessor('key')),
+                'value' => new Property('value', [], $mapper->analyzers()['default'], 'integer', new SimplePropertyAccessor('value')),
+            ], new SimplePropertyAccessor('foo'), Types::NESTED),
+            'bar' => new ObjectProperty('bar', EmbeddedEntity::class, [
+                'key' => new Property('key', [], $mapper->analyzers()['default'], 'keyword', new SimplePropertyAccessor('key')),
+                'value' => new Property('value', [], $mapper->analyzers()['default'], 'integer', new SimplePropertyAccessor('value')),
+            ], new SimplePropertyAccessor('bar'), Types::NESTED),
+            'baz' => new ObjectProperty('baz', EmbeddedEntity::class, [
+                'key' => new Property('key', [], $mapper->analyzers()['default'], 'keyword', new SimplePropertyAccessor('key')),
+                'value' => new Property('value', [], $mapper->analyzers()['default'], 'integer', new SimplePropertyAccessor('value')),
+            ], new SimplePropertyAccessor('baz'), Types::NESTED),
         ];
 
         $this->assertEquals($expected, $properties);

@@ -2,6 +2,7 @@
 
 namespace Elasticsearch\Mapper\Property;
 
+use Bdf\Prime\Indexer\Elasticsearch\Grammar\Types;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\ArrayAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\CsvAnalyzer;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer\StandardAnalyzer;
@@ -71,6 +72,25 @@ class PropertiesBuilderTest extends TestCase
                 'zipCode' => new Property('zipCode', [], new StandardAnalyzer(), 'keyword', new SimplePropertyAccessor('zipCode')),
                 'country' => new Property('country', [], new StandardAnalyzer(), 'keyword', new SimplePropertyAccessor('country')),
             ], new SimplePropertyAccessor('my_field'))
+        ], $this->builder->build());
+    }
+
+    public function test_nested()
+    {
+        $this->builder->nested('my_field', \City::class, function (PropertiesBuilder $builder) {
+            $builder
+                ->text('name')
+                ->keyword('zipCode')
+                ->keyword('country')
+            ;
+        });
+
+        $this->assertEquals([
+            'my_field' => new ObjectProperty('my_field', \City::class, [
+                'name' => new Property('name', [], new StandardAnalyzer(), 'text', new SimplePropertyAccessor('name')),
+                'zipCode' => new Property('zipCode', [], new StandardAnalyzer(), 'keyword', new SimplePropertyAccessor('zipCode')),
+                'country' => new Property('country', [], new StandardAnalyzer(), 'keyword', new SimplePropertyAccessor('country')),
+            ], new SimplePropertyAccessor('my_field'), Types::NESTED)
         ], $this->builder->build());
     }
 

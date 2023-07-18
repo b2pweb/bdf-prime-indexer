@@ -10,7 +10,7 @@ use function array_map;
 use function is_array;
 
 /**
- * Store property of type `object`
+ * Store property of type `object` or `nested`
  * This property handles simple object, or array of objects
  */
 final class ObjectProperty implements PropertyInterface
@@ -34,19 +34,22 @@ final class ObjectProperty implements PropertyInterface
      * @var PropertyAccessorInterface
      */
     private PropertyAccessorInterface $accessor;
+    private string $type;
 
     /**
      * @param string $name The property name
      * @param class-string $className Embedded object type
      * @param array<string, PropertyInterface> $properties Index properties
      * @param PropertyAccessorInterface $accessor Accessor for extract object from container object
+     * @param string $type The property type. Must be `object` or `nested`. By default, `object`
      */
-    public function __construct(string $name, string $className, array $properties, PropertyAccessorInterface $accessor)
+    public function __construct(string $name, string $className, array $properties, PropertyAccessorInterface $accessor, string $type = Types::OBJECT)
     {
         $this->name = $name;
         $this->className = $className;
         $this->properties = $properties;
         $this->accessor = $accessor;
+        $this->type = $type;
     }
 
     /**
@@ -75,7 +78,7 @@ final class ObjectProperty implements PropertyInterface
      */
     public function type(): string
     {
-        return Types::OBJECT;
+        return $this->type;
     }
 
     /**

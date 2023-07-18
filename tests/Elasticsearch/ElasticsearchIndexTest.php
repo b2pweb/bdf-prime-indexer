@@ -7,6 +7,8 @@ use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapper;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Bulk\ElasticsearchBulkQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Bulk\UpdateOperation;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Compound\BooleanQuery;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Compound\Nested;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Expression\Script;
@@ -17,6 +19,7 @@ use ElasticsearchTestFiles\City;
 use ElasticsearchTestFiles\CityIndex;
 use ElasticsearchTestFiles\ContainerEntity;
 use ElasticsearchTestFiles\ContainerEntityIndex;
+use ElasticsearchTestFiles\ContainerEntityWithNestedIndex;
 use ElasticsearchTestFiles\EmbeddedEntity;
 use ElasticsearchTestFiles\UserIndex;
 use ElasticsearchTestFiles\WithAnonAnalyzerIndex;
@@ -861,6 +864,88 @@ class ElasticsearchIndexTest extends IndexTestCase
         $this->assertEquals([
             $entity1->setFoo(new EmbeddedEntity())->setBar(new EmbeddedEntity()) // ObjectProperty will always instantiate the object
         ], $index->query()->all());
+    }
+
+    public function test_nested_array_functional()
+    {
+        $index = new ElasticsearchIndex(self::getClient(), new ElasticsearchMapper(new ContainerEntityWithNestedIndex()));
+        $index->create([
+            $entity1 = (new ContainerEntity())
+                ->setId('a')
+                ->setName('Jean Machin')
+                ->setFoo((new EmbeddedEntity())->setKey('aqw')->setValue(951))
+                ->setBaz([
+                    (new EmbeddedEntity())->setKey('abc')->setValue(123),
+                    (new EmbeddedEntity())->setKey('xyz')->setValue(456),
+                ]),
+        ]);
+        $index->refresh();
+
+        $this->assertEqualsCanonicalizing([
+            [
+                'name' => 'Jean Machin',
+                'foo' => [
+                    'key' => 'aqw',
+                    'value' => 951,
+                ],
+                'bar' => null,
+                'baz' => [
+                    [
+                        'key' => 'abc',
+                        'value' => 123,
+                    ],
+                    [
+                        'key' => 'xyz',
+                        'value' => 456,
+                    ],
+                ],
+            ],
+        ], array_map(fn ($a) => $a['_source'], $index->query()->execute()->hits()));
+        $this->assertEquals([
+            $entity1->setBar(new EmbeddedEntity()) // ObjectProperty will always instantiate the object
+        ], $index->query()->all());
+    }
+
+    public function test_nested_querying()
+    {
+        $index = new ElasticsearchIndex(self::getClient(), new ElasticsearchMapper(new ContainerEntityWithNestedIndex()));
+        $index->create([
+            $entity1 = (new ContainerEntity())
+                ->setId('a')
+                ->setName('Jean Machin')
+                ->setFoo(new EmbeddedEntity())
+                ->setBar(new EmbeddedEntity())
+                ->setBaz([
+                    (new EmbeddedEntity())->setKey('abc')->setValue(123),
+                    (new EmbeddedEntity())->setKey('xyz')->setValue(456),
+                ]),
+            $entity2 = (new ContainerEntity())
+                ->setId('b')
+                ->setName('François Bidule')
+                ->setFoo(new EmbeddedEntity())
+                ->setBar(new EmbeddedEntity())
+                ->setBaz([
+                    (new EmbeddedEntity())->setKey('abc')->setValue(456),
+                    (new EmbeddedEntity())->setKey('xyz')->setValue(123),
+                ]),
+        ]);
+        $index->refresh();
+
+        $this->assertEquals([$entity1], $index->query()->filter([[
+            'nested' => [
+                'path' => 'baz',
+                'query' => [
+                    'bool' => [
+                        'must' => [
+                            ['term' => ['baz.key' => 'abc']],
+                            ['term' => ['baz.value' => 123]],
+                        ],
+                    ],
+                ],
+            ],
+        ]])->all());
+
+        $this->assertEquals([$entity1, $entity2], $index->query()->filter(new Nested('baz', (new BooleanQuery())->filter(['term' => ['baz.key' => 'abc']])))->all());
     }
 
     public function test_date_functional()
