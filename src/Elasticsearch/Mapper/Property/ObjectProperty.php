@@ -5,8 +5,13 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Mapper\Property;
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\Types;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\Accessor\PropertyAccessorInterface;
 
+use function array_is_list;
+use function array_map;
+use function is_array;
+
 /**
  * Store property of type `object`
+ * This property handles simple object, or array of objects
  */
 final class ObjectProperty implements PropertyInterface
 {
@@ -87,9 +92,63 @@ final class ObjectProperty implements PropertyInterface
     public function readFromModel($entity)
     {
         if (!$object = $this->accessor->readFromModel($entity)) {
-            return null;
+            // Here $object can be null or an empty array
+            // So we return the value as is to keep array value if present
+            return $object;
         }
 
+        return is_array($object)
+            ? array_map([$this, 'normalize'], $object)
+            : $this->normalize($object)
+        ;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function writeToModel($entity, $indexedValue)
+    {
+        // Consider the property as an array of nested objects if the value is a list (i.e. JSON array)
+        // or if the current entity value is an array
+        $object = $this->accessor->readFromModel($entity);
+        $isListOfObjects = $indexedValue && array_is_list($indexedValue);
+
+        // Convert indexed value to array if the current entity value is an array
+        if (!$isListOfObjects && is_array($object)) {
+            $indexedValue = $indexedValue ? [$indexedValue] : [];
+            $isListOfObjects = true;
+        }
+
+        if ($isListOfObjects) {
+            $className = $this->className;
+            $values = [];
+
+            foreach ($indexedValue as $value) {
+                $object = new $className;
+                $this->fill($object, (array) $value);
+                $values[] = $object;
+            }
+
+            $this->accessor->writeToModel($entity, $values);
+        } else {
+            if (!$object) {
+                $className = $this->className;
+                $object = new $className;
+                $this->accessor->writeToModel($entity, $object);
+            }
+
+            $this->fill($object, (array) $indexedValue);
+        }
+    }
+
+    /**
+     * Normalize object to indexed array
+     *
+     * @param object $object
+     * @return array
+     */
+    private function normalize(object $object): array
+    {
         $normalized = [];
 
         foreach ($this->properties as $property) {
@@ -100,20 +159,15 @@ final class ObjectProperty implements PropertyInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Fill given object with properties values
+     *
+     * @param object $object
+     * @param array<string, mixed> $values
      */
-    public function writeToModel($entity, $indexedValue)
+    private function fill(object $object, array $values): void
     {
-        $object = $this->accessor->readFromModel($entity);
-
-        if (!$object) {
-            $className = $this->className;
-            $object = new $className;
-            $this->accessor->writeToModel($entity, $object);
-        }
-
         foreach ($this->properties as $property) {
-            if (($fieldValue = $indexedValue[$property->name()] ?? null) !== null) {
+            if (($fieldValue = $values[$property->name()] ?? null) !== null) {
                 $property->writeToModel($object, $fieldValue);
             }
         }

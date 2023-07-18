@@ -414,6 +414,13 @@ class ElasticsearchIndexTest extends IndexTestCase
                             'value' => ['type' => 'integer'],
                         ],
                     ],
+                    'baz' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'key' => ['type' => 'keyword'],
+                            'value' => ['type' => 'integer'],
+                        ],
+                    ],
                 ],
             ],
         ];
@@ -802,6 +809,7 @@ class ElasticsearchIndexTest extends IndexTestCase
                     'key' => 'xyz',
                     'value' => 456,
                 ],
+                'baz' => [],
             ],
             [
                 'name' => 'François Bidule',
@@ -813,9 +821,46 @@ class ElasticsearchIndexTest extends IndexTestCase
                     'key' => 'zsx',
                     'value' => 852,
                 ],
+                'baz' => [],
             ],
         ], array_map(fn ($a) => $a['_source'], $index->query()->execute()->hits()));
         $this->assertEqualsCanonicalizing([$entity1, $entity2], $index->query()->all());
+    }
+
+    public function test_embedded_array_functional()
+    {
+        $index = new ElasticsearchIndex(self::getClient(), new ElasticsearchMapper(new ContainerEntityIndex()));
+        $index->create([
+            $entity1 = (new ContainerEntity())
+                ->setId('a')
+                ->setName('Jean Machin')
+                ->setBaz([
+                    (new EmbeddedEntity())->setKey('abc')->setValue(123),
+                    (new EmbeddedEntity())->setKey('xyz')->setValue(456),
+                ]),
+        ]);
+        $index->refresh();
+
+        $this->assertEqualsCanonicalizing([
+            [
+                'name' => 'Jean Machin',
+                'foo' => null,
+                'bar' => null,
+                'baz' => [
+                    [
+                        'key' => 'abc',
+                        'value' => 123,
+                    ],
+                    [
+                        'key' => 'xyz',
+                        'value' => 456,
+                    ],
+                ],
+            ],
+        ], array_map(fn ($a) => $a['_source'], $index->query()->execute()->hits()));
+        $this->assertEquals([
+            $entity1->setFoo(new EmbeddedEntity())->setBar(new EmbeddedEntity()) // ObjectProperty will always instantiate the object
+        ], $index->query()->all());
     }
 
     public function test_date_functional()

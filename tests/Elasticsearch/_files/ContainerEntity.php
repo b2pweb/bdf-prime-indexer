@@ -8,6 +8,7 @@ class ContainerEntity
     public ?string $name = null;
     public ?EmbeddedEntity $foo = null;
     public ?EmbeddedEntity $bar = null;
+    public array $baz = [];
 
     public function id(): ?string
     {
@@ -53,6 +54,26 @@ class ContainerEntity
     public function setBar(?EmbeddedEntity $bar): ContainerEntity
     {
         $this->bar = $bar;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function baz(): array
+    {
+        return $this->baz;
+    }
+
+    /**
+     * @param array $baz
+     *
+     * @return ContainerEntity
+     */
+    public function setBaz(array $baz): ContainerEntity
+    {
+        $this->baz = $baz;
 
         return $this;
     }

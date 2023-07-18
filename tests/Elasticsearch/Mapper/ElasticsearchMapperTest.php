@@ -96,6 +96,10 @@ class ElasticsearchMapperTest extends IndexTestCase
                 'key' => new Property('key', [], $mapper->analyzers()['default'], 'keyword', new SimplePropertyAccessor('key')),
                 'value' => new Property('value', [], $mapper->analyzers()['default'], 'integer', new SimplePropertyAccessor('value')),
             ], new SimplePropertyAccessor('bar')),
+            'baz' => new ObjectProperty('baz', EmbeddedEntity::class, [
+                'key' => new Property('key', [], $mapper->analyzers()['default'], 'keyword', new SimplePropertyAccessor('key')),
+                'value' => new Property('value', [], $mapper->analyzers()['default'], 'integer', new SimplePropertyAccessor('value')),
+            ], new SimplePropertyAccessor('baz')),
         ];
 
         $this->assertEquals($expected, $properties);
