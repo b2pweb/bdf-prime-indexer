@@ -92,6 +92,8 @@ final class ObjectProperty implements PropertyInterface
     public function readFromModel($entity)
     {
         if (!$object = $this->accessor->readFromModel($entity)) {
+            // Here $object can be null or an empty array
+            // So we return the value as is to keep array value if present
             return $object;
         }
 
