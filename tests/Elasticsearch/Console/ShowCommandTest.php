@@ -5,6 +5,7 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Console;
 use Bdf\Prime\Indexer\CommandTestCase;
 use Bdf\Prime\Indexer\IndexFactory;
 use Bdf\Prime\Indexer\IndexTestCase;
+use ElasticsearchTestFiles\ContainerEntity;
 use ElasticsearchTestFiles\User;
 
 /**
@@ -38,6 +39,23 @@ class ShowCommandTest extends CommandTestCase
         $this->assertStringContainsString('name: text', $output);
         $this->assertStringContainsString('password: keyword', $output);
         $this->assertStringContainsString('roles: text', $output);
+    }
+
+    /**
+     *
+     */
+    public function test_execute_with_embedded()
+    {
+        $this->factory()->for(ContainerEntity::class)->create();
+
+        $output = $this->execute('elasticsearch:show');
+
+        $this->assertMatchesRegularExpression('# Indices +| Properties +| Aliases +#', $output);
+        $this->assertMatchesRegularExpression('# containers_.{13} +| .* +| test_users +#', $output);
+        $this->assertStringContainsString('bar: object(key, value)', $output);
+        $this->assertStringContainsString('baz: object(key, value)', $output);
+        $this->assertStringContainsString('foo: object(key, value)', $output);
+        $this->assertStringContainsString('name: text', $output);
     }
 
     private function factory(): IndexFactory
