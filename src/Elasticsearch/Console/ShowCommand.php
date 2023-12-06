@@ -83,7 +83,7 @@ class ShowCommand extends AbstractCommand
         foreach ($definition['mappings']['properties'] as $prop => $def) {
             $type = $def['type'] ?? null;
 
-            if (!$type && isset($def['properties'])) {
+            if ((!$type || $type === 'nested') && isset($def['properties'])) {
                 $type = 'object(' . implode(', ', array_keys($def['properties'])) . ')';
             }
 
