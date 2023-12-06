@@ -9,6 +9,11 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function array_keys;
+use function implode;
+use function sort;
+use function usort;
+
 /**
  * Class ShowCommand
  *
@@ -48,7 +53,7 @@ class ShowCommand extends AbstractCommand
             $rows[] = [$index, $this->getProperties($definition), $this->getAliasesColumn($aliases, $index)];
         }
 
-        usort($rows, fn($a, $b) => strcmp($a[0], $b[0]));
+        usort($rows, fn($a, $b) => $a[0] <=> $b[0]);
 
         $style->createTable()
             ->setStyle('box-double')
@@ -76,7 +81,13 @@ class ShowCommand extends AbstractCommand
         $properties = '';
 
         foreach ($definition['mappings']['properties'] as $prop => $def) {
-            $properties .= $prop . ': ' . $def['type'] . PHP_EOL;
+            $type = $def['type'] ?? null;
+
+            if ((!$type || $type === 'nested') && isset($def['properties'])) {
+                $type = 'object(' . implode(', ', array_keys($def['properties'])) . ')';
+            }
+
+            $properties .= $prop . ': ' . $type . PHP_EOL;
         }
 
         return $properties;
