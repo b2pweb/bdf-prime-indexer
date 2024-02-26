@@ -185,6 +185,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable, Counta
      */
     public function where($column, $operator = null, $value = null)
     {
+        /** @psalm-suppress PossiblyInvalidArgument */
         return $this->buildWhere($column, $operator, $value, BooleanQuery::COMPOSITE_AND);
     }
 
@@ -193,38 +194,51 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable, Counta
      */
     public function orWhere($column, $operator = null, $value = null)
     {
+        /** @psalm-suppress PossiblyInvalidArgument */
         return $this->buildWhere($column, $operator, $value, BooleanQuery::COMPOSITE_OR);
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @psalm-suppress MoreSpecificImplementedParamType
      */
     public function whereNull(string $column, string $type = BooleanQuery::COMPOSITE_AND)
     {
+        /** @psalm-suppress PossiblyInvalidArgument */
         return $this->whereRaw(new Missing($column), $type);
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @psalm-suppress MoreSpecificImplementedParamType
      */
     public function whereNotNull(string $column, string $type = BooleanQuery::COMPOSITE_AND)
     {
+        /** @psalm-suppress PossiblyInvalidArgument */
         return $this->whereRaw(new Exists($column), $type);
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @psalm-suppress MoreSpecificImplementedParamType
      */
     public function orWhereNull(string $column)
     {
+        /** @psalm-suppress PossiblyInvalidArgument */
         return $this->whereNull($column, BooleanQuery::COMPOSITE_OR);
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @psalm-suppress MoreSpecificImplementedParamType
      */
     public function orWhereNotNull(string $column)
     {
+        /** @psalm-suppress PossiblyInvalidArgument */
         return $this->whereNotNull($column, BooleanQuery::COMPOSITE_OR);
     }
 
