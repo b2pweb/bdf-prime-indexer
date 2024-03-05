@@ -8,7 +8,7 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Mapper\Analyzer;
 final class CsvAnalyzer implements AnalyzerInterface
 {
     /**
-     * @var string
+     * @var non-empty-string
      */
     private string $separator;
 
@@ -21,7 +21,7 @@ final class CsvAnalyzer implements AnalyzerInterface
     /**
      * CsvAnalyzer constructor.
      *
-     * @param string $separator The elements separator character
+     * @param non-empty-string $separator The elements separator character
      * @param array $filters Filters to apply (only for declaration)
      */
     public function __construct(string $separator = ',', array $filters = [])

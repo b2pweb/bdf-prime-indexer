@@ -89,6 +89,7 @@ final class RepositorySubscriber
      * Subscribe to repository writes for synchronize index
      *
      * @param EntityRepository $repository
+     * @psalm-suppress PossiblyInvalidArgument
      */
     public function subscribe(EntityRepository $repository): void
     {

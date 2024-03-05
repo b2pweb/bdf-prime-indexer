@@ -10,6 +10,8 @@ use Bdf\Prime\Query\Contract\Whereable;
 
 /**
  * Base type for perform search on index
+ *
+ * @extends Streamable<array-key, mixed>
  */
 interface QueryInterface extends Whereable, Streamable
 {

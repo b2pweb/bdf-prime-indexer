@@ -13,6 +13,7 @@ use function array_filter;
  * @package Bdf\Prime\Indexer\Bundle\DependencyInjection
  *
  * @psalm-suppress PossiblyUndefinedMethod
+ * @psalm-suppress UndefinedMethod
  */
 class Configuration implements ConfigurationInterface
 {

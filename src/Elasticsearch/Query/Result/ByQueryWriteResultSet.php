@@ -11,6 +11,9 @@ use EmptyIterator;
  * Result wrapper for write operation perform on documents matching with a query
  *
  * Unlike {@see WriteResultSet} the write operation can be performed on multiple documents, so count can be higher than 1.
+ *
+ * @implements ArrayAccess<string, mixed>
+ * @implements ResultSetInterface<array<string, mixed>>
  */
 final class ByQueryWriteResultSet extends EmptyIterator implements ResultSetInterface, ArrayAccess
 {

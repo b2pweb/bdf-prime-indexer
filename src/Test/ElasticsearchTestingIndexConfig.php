@@ -8,15 +8,21 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertiesBuilder;
 
 /**
  * Decorate elasticsearch index configuration for testing
+ *
+ * @template E as object
+ * @implements ElasticsearchIndexConfigurationInterface<E>
  */
 class ElasticsearchTestingIndexConfig implements ElasticsearchIndexConfigurationInterface
 {
+    /**
+     * @var ElasticsearchIndexConfigurationInterface<E>
+     */
     private ElasticsearchIndexConfigurationInterface $config;
 
     /**
      * ElasticsearchTestingIndexConfig constructor.
      *
-     * @param ElasticsearchIndexConfigurationInterface $config
+     * @param ElasticsearchIndexConfigurationInterface<E> $config
      */
     public function __construct(ElasticsearchIndexConfigurationInterface $config)
     {

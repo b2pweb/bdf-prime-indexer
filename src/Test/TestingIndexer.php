@@ -256,6 +256,7 @@ class TestingIndexer
     private function resetIndexesProperty(): void
     {
         if (!$this->indexesProperty) {
+            /** @psalm-suppress PossiblyNullArgument */
             $this->indexesProperty = new ReflectionProperty($this->factory, 'indexes');
             $this->indexesProperty->setAccessible(true);
         }
