@@ -41,7 +41,7 @@ final class ElasticsearchIndexFactory implements IndexFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function __invoke($config, IndexFactory $factory = null): IndexInterface
+    public function __invoke($config, ?IndexFactory $factory = null): IndexInterface
     {
         return new ElasticsearchIndex(
             $this->container->get(ClientInterface::class),
