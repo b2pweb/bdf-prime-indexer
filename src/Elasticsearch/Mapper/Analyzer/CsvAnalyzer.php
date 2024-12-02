@@ -45,7 +45,7 @@ final class CsvAnalyzer implements AnalyzerInterface
      */
     public function fromIndex($value): array
     {
-        return explode($this->separator, $value);
+        return $value !== null && $value !== '' ? explode($this->separator, $value) : [];
     }
 
     /**
