@@ -55,7 +55,7 @@ final class BulkResultSet implements ResultSetInterface, ArrayAccess
     /**
      * {@inheritdoc}
      */
-    public function key(): int
+    public function key(): ?int
     {
         return $this->resultSet->key();
     }
