@@ -12,17 +12,17 @@
   "autoload": {
     "psr-4": {
       "Bdf\\Prime\\Indexer\\": "src"
-    }
+    },
+    "files": [
+      "src/polyfill-sf6.php"
+    ]
   },
   "autoload-dev": {
     "psr-4": {
       "Bdf\\Prime\\Indexer\\": "tests",
       "ElasticsearchTestFiles\\": "tests/Elasticsearch/_files",
       "DenormalizeTestFiles\\": "tests/Denormalize/_files"
-    },
-    "files": [
-      "src/polyfill-sf6.php"
-    ]
+    }
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
