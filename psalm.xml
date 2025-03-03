@@ -15,6 +15,7 @@
             <file name="src/Elasticsearch/Adapter/ES8Client.php" />
             <file name="src/Elasticsearch/Adapter/ES7Client.php" />
             <file name="src/Elasticsearch/Adapter/ClientFactory.php" />
+            <file name="src/polyfill-sf6.php" />
         </ignoreFiles>
     </projectFiles>
 </psalm>
