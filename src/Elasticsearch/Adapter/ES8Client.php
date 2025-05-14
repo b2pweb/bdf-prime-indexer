@@ -16,6 +16,8 @@ use Elastic\Elasticsearch\Exception\ElasticsearchException;
 use Elastic\Elasticsearch\Exception\ServerResponseException;
 use Elastic\Transport\Exception\NoNodeAvailableException as DriverNoNodeAvailableException;
 
+use function intdiv;
+
 /**
  * Client adapter for PHP elasticsearch client v8
  */
@@ -239,6 +241,58 @@ final class ES8Client implements ClientInterface
             $results['hits']['hits'],
             $results
         );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function multiSearch(string $index, array $queries): array
+    {
+        $body = [];
+
+        foreach ($queries as $query) {
+            $body[] = [];
+            $body[] = $query;
+        }
+
+        try {
+            $response = $this->client->msearch(['index' => $index, 'body' => $body])->asArray();
+        } catch (ElasticsearchException $e) {
+            $this->handleException($e);
+        }
+
+        $results = [];
+
+        foreach ($response['responses'] as $key => $result) {
+            if (isset($result['error'])) {
+                $status = (int) $result['status'];
+
+                switch (intdiv($status, 100)) {
+                    case 4:
+                        throw $status === 404 ? new NotFoundException($result['error']['reason']) : new InvalidRequestException($result['error']['reason']);
+
+                    case 5:
+                        throw new InternalServerException($result['error']['reason']);
+
+                    default:
+                        throw new RuntimeException($result['error']['reason']);
+                }
+            }
+
+            $results[$key] = new SearchResults(
+                $result['_scroll_id'] ?? null,
+                $result['took'],
+                $result['timed_out'],
+                $result['_shards'],
+                $result['hits']['total']['value'],
+                $result['hits']['total']['relation'] === 'eq',
+                $result['hits']['max_score'] ?? null,
+                $result['hits']['hits'],
+                $result
+            );
+        }
+
+        return $results;
     }
 
     /**

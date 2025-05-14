@@ -188,6 +188,22 @@ interface ClientInterface
     public function search(string $index, array $query): SearchResults;
 
     /**
+     * Perform a search query on an index
+     *
+     * @param string $index Index to search on
+     * @param array<array> $queries Queries to perform. Each items use same format as $query parameter of {@see ClientInterface::search()}.
+     *
+     * @return list<SearchResults>
+     *
+     * @throws NotFoundException When the index does not exist
+     * @throws InternalServerException When http 500 error occurs
+     * @throws InvalidRequestException When request is malformed
+     * @throws NoNodeAvailableException If elasticsearch server is down
+     * @throws ElasticsearchExceptionInterface When requested cannot be performed
+     */
+    public function multiSearch(string $index, array $queries): array;
+
+    /**
      * Perform a search query on an index and return the matching documents count
      *
      * The result is the same as `$client->search($index, $query)->total()` but does not fetch all documents.

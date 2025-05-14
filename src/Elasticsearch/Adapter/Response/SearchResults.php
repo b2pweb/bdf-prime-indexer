@@ -29,7 +29,7 @@ final class SearchResults implements ArrayAccess
      * @param int $total
      * @param bool $isAccurateCount
      * @param float|null $maxScore
-     * @param array $hits
+     * @param list<array> $hits
      * @param array $raw
      */
     public function __construct(?string $scrollId, int $took, bool $timedOut, array $shards, int $total, bool $isAccurateCount, ?float $maxScore, array $hits, array $raw)
@@ -130,13 +130,14 @@ final class SearchResults implements ArrayAccess
     /**
      * Array of returned document objects
      *
-     * @return array{
+     * @return list<array{
      *     _index: string,
      *     _id: string,
      *     _score: float,
      *     _source: array,
      *     fields: array
-     * }
+     * }>
+     * @psalm-suppress MoreSpecificReturnType
      */
     public function hits(): array
     {
