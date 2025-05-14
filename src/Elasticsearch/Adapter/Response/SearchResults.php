@@ -138,6 +138,7 @@ final class SearchResults implements ArrayAccess
      *     fields: array
      * }>
      * @psalm-suppress MoreSpecificReturnType
+     * @psalm-suppress LessSpecificReturnStatement
      */
     public function hits(): array
     {
