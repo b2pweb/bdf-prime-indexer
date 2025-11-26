@@ -238,7 +238,7 @@ class TestingIndexer
         }
 
         $this->configProperty = new ReflectionProperty(MappingResolver::class, 'mapping');
-        $this->configProperty->setAccessible(true);
+        PHP_VERSION_ID >= 80100 or $this->configProperty->setAccessible(true);
 
         return $this->configProperty;
     }
@@ -258,7 +258,7 @@ class TestingIndexer
         if (!$this->indexesProperty) {
             /** @psalm-suppress PossiblyNullArgument */
             $this->indexesProperty = new ReflectionProperty($this->factory, 'indexes');
-            $this->indexesProperty->setAccessible(true);
+            PHP_VERSION_ID >= 80100 or $this->indexesProperty->setAccessible(true);
         }
 
         $this->indexesProperty->setValue($this->factory, []);
