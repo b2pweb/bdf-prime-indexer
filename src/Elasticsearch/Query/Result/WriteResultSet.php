@@ -11,6 +11,7 @@ use EmptyIterator;
  * ResultSet wrapper for a single document write result
  *
  * @implements ResultSetInterface<array<string, mixed>>
+ * @implements ArrayAccess<string, mixed>
  */
 final class WriteResultSet extends EmptyIterator implements ResultSetInterface, ArrayAccess
 {
@@ -27,22 +28,24 @@ final class WriteResultSet extends EmptyIterator implements ResultSetInterface, 
      *     result: string,
      *     created: bool,
      *     updated: bool,
-     *     deleted: bool
+     *     deleted: bool,
+     *     noop: bool,
+     *     ...
      * }
      */
     private array $data;
 
     /**
-     * @param array $data
+     * @param array{ _index: string, _id: string, _version: integer, result: string, ...} $data
      */
     public function __construct(array $data)
     {
-        $this->data = $data;
+        $data[self::RESULT_CREATED] = $data['result'] === self::RESULT_CREATED;
+        $data[self::RESULT_UPDATED] = $data['result'] === self::RESULT_UPDATED;
+        $data[self::RESULT_DELETED] = $data['result'] === self::RESULT_DELETED;
+        $data[self::RESULT_NOOP]    = $data['result'] === self::RESULT_NOOP;
 
-        $this->data[self::RESULT_CREATED] = $data['result'] === self::RESULT_CREATED;
-        $this->data[self::RESULT_UPDATED] = $data['result'] === self::RESULT_UPDATED;
-        $this->data[self::RESULT_DELETED] = $data['result'] === self::RESULT_DELETED;
-        $this->data[self::RESULT_NOOP]    = $data['result'] === self::RESULT_NOOP;
+        $this->data = $data;
     }
 
     /**

@@ -24,6 +24,7 @@ final class Property implements PropertyInterface
      *     index?: bool,
      *     fields?: array,
      *     analyzer?: string,
+     *     ...
      * }
      */
     private array $declaration;
@@ -53,7 +54,7 @@ final class Property implements PropertyInterface
      * Property constructor.
      *
      * @param string $name
-     * @param array{index?: bool, fields?: array, analyzer?: string} $declaration
+     * @param array{index?: bool, fields?: array, analyzer?: string, ...} $declaration
      * @param AnalyzerInterface $analyzer
      * @param string $type
      * @param PropertyAccessorInterface $accessor

@@ -33,6 +33,8 @@ class CsvAnalyzerTest extends TestCase
         $analyzer = new CsvAnalyzer();
 
         $this->assertEquals(['3', '7'], $analyzer->fromIndex('3,7'));
+        $this->assertEquals([], $analyzer->fromIndex(''));
+        $this->assertEquals([], $analyzer->fromIndex(null));
     }
 
     /**
@@ -43,5 +45,6 @@ class CsvAnalyzerTest extends TestCase
         $analyzer = new CsvAnalyzer();
 
         $this->assertEquals('3,7', $analyzer->toIndex(['3', '7']));
+        $this->assertEquals(null, $analyzer->toIndex(null));
     }
 }

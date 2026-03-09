@@ -11,6 +11,7 @@ use Bdf\Prime\Connection\Result\ResultSetInterface;
  * ResultSet wrapper for a bulk write result
  *
  * @implements ResultSetInterface<array<string, mixed>>
+ * @implements ArrayAccess<string, mixed>
  */
 final class BulkResultSet implements ResultSetInterface, ArrayAccess
 {
@@ -54,7 +55,7 @@ final class BulkResultSet implements ResultSetInterface, ArrayAccess
     /**
      * {@inheritdoc}
      */
-    public function key(): int
+    public function key(): ?int
     {
         return $this->resultSet->key();
     }

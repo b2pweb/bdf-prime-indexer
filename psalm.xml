@@ -2,6 +2,7 @@
 <psalm
     errorLevel="3"
     resolveFromConfigFile="true"
+    findUnusedCode="false"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
     xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
@@ -14,6 +15,7 @@
             <file name="src/Elasticsearch/Adapter/ES8Client.php" />
             <file name="src/Elasticsearch/Adapter/ES7Client.php" />
             <file name="src/Elasticsearch/Adapter/ClientFactory.php" />
+            <file name="src/polyfill-sf6.php" />
         </ignoreFiles>
     </projectFiles>
 </psalm>

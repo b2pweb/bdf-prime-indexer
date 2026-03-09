@@ -18,6 +18,7 @@ use Traversable;
  * @template R as array|object
  * @extends AbstractPaginator<R>
  * @implements IteratorAggregate<array-key, R>
+ * @implements PaginatorInterface<R>
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */

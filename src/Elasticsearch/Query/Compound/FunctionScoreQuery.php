@@ -43,7 +43,7 @@ final class FunctionScoreQuery implements WrappingQueryInterface
      *
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/2.4/query-dsl-function-score-query.html#score-functions For list of function types
      */
-    public function addFunction(string $type, array $parameters, array $filter = [], float $weight = null): FunctionScoreQuery
+    public function addFunction(string $type, array $parameters, array $filter = [], ?float $weight = null): FunctionScoreQuery
     {
         $function = [$type => $parameters];
 
@@ -134,7 +134,7 @@ final class FunctionScoreQuery implements WrappingQueryInterface
     /**
      * {@inheritdoc}
      */
-    public function wrap(CompilableExpressionInterface $innerQuery = null): WrappingQueryInterface
+    public function wrap(?CompilableExpressionInterface $innerQuery = null): WrappingQueryInterface
     {
         $this->query = $innerQuery;
 

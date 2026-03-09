@@ -76,6 +76,8 @@ final class DenormalizedIndex implements IndexInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @psalm-suppress PossiblyInvalidArgument
      */
     public function create(iterable $entities = [], $options = []): void
     {

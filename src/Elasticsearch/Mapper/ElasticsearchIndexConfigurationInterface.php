@@ -8,6 +8,9 @@ use Bdf\Prime\Indexer\IndexConfigurationInterface;
 
 /**
  * Configuration for an elasticsearch index
+ *
+ * @template E as object
+ * @extends IndexConfigurationInterface<E>
  */
 interface ElasticsearchIndexConfigurationInterface extends IndexConfigurationInterface
 {

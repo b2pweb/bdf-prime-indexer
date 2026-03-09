@@ -192,6 +192,7 @@ class CreateIndexCommand extends Command
             return $entities;
         }
 
+        /** @psalm-suppress PossiblyInvalidArgument */
         return Streams::wrap($entities)->filter([$config, 'shouldBeIndexed']);
     }
 }

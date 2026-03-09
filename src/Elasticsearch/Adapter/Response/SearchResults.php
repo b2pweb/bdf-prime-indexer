@@ -2,10 +2,14 @@
 
 namespace Bdf\Prime\Indexer\Elasticsearch\Adapter\Response;
 
+use ArrayAccess;
+
 /**
  * Results of a search query
+ *
+ * @implements ArrayAccess<string, mixed>
  */
-final class SearchResults implements \ArrayAccess
+final class SearchResults implements ArrayAccess
 {
     private ?string $scrollId;
     private int $took;

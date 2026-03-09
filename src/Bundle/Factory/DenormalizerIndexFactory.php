@@ -19,7 +19,7 @@ final class DenormalizerIndexFactory implements IndexFactoryInterface
      *
      * @param DenormalizerInterface $config
      */
-    public function __invoke($config, IndexFactory $factory = null): IndexInterface
+    public function __invoke($config, ?IndexFactory $factory = null): IndexInterface
     {
         if (!$factory) {
             throw new \InvalidArgumentException('$factory is mandatory');

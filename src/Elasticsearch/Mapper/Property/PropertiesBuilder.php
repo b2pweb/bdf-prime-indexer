@@ -40,6 +40,7 @@ class PropertiesBuilder
      *     fields?: array,
      *     properties?: array,
      *     className?: class-string,
+     *     ...
      * }>
      */
     private array $properties = [];
@@ -362,7 +363,7 @@ class PropertiesBuilder
      * The analyzer will be added automatically, and reused if possible
      *
      * @param string $name The property name. Should be an array property
-     * @param string $separator The values separator
+     * @param non-empty-string $separator The values separator
      * @param string $type The property type to use. Use "string" on elasticsearch < 5.0
      *
      * @return $this
@@ -539,6 +540,7 @@ class PropertiesBuilder
                 return $this->option('accessor', new CustomAccessor($accessor));
 
             case is_array($accessor):
+                /** @psalm-suppress NoValue */
                 return $this->option('accessor', new EmbeddedAccessor($accessor));
 
             case $accessor instanceof PropertyAccessorInterface:
@@ -607,7 +609,7 @@ class PropertiesBuilder
                     $type
                 );
             } else {
-                if (isset($property['analyzer'], $this->analyzers[$property['analyzer']])) {
+                if (isset($property['analyzer']) && isset($this->analyzers[$property['analyzer']])) {
                     $analyzer = $this->analyzers[$property['analyzer']];
                 } else {
                     $analyzer = $this->mapper->analyzers()[$property['analyzer'] ?? 'default'];

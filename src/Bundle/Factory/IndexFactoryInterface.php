@@ -10,7 +10,7 @@ use Bdf\Prime\Indexer\IndexInterface;
  * Factory for indexes
  *
  * @template T as object
- * @method IndexInterface __invoke($config, IndexFactory $factory)
+ * @method IndexInterface __invoke($config, ?IndexFactory $factory = null)
  */
 interface IndexFactoryInterface
 {
@@ -25,7 +25,7 @@ interface IndexFactoryInterface
      * Create the index from the configuration object
      *
      * @param T $config The configuration object
-     * @param IndexFactory $factory The index factory
+     * @param IndexFactory|null $factory The index factory
      *
      * @return IndexInterface
      *
