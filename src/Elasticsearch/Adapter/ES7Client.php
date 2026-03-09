@@ -252,6 +252,58 @@ final class ES7Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
+    public function multiSearch(string $index, array $queries): array
+    {
+        $body = [];
+
+        foreach ($queries as $query) {
+            $body[] = [];
+            $body[] = $query;
+        }
+
+        try {
+            $response = $this->client->msearch(['index' => $index, 'body' => $body]);
+        } catch (ElasticsearchException $e) {
+            $this->handleException($e);
+        }
+
+        $results = [];
+
+        foreach ($response['responses'] as $key => $result) {
+            if (isset($result['error'])) {
+                $status = (int) $result['status'];
+
+                switch (intdiv($status, 100)) {
+                    case 4:
+                        throw $status === 404 ? new NotFoundException($result['error']['reason']) : new InvalidRequestException($result['error']['reason']);
+
+                    case 5:
+                        throw new InternalServerException($result['error']['reason']);
+
+                    default:
+                        throw new RuntimeException($result['error']['reason']);
+                }
+            }
+
+            $results[$key] = new SearchResults(
+                $result['_scroll_id'] ?? null,
+                $result['took'],
+                $result['timed_out'],
+                $result['_shards'],
+                $result['hits']['total']['value'],
+                $result['hits']['total']['relation'] === 'eq',
+                $result['hits']['max_score'] ?? null,
+                $result['hits']['hits'],
+                $result
+            );
+        }
+
+        return $results;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function count(string $index, array $query): int
     {
         try {

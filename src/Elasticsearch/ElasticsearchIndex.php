@@ -10,6 +10,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Mapper\ElasticsearchMapperInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Bulk\ElasticsearchBulkQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Mapper\Property\PropertyInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
+use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchMultiSearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchUpdateQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\BulkResultSet;
@@ -249,6 +250,16 @@ class ElasticsearchIndex implements IndexInterface
         return (new ElasticsearchBulkQuery($this->client, $this->mapper))
             ->into($this->mapper->configuration()->index())
         ;
+    }
+
+    /**
+     * Get a query object for performing multi search
+     *
+     * @return ElasticsearchMultiSearchQuery
+     */
+    public function multi(): ElasticsearchMultiSearchQuery
+    {
+        return new ElasticsearchMultiSearchQuery($this->client, $this->mapper->configuration()->index(), $this->mapper);
     }
 
     /**

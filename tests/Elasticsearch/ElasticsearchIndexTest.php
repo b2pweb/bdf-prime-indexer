@@ -10,6 +10,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\Bulk\UpdateOperation;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Compound\BooleanQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Compound\Nested;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchCreateQuery;
+use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchMultiSearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\ElasticsearchQuery;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Expression\Script;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
@@ -25,6 +26,8 @@ use ElasticsearchTestFiles\UserIndex;
 use ElasticsearchTestFiles\WithAnonAnalyzerIndex;
 use ElasticsearchTestFiles\WithDate;
 use ElasticsearchTestFiles\WithDateIndex;
+
+use function array_map;
 
 /**
  * Class ElasticsearchIndexTest
@@ -257,6 +260,25 @@ class ElasticsearchIndexTest extends IndexTestCase
                 ->sort(function (City $a, City $b) { return $b->population() - $a->population(); })
                 ->map(new Getter('name'))
                 ->toArray(false)
+        );
+    }
+
+    /**
+     *
+     */
+    public function test_multi()
+    {
+        $this->addCities();
+
+        $query = $this->index->multi();
+
+        $query->query('p')->where('population', '>', 1000000)->order('population', 'asc');
+        $query->query('c')->where('population', '<', 1000000)->order('population', 'asc');
+
+        $this->assertInstanceOf(ElasticsearchMultiSearchQuery::class, $query);
+        $this->assertEquals(
+            ['p' => 'Paris', 'c' => 'Parthenay'],
+            array_map(fn (City $city) => $city->name(), $query->first())
         );
     }
 
