@@ -5,7 +5,6 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 use Bdf\Collection\Stream\ArrayStream;
 use Bdf\Collection\Stream\StreamInterface;
 use Bdf\Collection\Util\OptionalInterface;
-use Bdf\Prime\Connection\Result\ResultSetInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\ElasticsearchExceptionInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Response\SearchResults;
@@ -26,10 +25,8 @@ use Bdf\Prime\Query\Contract\Limitable;
 use Bdf\Prime\Query\Contract\Orderable;
 use Bdf\Prime\Query\Expression\ExpressionInterface as PrimeExpressionInterface;
 use Bdf\Prime\Query\QueryInterface as PrimeQueryInterface;
-use Closure;
 use Countable;
 use InvalidArgumentException;
-
 use TypeError;
 
 use function array_replace;
@@ -38,6 +35,7 @@ use function explode;
 use function is_array;
 use function is_callable;
 use function is_int;
+use function is_iterable;
 use function is_string;
 use function trim;
 
@@ -793,7 +791,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable, Counta
     /**
      * Build simple where expression
      *
-     * @param string|array<string,mixed>|callable(static):void $expression The expression to compile. Can be name of the column, array expression, or closure
+     * @param string|iterable<string,mixed>|callable(static):void $expression The expression to compile. Can be name of the column, array expression, or closure
      * @param string|mixed $operator The operator (if first argument is column name), or value if value is not given
      * @param mixed $value The comparison value if first argument is the column name
      * @param string $type The composite expression type (and/or)
@@ -812,7 +810,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable, Counta
             return $this->nested($expression, $type);
         }
 
-        if (is_array($expression)) {
+        if (is_iterable($expression)) {
             return $this->buildArrayExpression($expression, $type);
         }
 
@@ -836,12 +834,12 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable, Counta
     /**
      * Build array expression
      *
-     * @param array $expression
+     * @param iterable<string, mixed> $expression
      * @param string $type
      *
      * @return $this
      */
-    private function buildArrayExpression(array $expression, $type = BooleanQuery::COMPOSITE_AND)
+    private function buildArrayExpression(iterable $expression, $type = BooleanQuery::COMPOSITE_AND)
     {
         //nested expression
         $bool = new BooleanQuery();
