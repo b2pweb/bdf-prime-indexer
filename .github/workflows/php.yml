@@ -51,7 +51,7 @@ jobs:
     - name: Runs Elasticsearch
       uses: elastic/elastic-github-actions/elasticsearch@dc110609b1cb3024477ead739ca23ab547b8b9ff
       with:
-        stack-version: 7.17.1
+        stack-version: 7.17.28
 
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
@@ -71,7 +71,7 @@ jobs:
       fail-fast: false
       matrix:
         versions:
-          - es: '7.17.1'
+          - es: '7.17.28'
             lib: '7.0'
           - es: '8.1.0'
             lib: '8.0'
