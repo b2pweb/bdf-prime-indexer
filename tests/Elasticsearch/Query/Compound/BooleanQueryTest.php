@@ -6,6 +6,7 @@ use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammar;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\MatchBoolean;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Missing;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Range;
+use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\WhereFilter;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Wildcard;
 use PHPUnit\Framework\TestCase;
 
@@ -41,6 +42,45 @@ class BooleanQueryTest extends TestCase
                 'must_not' => [['missing' => ['field' => 'population']]],
             ]
         ], $bool->compile(new ElasticsearchGrammar()));
+    }
+
+    public function test_removeFilter_not_matching()
+    {
+        $bool = new BooleanQuery();
+        $bool
+            ->filter(new WhereFilter('name', '=', 'Paris'))
+            ->filter(new WhereFilter('zipCode', '=', '75000'))
+        ;
+
+        $removed = clone $bool;
+        $this->assertFalse($removed->removeFilter(fn ($filter) => $filter->column() === 'not_found'));
+        $this->assertEquals($bool, $removed);
+    }
+
+    public function test_removeFilter_matching()
+    {
+        $bool = new BooleanQuery();
+        $bool
+            ->filter(new WhereFilter('name', '=', 'Paris'))
+            ->filter(new WhereFilter('zipCode', '=', '75000'))
+        ;
+
+        $this->assertTrue($bool->removeFilter(fn ($filter) => $filter->column() === 'name'));
+        $this->assertEquals((new BooleanQuery())->filter(new WhereFilter('zipCode', '=', '75000')), $bool);
+    }
+
+    public function test_removeFilter_matching_multiple()
+    {
+        $bool = new BooleanQuery();
+        $bool
+            ->filter(new WhereFilter('name', '=', 'Paris'))
+            ->filter(new WhereFilter('zipCode', '=', '75000'))
+            ->filter(new WhereFilter('name', '>', 'A'))
+            ->filter(new WhereFilter('name', '<', 'Z'))
+        ;
+
+        $this->assertTrue($bool->removeFilter(fn ($filter) => $filter->column() === 'name'));
+        $this->assertEquals((new BooleanQuery())->filter(new WhereFilter('zipCode', '=', '75000')), $bool);
     }
 
     /**

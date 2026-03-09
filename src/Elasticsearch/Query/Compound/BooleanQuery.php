@@ -4,6 +4,13 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query\Compound;
 
 use Bdf\Prime\Indexer\Elasticsearch\Grammar\ElasticsearchGrammarInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Query\CompilableExpressionInterface;
+use Closure;
+
+use function array_keys;
+use function array_merge;
+use function array_values;
+use function count;
+use function end;
 
 /**
  * A compound query with boolean combinations.
@@ -52,6 +59,38 @@ final class BooleanQuery implements CompilableExpressionInterface
         $this->filter[] = $query;
 
         return $this;
+    }
+
+    /**
+     * Remove a filter matching the given predicate
+     * If multiple filters match the predicate, all of them will be removed
+     *
+     * Note: this method will only remove filters that have been added using the filter() method
+     *
+     * @param Closure(array|CompilableExpressionInterface):bool $predicate The predicate. Takes a filter as parameter and returns true if it should be removed
+     *
+     * @return bool true if at least one filter has been removed, false if no filter matched the predicate
+     * @see BooleanQuery::filter() To add a filter
+     */
+    public function removeFilter(Closure $predicate): bool
+    {
+        $filters = $this->filter;
+        $hasChanged = false;
+
+        foreach ($filters as $key => $filter) {
+            if ($predicate($filter)) {
+                unset($filters[$key]);
+                $hasChanged = true;
+            }
+        }
+
+        if ($hasChanged) {
+            $this->filter = array_values($filters);
+
+            return true;
+        }
+
+        return false;
     }
 
     /**

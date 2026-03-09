@@ -12,7 +12,7 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
  */
 class PrimeIndexerBundle extends Bundle
 {
-    public function build(ContainerBuilder $container)
+    public function build(ContainerBuilder $container): void
     {
         $container->addCompilerPass(new RegisterIndexFactoryCompilerPass());
         $container->addCompilerPass(new RegisterIndexConfigurationCompilerPass());

@@ -5,7 +5,6 @@ namespace Bdf\Prime\Indexer\Elasticsearch\Query;
 use Bdf\Collection\Stream\ArrayStream;
 use Bdf\Collection\Stream\StreamInterface;
 use Bdf\Collection\Util\OptionalInterface;
-use Bdf\Prime\Connection\Result\ResultSetInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\ClientInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Exception\ElasticsearchExceptionInterface;
 use Bdf\Prime\Indexer\Elasticsearch\Adapter\Response\SearchResults;
@@ -24,8 +23,21 @@ use Bdf\Prime\Indexer\Exception\QueryExecutionException;
 use Bdf\Prime\Indexer\QueryInterface;
 use Bdf\Prime\Query\Contract\Limitable;
 use Bdf\Prime\Query\Contract\Orderable;
-use Closure;
+use Bdf\Prime\Query\Expression\ExpressionInterface as PrimeExpressionInterface;
+use Bdf\Prime\Query\QueryInterface as PrimeQueryInterface;
 use Countable;
+use InvalidArgumentException;
+use TypeError;
+
+use function array_replace;
+use function ceil;
+use function explode;
+use function is_array;
+use function is_callable;
+use function is_int;
+use function is_iterable;
+use function is_string;
+use function trim;
 
 /**
  * Query for perform index search
@@ -185,8 +197,27 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable, Counta
      */
     public function where($column, $operator = null, $value = null)
     {
-        /** @psalm-suppress PossiblyInvalidArgument */
+        if ($column instanceof PrimeExpressionInterface) {
+            throw new InvalidArgumentException('Field cannot be a Prime expression on elasticsearch. Use a string, or whereRaw() instead.');
+        }
+
         return $this->buildWhere($column, $operator, $value, BooleanQuery::COMPOSITE_AND);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function whereReplace(string $column, $operator = null, $value = null)
+    {
+        if ($value === null && (!is_string($operator) || !isset($this->operators[$operator]))) {
+            $value = $operator;
+            $operator = '=';
+        }
+
+        $this->bool()->and()->removeFilter(fn ($filter) => $filter instanceof WhereFilter && $filter->column() === $column && $filter->operator() === $operator);
+        $this->bool()->and()->filter(new WhereFilter($column, $operator, $value));
+
+        return $this;
     }
 
     /**
@@ -194,62 +225,68 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable, Counta
      */
     public function orWhere($column, $operator = null, $value = null)
     {
-        /** @psalm-suppress PossiblyInvalidArgument */
+        if ($column instanceof PrimeExpressionInterface) {
+            throw new InvalidArgumentException('Field cannot be a Prime expression on elasticsearch. Use a string, or whereRaw() instead.');
+        }
+
         return $this->buildWhere($column, $operator, $value, BooleanQuery::COMPOSITE_OR);
     }
 
     /**
      * {@inheritdoc}
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
      */
-    public function whereNull(string $column, string $type = BooleanQuery::COMPOSITE_AND)
+    public function whereNull($column, string $type = BooleanQuery::COMPOSITE_AND)
     {
-        /** @psalm-suppress PossiblyInvalidArgument */
+        if (!is_string($column)) {
+            throw new InvalidArgumentException('Field name must be a string');
+        }
+
         return $this->whereRaw(new Missing($column), $type);
     }
 
     /**
      * {@inheritdoc}
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
      */
-    public function whereNotNull(string $column, string $type = BooleanQuery::COMPOSITE_AND)
+    public function whereNotNull($column, string $type = BooleanQuery::COMPOSITE_AND)
     {
-        /** @psalm-suppress PossiblyInvalidArgument */
+        if (!is_string($column)) {
+            throw new InvalidArgumentException('Field name must be a string');
+        }
+
         return $this->whereRaw(new Exists($column), $type);
     }
 
     /**
      * {@inheritdoc}
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
      */
-    public function orWhereNull(string $column)
+    public function orWhereNull($column)
     {
-        /** @psalm-suppress PossiblyInvalidArgument */
         return $this->whereNull($column, BooleanQuery::COMPOSITE_OR);
     }
 
     /**
      * {@inheritdoc}
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
      */
-    public function orWhereNotNull(string $column)
+    public function orWhereNotNull($column)
     {
-        /** @psalm-suppress PossiblyInvalidArgument */
         return $this->whereNotNull($column, BooleanQuery::COMPOSITE_OR);
     }
 
     /**
      * {@inheritdoc}
      *
-     * @param string|\Bdf\Prime\Query\QueryInterface|\Bdf\Prime\Query\Expression\ExpressionInterface|array|CompilableExpressionInterface $raw
-     * @psalm-suppress PossiblyInvalidArgument
+     * @param string|PrimeQueryInterface|\Bdf\Prime\Query\Expression\ExpressionInterface|array|CompilableExpressionInterface $raw
      */
     public function whereRaw($raw, string $type = BooleanQuery::COMPOSITE_AND)
     {
+        if ($raw instanceof PrimeQueryInterface) {
+            throw new InvalidArgumentException('Cannot use Prime query as raw expression');
+        }
+
+        if ($raw instanceof PrimeExpressionInterface || is_string($raw)) {
+            throw new InvalidArgumentException('Prime expression are not supported by elasticsearch query. Use CompilableExpressionInterface instead.');
+        }
+
         switch ($type) {
             case BooleanQuery::COMPOSITE_AND:
                 $this->bool()->and()->filter($raw);
@@ -318,7 +355,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable, Counta
     {
         if (!is_array($sort)) {
             if (!is_string($sort)) {
-                throw new \TypeError('$sort must be of type string or array');
+                throw new TypeError('$sort must be of type string or array');
             }
 
             $this->order = [$sort => $order];
@@ -338,7 +375,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable, Counta
             $this->order = array_replace($this->order, $sort);
         } else {
             if (!is_string($sort)) {
-                throw new \TypeError('$sort must be of type string or array');
+                throw new TypeError('$sort must be of type string or array');
             }
 
             $this->order[$sort] = $order;
@@ -754,7 +791,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable, Counta
     /**
      * Build simple where expression
      *
-     * @param string|array<string,mixed>|callable(static):void $expression The expression to compile. Can be name of the column, array expression, or closure
+     * @param string|iterable<string,mixed>|callable(static):void $expression The expression to compile. Can be name of the column, array expression, or closure
      * @param string|mixed $operator The operator (if first argument is column name), or value if value is not given
      * @param mixed $value The comparison value if first argument is the column name
      * @param string $type The composite expression type (and/or)
@@ -764,6 +801,8 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable, Counta
     private function buildWhere($expression, $operator, $value, $type)
     {
         if ($expression instanceof CompilableExpressionInterface) {
+            @trigger_error('Using CompilableExpressionInterface as expression is deprecated. Use whereRaw() instead.', E_USER_DEPRECATED);
+
             return $this->whereRaw($expression, $type);
         }
 
@@ -771,7 +810,7 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable, Counta
             return $this->nested($expression, $type);
         }
 
-        if (is_array($expression)) {
+        if (is_iterable($expression)) {
             return $this->buildArrayExpression($expression, $type);
         }
 
@@ -795,12 +834,12 @@ class ElasticsearchQuery implements QueryInterface, Orderable, Limitable, Counta
     /**
      * Build array expression
      *
-     * @param array $expression
+     * @param iterable<string, mixed> $expression
      * @param string $type
      *
      * @return $this
      */
-    private function buildArrayExpression(array $expression, $type = BooleanQuery::COMPOSITE_AND)
+    private function buildArrayExpression(iterable $expression, $type = BooleanQuery::COMPOSITE_AND)
     {
         //nested expression
         $bool = new BooleanQuery();
