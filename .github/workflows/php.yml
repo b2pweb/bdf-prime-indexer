@@ -73,7 +73,7 @@ jobs:
         versions:
           - es: '7.17.28'
             lib: '7.0'
-          - es: '8.1.0'
+          - es: '8.19.12'
             lib: '8.0'
 
     name: Elasticsearch version ${{ matrix.versions.es }}
@@ -234,10 +234,10 @@ jobs:
           sudo sysctl -w fs.file-max=262144
           sudo sysctl -w vm.max_map_count=262144
 
-      - name: Runs Elasticsearch 8.1.0
+      - name: Runs Elasticsearch 8.19.12
         uses: elastic/elastic-github-actions/elasticsearch@dc110609b1cb3024477ead739ca23ab547b8b9ff
         with:
-          stack-version: 8.1.0
+          stack-version: 8.19.12
           security-enabled: false
 
       - name: Install dependencies
