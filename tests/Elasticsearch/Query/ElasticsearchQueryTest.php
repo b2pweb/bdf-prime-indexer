@@ -13,7 +13,11 @@ use Bdf\Prime\Indexer\Elasticsearch\Query\Filter\Wildcard;
 use Bdf\Prime\Indexer\Elasticsearch\Query\Result\ElasticsearchPaginator;
 use Bdf\Prime\Indexer\Exception\QueryExecutionException;
 use Bdf\Prime\Indexer\IndexTestCase;
+use Bdf\Prime\Query\Expression\Attribute;
+use Bdf\Prime\Query\Expression\Field;
+use Bdf\Prime\Query\QueryInterface;
 use Elastic\Elasticsearch\Client;
+use InvalidArgumentException;
 
 /**
  * Class ElasticsearchQueryTest
@@ -61,6 +65,74 @@ class ElasticsearchQueryTest extends IndexTestCase
                 ]
             ],
             $this->query->from('cities', 'city')->where('name', 'Paris')->compile()
+        );
+    }
+
+    /**
+     *
+     */
+    public function test_simple_whereReplace()
+    {
+        $query = $this->query->from('cities', 'city');
+
+        $this->assertEquals(
+            [
+                'query' => [
+                    'bool' => [
+                        'filter' => [
+                            ['term' => ['name' => 'Paris']]
+                        ]
+                    ]
+                ]
+            ],
+            $query->whereReplace('name', 'Paris')->compile()
+        );
+
+        $this->assertEquals(
+            [
+                'query' => [
+                    'bool' => [
+                        'filter' => [
+                            ['term' => ['name' => 'Avignon']]
+                        ]
+                    ]
+                ]
+            ],
+            $query->whereReplace('name', 'Avignon')->compile()
+        );
+    }
+
+    /**
+     *
+     */
+    public function test_whereReplace_with_operator()
+    {
+        $query = $this->query->from('cities', 'city');
+
+        $this->assertEquals(
+            [
+                'query' => [
+                    'bool' => [
+                        'filter' => [
+                            ['range' => ['name' => ['gt' => 'A']]]
+                        ]
+                    ]
+                ]
+            ],
+            $query->whereReplace('name', '>', 'A')->compile()
+        );
+
+        $this->assertEquals(
+            [
+                'query' => [
+                    'bool' => [
+                        'filter' => [
+                            ['range' => ['name' => ['gt' => 'B']]]
+                        ]
+                    ]
+                ]
+            ],
+            $query->whereReplace('name', '>', 'B')->compile()
         );
     }
 
@@ -168,6 +240,63 @@ class ElasticsearchQueryTest extends IndexTestCase
     /**
      *
      */
+    public function test_where_multiple_replace()
+    {
+        $query = $this->query->from('cities', 'city');
+
+        $this->assertEquals(
+            [
+                'query' => [
+                    'bool' => [
+                        'filter' => [
+                            ['term' => ['name' => 'Paris']],
+                            ['term' => ['zipCode' => '75000']],
+                        ]
+                    ]
+                ]
+            ],
+            $query
+                ->where('name', 'Paris')
+                ->where('zipCode', '75000')
+                ->compile()
+        );
+
+        $this->assertEquals(
+            [
+                'query' => [
+                    'bool' => [
+                        'filter' => [
+                            ['term' => ['zipCode' => '75000']],
+                            ['term' => ['name' => 'Avignon']],
+                        ]
+                    ]
+                ]
+            ],
+            $query
+                ->whereReplace('name', 'Avignon')
+                ->compile()
+        );
+
+        $this->assertEquals(
+            [
+                'query' => [
+                    'bool' => [
+                        'filter' => [
+                            ['term' => ['name' => 'Avignon']],
+                            ['term' => ['zipCode' => '84001']],
+                        ]
+                    ]
+                ]
+            ],
+            $query
+                ->whereReplace('zipCode', '84001')
+                ->compile()
+        );
+    }
+
+    /**
+     *
+     */
     public function test_where_with_array()
     {
         $this->assertEquals(
@@ -189,6 +318,26 @@ class ElasticsearchQueryTest extends IndexTestCase
                 ])
                 ->compile()
         );
+    }
+
+    /**
+     *
+     */
+    public function test_where_with_expression_not_supported()
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->query->from('cities', 'city')->where(new Attribute('foo'));
+    }
+
+    /**
+     *
+     */
+    public function test_orWhere_with_expression_not_supported()
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->query->from('cities', 'city')->orWhere(new Attribute('foo'));
     }
 
     /**
@@ -664,6 +813,20 @@ class ElasticsearchQueryTest extends IndexTestCase
         $this->assertSame(15, $this->query->getOffset());
         $this->assertTrue($this->query->isLimitQuery());
         $this->assertTrue($this->query->hasPagination());
+    }
+
+    public function test_whereRaw_expression_not_supported()
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->query->whereRaw(new Attribute('foo'));
+    }
+
+    public function test_whereRaw_query_not_supported()
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->query->whereRaw($this->createMock(QueryInterface::class));
     }
 
     /**

@@ -42,4 +42,20 @@ final class WhereFilter implements CompilableExpressionInterface
     {
         return $grammar->operator($this->column, $this->operator, $this->value);
     }
+
+    /**
+     * Get the field name to filter
+     */
+    public function column(): string
+    {
+        return $this->column;
+    }
+
+    /**
+     * Get the used operator
+     */
+    public function operator(): string
+    {
+        return $this->operator;
+    }
 }
