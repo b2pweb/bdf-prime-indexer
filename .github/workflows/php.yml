@@ -153,9 +153,11 @@ jobs:
         sudo sysctl -w fs.file-max=262144
         sudo sysctl -w vm.max_map_count=262144
 
-    - uses: nyaruka/elasticsearch-action@v1
+    - name: Runs Elasticsearch ${{ matrix.versions.es }}
+      uses: elastic/elastic-github-actions/elasticsearch@dc110609b1cb3024477ead739ca23ab547b8b9ff
       with:
-        elastic version: 8.19.12
+        stack-version: 8.19.12
+        security-enabled: false
 
     - name: Install Prime ${{ matrix.prime-versions }}
       run: composer require --no-update --dev 'b2pweb/bdf-prime:~${{ matrix.prime-versions }}.0'
