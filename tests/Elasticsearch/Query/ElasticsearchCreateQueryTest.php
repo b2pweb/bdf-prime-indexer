@@ -289,7 +289,7 @@ class ElasticsearchCreateQueryTest extends IndexTestCase
 
         $this->assertEmpty(iterator_to_array($response));
         $this->assertEmpty($response->all());
-        $this->assertSame($response, $response->asAssociative()->asList()->asObject()->asClass(\stdClass::class)->asColumn(1)->fetchMode(ResultSetInterface::FETCH_ASSOC));
+        $this->assertSame($response, $response->asAssociative()->asList()->asObject()->asClass(\stdClass::class)->asColumn(1));
         $this->assertArrayHasKey('result', $response);
         $this->assertArrayNotHasKey('foo', $response);
 
@@ -370,7 +370,7 @@ class ElasticsearchCreateQueryTest extends IndexTestCase
 
         $this->assertEmpty(iterator_to_array($response));
         $this->assertEmpty($response->all());
-        $this->assertSame($response, $response->asAssociative()->asList()->asObject()->asClass(\stdClass::class)->asColumn(1)->fetchMode(ResultSetInterface::FETCH_ASSOC));
+        $this->assertSame($response, $response->asAssociative()->asList()->asObject()->asClass(\stdClass::class)->asColumn(1));
 
         $this->assertEquals(1, $this->search()->execute()->total());
         $this->assertEquals([

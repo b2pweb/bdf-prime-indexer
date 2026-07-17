@@ -12,7 +12,7 @@ final class PrimeIndexerTestExtension extends Extension
     /**
      * {@inheritdoc}
      */
-    public function load(array $configs, ContainerBuilder $container)
+    public function load(array $configs, ContainerBuilder $container): void
     {
         $container->register(TestingIndexer::class)
             ->setArguments([new Reference('service_container'), false])

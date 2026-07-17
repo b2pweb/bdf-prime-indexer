@@ -122,52 +122,54 @@ jobs:
 
     - name: Run test suite
       run: composer run-script tests
-#
-#  prime_compatiblity:
-#    runs-on: ubuntu-latest
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        prime-versions: ['2.0']
-#    name: Prime version ${{ matrix.prime-versions }}
-#
-#    steps:
-#    - uses: actions/checkout@v2
-#
-#    - name: Set Timezone
-#      uses: szenius/set-timezone@v1.0
-#      with:
-#        timezoneLinux: "Europe/Paris"
-#
-#    - name: Install PHP
-#      uses: shivammathur/setup-php@v2
-#      with:
-#        php-version: 7.2
-#        extensions: json
-#        ini-values: date.timezone=Europe/Paris
-#
-#    - name: Configure sysctl limits
-#      run: |
-#        sudo swapoff -a
-#        sudo sysctl -w vm.swappiness=1
-#        sudo sysctl -w fs.file-max=262144
-#        sudo sysctl -w vm.max_map_count=262144
-#
-#    - uses: nyaruka/elasticsearch-action@v1
-#      with:
-#        elastic version: 5.6
-#
-#    - name: Install dependencies
-#      run: composer install --prefer-dist --no-progress
-#
-#    - name: Install Prime ${{ matrix.prime-versions }}
-#      run: composer require --dev 'b2pweb/bdf-prime:~${{ matrix.prime-versions }}.0' --with-all-dependencies
-#
-#    - name: Install ES Lib 5.0
-#      run: composer require --dev 'elasticsearch/elasticsearch:~5.0' --with-all-dependencies
-#
-#    - name: Run test suite
-#      run: composer run-script tests
+
+  prime_compatiblity:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        prime-versions: ['2.2', '2.3', '3.0']
+    name: Prime version ${{ matrix.prime-versions }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set Timezone
+      uses: szenius/set-timezone@v1.0
+      with:
+        timezoneLinux: "Europe/Paris"
+
+    - name: Install PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.4
+        extensions: json
+        ini-values: date.timezone=Europe/Paris
+
+    - name: Configure sysctl limits
+      run: |
+        sudo swapoff -a
+        sudo sysctl -w vm.swappiness=1
+        sudo sysctl -w fs.file-max=262144
+        sudo sysctl -w vm.max_map_count=262144
+
+    - name: Runs Elasticsearch ${{ matrix.versions.es }}
+      uses: elastic/elastic-github-actions/elasticsearch@dc110609b1cb3024477ead739ca23ab547b8b9ff
+      with:
+        stack-version: 8.19.12
+        security-enabled: false
+
+    - name: Install Prime ${{ matrix.prime-versions }}
+      run: composer require --no-update --dev 'b2pweb/bdf-prime:~${{ matrix.prime-versions }}.0'
+
+    - name: Install ES Lib 8.0
+      run: composer require --no-update --dev 'elasticsearch/elasticsearch:~8.0'
+
+    - name: Install dependencies
+      run: composer update --prefer-dist --no-progress --with-all-dependencies
+
+    - name: Run test suite
+      run: composer run-script tests
 
   analysis:
     name: Analysis

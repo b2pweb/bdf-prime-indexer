@@ -5,6 +5,9 @@ namespace Bdf\Prime\Indexer\Sync;
 use Bdf\Bus\MessageDispatcherInterface;
 use Bdf\Prime\Indexer\ShouldBeIndexedConfigurationInterface;
 use Bdf\Prime\Repository\EntityRepository;
+use Bdf\Prime\Repository\Event\AfterDelete;
+use Bdf\Prime\Repository\Event\AfterInsert;
+use Bdf\Prime\Repository\Event\AfterUpdate;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
@@ -47,11 +50,11 @@ final class RepositorySubscriber
     /**
      * An entity is inserted
      * Index only if it should be indexed
-     *
-     * @param object $entity
      */
-    public function inserted(object $entity): void
+    public function inserted(AfterInsert $event): void
     {
+        $entity = $event->entity;
+
         if ($this->shouldBeIndexed($entity)) {
             $this->dispatcher->dispatch(new AddToIndex($this->index, $entity));
         }
@@ -62,11 +65,11 @@ final class RepositorySubscriber
      *
      * If the entity should still be indexed, it will be updated
      * Otherwise, the entity is removed
-     *
-     * @param object $entity
      */
-    public function updated(object $entity): void
+    public function updated(AfterUpdate $event): void
     {
+        $entity = $event->entity;
+
         if ($this->shouldBeIndexed($entity)) {
             $this->dispatcher->dispatch(new UpdateIndexedEntity($this->index, $entity));
         } else {
@@ -77,12 +80,10 @@ final class RepositorySubscriber
     /**
      * An entity is deleted from the database
      * The entity will also be removed from index
-     *
-     * @param object $entity
      */
-    public function deleted(object $entity): void
+    public function deleted(AfterDelete $event): void
     {
-        $this->dispatcher->dispatch(new RemoveFromIndex($this->index, $entity));
+        $this->dispatcher->dispatch(new RemoveFromIndex($this->index, $event->entity));
     }
 
     /**

@@ -9,7 +9,7 @@ class UserAttributesMapper extends Mapper
     public function schema(): array
     {
         return [
-            'connexion' => 'test',
+            'connection' => 'test',
             'table' => 'user_attr',
         ];
     }

@@ -16,7 +16,7 @@ final class RegisterIndexConfigurationCompilerPass implements CompilerPassInterf
     /**
      * {@inheritdoc}
      */
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         $resolverDefinition = $container->findDefinition(MappingResolver::class);
 
