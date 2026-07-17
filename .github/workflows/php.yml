@@ -128,7 +128,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        prime-versions: ['2.0', '3.0']
+        prime-versions: ['2.2', '2.3', '3.0']
     name: Prime version ${{ matrix.prime-versions }}
 
     steps:
@@ -157,14 +157,14 @@ jobs:
       with:
         elastic version: 8.19.12
 
-    - name: Install dependencies
-      run: composer install --prefer-dist --no-progress
-
     - name: Install Prime ${{ matrix.prime-versions }}
-      run: composer require --dev 'b2pweb/bdf-prime:~${{ matrix.prime-versions }}.0' --with-all-dependencies
+      run: composer require --no-update --dev 'b2pweb/bdf-prime:~${{ matrix.prime-versions }}.0'
 
     - name: Install ES Lib 8.0
-      run: composer require --dev 'elasticsearch/elasticsearch:~8.0' --with-all-dependencies
+      run: composer require --no-update --dev 'elasticsearch/elasticsearch:~8.0'
+
+    - name: Install dependencies
+      run: composer update --prefer-dist --no-progress --with-all-dependencies
 
     - name: Run test suite
       run: composer run-script tests

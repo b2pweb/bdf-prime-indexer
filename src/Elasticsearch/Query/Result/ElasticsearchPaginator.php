@@ -44,7 +44,7 @@ class ElasticsearchPaginator extends PrimeSerializable implements IteratorAggreg
     /**
      * Current page
      */
-    private ?int $page = null;
+    private int $page;
 
     /**
      * Number of entities loaded in the collection
@@ -201,6 +201,9 @@ class ElasticsearchPaginator extends PrimeSerializable implements IteratorAggreg
      * SPL - ArrayAccess
      *
      * {@inheritdoc}
+     *
+     * @psalm-suppress PossiblyNullArrayOffset
+     * @psalm-suppress PossiblyNullArgument
      */
     public function offsetSet($offset, $value): void
     {
@@ -369,6 +372,7 @@ class ElasticsearchPaginator extends PrimeSerializable implements IteratorAggreg
 
         return $this;
     }
+
     /**
      * @return CollectionInterface<R>
      */
@@ -384,6 +388,7 @@ class ElasticsearchPaginator extends PrimeSerializable implements IteratorAggreg
         if ($this->transformer) {
             return $collection->map($this->transformer);
         } else {
+            /** @var CollectionInterface<R> */
             return $collection;
         }
     }
